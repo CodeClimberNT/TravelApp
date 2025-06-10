@@ -108,7 +108,6 @@ fun NavGraph(
         composable(Destinations.USER_MAIN_PAGE_ROUTE) {
             ProfileScreen(
                 viewModel = userVm,
-                authVm = singInVm,
                 navActions = navActions,
                 bottomBarItem = BottomBarItem.Profile,
                 snackBarHostState = snackbarHostState
@@ -141,7 +140,7 @@ fun NavGraph(
                 viewModel = userVm,
                 onBackClick = {
                     userVm.handleBackNavigation()
-                    navActions.back()
+                    navActions.navigateToUserMainPage()
                 }
             )
         }

@@ -53,10 +53,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
+import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -75,7 +77,7 @@ enum class CameraPopupState {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun EditUserProfileInfo(
-    viewModel: UserProfileViewModel,
+    viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
     onBackClick: () -> Unit
 ) {
 

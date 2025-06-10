@@ -77,15 +77,11 @@ sealed interface ProfileEvent {
 @Composable
 fun ProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
-    authVm: SignInViewModel,
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-
-    Log.d("User Main Page","Loading")
-
-    val profile by viewModel.selectedUserProfile.collectAsState()
+    val profile by viewModel.loggedUser.collectAsState()
 
         Scaffold(
             snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -101,28 +97,18 @@ fun ProfileScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Log.d("USER MAIN PAGE", "LOADING")
-                if (profile == null || profile!!.id == 0){
-                    Log.d("USER MAIN PAGE", "CHECKED ID")
+                if (profile.uid.isEmpty()){
                     SignInScreen(navActions)
                 }else{
-                    // Profile header
-                    ProfileHeader(profile!!, navActions = navActions)
-                    //button list
+                    ProfileHeader(profile, navActions = navActions)
                     Spacer(modifier = Modifier.height(40.dp))
                     ProfileButtonList(
                         navActions = navActions,
                         viewModel
                     )
                 }
-
-
             }
-
-
         }
-
-
     }
 
 @Composable

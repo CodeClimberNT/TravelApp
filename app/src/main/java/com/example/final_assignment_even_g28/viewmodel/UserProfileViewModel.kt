@@ -1,10 +1,12 @@
 package com.example.final_assignment_even_g28.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.model.UserProfile
@@ -39,150 +41,62 @@ import java.util.Locale
             profilePicture = ProfilePictureData.Monogram("JD")
         )*/
 
+/*
+* FOR LOGIN:
+* mail: account@yahoo.com
+* password: accountpassword
+* */
+
+
 class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     private var _userProfile by mutableStateOf(UserProfile())
     val userProfile: UserProfile get() = _userProfile
 
-    val userProfiles: StateFlow<List<UserProfile>> = model.userProfiles
     val selectedUserProfile: StateFlow<UserProfile?> = model.selectedUserProfile
+
+    val loggedUser: StateFlow<UserProfile> = model.loggedUser
 
     fun getUserById(userId: Int) = model.getUserById(userId)
     fun getUserByUid(uid: String) = model.getUserByUid(uid)
     fun getNicknameById(userId: Int): String? = model.getNicknameById(userId)
     fun updateUserProfile(updatedProfile: UserProfile) = model.updateUserProfile(updatedProfile)
 
-    var editingProfile = mutableStateOf<UserProfile>(UserProfile())
-        private set
+    var editingProfile: MutableState<UserProfile> = mutableStateOf<UserProfile>(UserProfile())
 
     private var _validationErrors by mutableStateOf(UserProfileError())
     val validationErrors: UserProfileError get() = _validationErrors
 
     var isEditing by mutableStateOf(false)
 
-
-    // init {
-    //     model.getAllUsers()
-    //     loadUser("11")
-    // }
-
     fun login(email: String, password: String) {
-        val auth = Collections.auth
-
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-
-                    if(user!=null){
-                        Collections.users.document(user.uid).get()
-                            .addOnSuccessListener { documentSnapshot ->
-                                val userProfile = documentSnapshot.toObject(UserProfile::class.java)
-                                if (userProfile!= null){
-                                    model.loadUser(userProfile)
-                                    Log.d("Login", "Entrato")
-
-                                }
-                            }
-                        Log.d("Login", "User logged in successfully: ${user.email}, ${user.uid}")
-                    } else {
-                        Log.e("Login", "Authentication failed: ${task.exception?.message}")
-                    }
-                    }
-            }
+        model.login(email, password)
     }
-/*
-    fun loadUser(id: String){
-        Collections.users
-            .document(id)
-            .get().addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val user = documentSnapshot.toObject(UserProfile::class.java)
 
-                    if (user != null) {
-                        model.loadUser(user)
-                    }
-
-                    Log.d("Load User", "Loading user $user")
-                } else {
-                    Log.e("Loading User", "User not found with this ID")
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Loading User", "Error getting loading user: $e")
-            }
-    }
-* */
 
     fun logOut() {
-        Collections.auth.signOut()
-        model.loadUser(UserProfile())
+        model.logOut()
     }
 
-    fun SignUp(userToSign: UserProfile, password: String) {
-        val auth = Collections.auth
-
-        auth.createUserWithEmailAndPassword(userToSign.email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-
-                    if (user != null) {
-                        Collections.users.get()
-                            .addOnSuccessListener { query ->
-                                val userCount = query.size()
-                                val savingUser = UserToSave(
-                                    id = userCount + 1,
-                                    uid = (userCount + 1).toString(),
-                                    name = userToSign.name,
-                                    surname = userToSign.surname,
-                                    typeOfExperiences = userToSign.typeOfExperiences,
-                                    mostDesiredDestination = userToSign.mostDesiredDestination,
-                                    phoneNumber = userToSign.phoneNumber,
-                                    email = userToSign.email,
-                                    dateOfBirth = userToSign.dateOfBirth,
-                                    pastExperiences = userToSign.pastExperiences,
-                                    bio = userToSign.bio,
-                                    badge = userToSign.badge,
-                                    currentLevel = userToSign.currentLevel,
-                                    rating = userToSign.rating,
-                                )
-                                val userToLogin = userToSign
-                                userToLogin.id = userCount+1
-                                Collections.users.document(user.uid).set(savingUser)
-                                    .addOnSuccessListener {
-                                        Log.d("Firestore", "User successfully added with custom ID")
-
-
-                                        model.loadUser(userToLogin)
-                                    }.addOnFailureListener { e ->
-                                        Log.e("Firestore", "Error adding user: $e")
-                                    }
-
-                            }.addOnFailureListener {
-                                Log.e("Firestore", "Error getting User Number")
-                            }
-                    }
-                }
-            }
-
+    fun signUp(userToSign: UserProfile, password: String) {
+        model.signUp(userToSign, password)
     }
 
     fun startEditing() {
         if (isEditing) {
             return
         }
-
-        editingProfile.value = _userProfile
+        editingProfile.value = loggedUser.value
         _validationErrors = UserProfileError()
         isEditing = true
     }
 
     fun cancelChanges() {
         isEditing = false
-        editingProfile.value = UserProfile()
+        editingProfile.value = loggedUser.value
     }
 
-    fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean {
+/*
+fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean {
         getUserByUid(userId)
         if (selectedUserProfile.value != null) {
             _userProfile = selectedUserProfile.value!!
@@ -192,6 +106,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             return false
         }
     }
+ */
+
 
     fun saveAndExitEditing() {
         editingProfile.value.let { draft ->
@@ -216,14 +132,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                     currentLevel = draft.currentLevel,
                     rating = draft.rating,
                 )
-                Collections.users.document(userProfile.id.toString())
-                    .set(savingUser).addOnSuccessListener {
-                        Log.d("Edit User", "Edited User with ID: ${userProfile.id}")
-                    }.addOnFailureListener { e ->
-                        Log.e("Edit User", "Error editing user: $e")
-                    }
-                _userProfile = draft
-                editingProfile.value = UserProfile()
+
+                model.editProfile(savingUser)
             }
         }
     }
@@ -268,7 +178,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
 
     private fun getInitials(): String {
-        val parts: List<String> = _userProfile.fullName.trim().split(" ")
+        val parts: List<String> = (loggedUser.value.name + loggedUser.value.surname).trim().split(" ")
 
         return when (parts.size) {
             0, 1 -> parts.firstOrNull()?.firstOrNull()?.toString() ?: ""
@@ -277,11 +187,11 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun getProfilePicture(): ProfilePictureData {
-        return _userProfile.profilePicture
+        return loggedUser.value.profilePicture
     }
 
     fun getEditingProfilePicture(): ProfilePictureData {
-        return editingProfile.value.profilePicture
+        return loggedUser.value.profilePicture
     }
 
     fun updateName(name: String) {
@@ -294,8 +204,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun updateTypeOfExperiences(newTypeOfExperiences: String) {
         val newTypeOfExperiences: List<String> = newTypeOfExperiences.split(",").map { it.trim() }
-        editingProfile.value =
-            editingProfile.value.copy(typeOfExperiences = newTypeOfExperiences)
+        editingProfile.value = editingProfile.value.copy(typeOfExperiences = newTypeOfExperiences)
     }
 
     fun updateMostDesiredDestination(newDestination: String) {
@@ -367,7 +276,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun getEditFieldDefinitionList(): List<EditableFieldDefinition> {
         Log.d("Edit Profile", "started")
-        val profile = editingProfile.value
+        var profile = editingProfile.value.copy()
         Log.d("Edit Profile", "finished load")
 
         return listOf(
@@ -432,18 +341,18 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun getInfoFieldDefinitionList(): List<InfoFieldDefinition> {
-        val profile = model.selectedUserProfile.value
+        val profile = loggedUser.value
 
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
         return listOf(
             InfoFieldDefinition(
                 label = "name",
-                value = profile?.name ?: "",
+                value = profile.name,
             ),
             InfoFieldDefinition(
                 label = "surname",
-                value = profile?.surname ?: "",
+                value = profile.surname,
             ),
             InfoFieldDefinition(
                 label = "Date of Birth",
@@ -451,23 +360,23 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             ),
             InfoFieldDefinition(
                 label = "Email",
-                value = profile?.email ?: "",
+                value = profile.email,
             ),
             InfoFieldDefinition(
                 label = "Phone Number",
-                value = "+39 ${profile?.phoneNumber}",
+                value = "+39 ${profile.phoneNumber}",
             ),
             InfoFieldDefinition(
                 label = "Desired Destination",
-                value = profile?.mostDesiredDestination ?: "",
+                value = profile.mostDesiredDestination,
             ),
             InfoFieldDefinition(
                 label = "Experiences as a Traveler",
-                value = profile?.pastExperiences.toString(),
+                value = profile.pastExperiences.toString(),
             ),
             InfoFieldDefinition(
                 label = "Bio",
-                value = profile?.bio ?: ""
+                value = profile.bio
             )
         )
     }

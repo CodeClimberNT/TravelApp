@@ -33,12 +33,15 @@ fun SignInScreen(navActions: Navigation,
     var showLogin by remember{ mutableStateOf(false)}
 
     LaunchedEffect(success) {
-        if (success) {
+        /*
+         if (success) {
             if(userVM.setCurrentUser(firebaseUser!!.uid, firebaseUser!!.displayName!!, firebaseUser!!.email!!))
                 navActions.navigateToTravelList()
             else
                 navActions.navigateToRegistrationForm()
         }
+        * */
+
     }
 
     Box(Modifier.fillMaxSize()) {
