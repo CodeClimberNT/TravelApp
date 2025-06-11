@@ -1,5 +1,4 @@
 package com.example.final_assignment_even_g28.ui.screens
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,9 +12,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.R
-import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.viewmodel.auth.SignInViewModel
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.sign_in.LogInForm
+import com.example.final_assignment_even_g28.ui.components.sign_in.RegistrationForm
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
@@ -79,10 +79,10 @@ fun SignInScreen(navActions: Navigation,
                 }
 
                 if(showRegisterModule){
-                    RegistrationForm(navActions)
+                    RegistrationForm(navActions){showRegisterModule = false}
                 }
                 if(showLogin){
-                    LogInForm(navActions, userVM)
+                    LogInForm(navActions){showLogin = false}
                 }
             }
 
@@ -99,45 +99,6 @@ private fun GoogleSignInButton(onClick: () -> Unit) {
         Image(painterResource(id = R.drawable.ic_google_logo), contentDescription = null, modifier = Modifier.size(25.dp))
         Spacer(Modifier.width(8.dp))
         Text("Sign in with Google")
-    }
-}
-
-@Composable
-fun LogInForm(navActions: Navigation, model: UserProfileViewModel){
-    var tempMail by remember { mutableStateOf("") }
-    var tempPassword by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        OutlinedTextField(
-            value = tempMail,
-            onValueChange = { tempMail = it },
-            label = { Text("Email") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = tempPassword,
-            onValueChange = { tempPassword = it },
-            label = { Text("Password") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = {
-            model.login(tempMail, tempPassword)
-            navActions.navigateToUserMainPage()
-            }, modifier = Modifier
-            .width(240.dp)
-            .height(48.dp)) {
-            Spacer(Modifier.width(8.dp))
-            Text("Sign in with Google")
-        }
     }
 }
 

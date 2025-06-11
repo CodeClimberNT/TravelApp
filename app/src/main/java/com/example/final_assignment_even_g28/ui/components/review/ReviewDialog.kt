@@ -67,9 +67,7 @@ fun ReviewDialog(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
-
                 )
-
                 EditableTextField(
                     review.title,
                     onValueChange = { vm.updateReviewTitle(it) },
@@ -77,7 +75,6 @@ fun ReviewDialog(
                     isError = !reviewErrors.title.isBlank(),
                     errorMessage = reviewErrors.title,
                 )
-
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
