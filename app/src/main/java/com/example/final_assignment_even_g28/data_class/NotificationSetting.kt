@@ -1,4 +1,4 @@
-package com.example.final_assignment_even_g28.model
+package com.example.final_assignment_even_g28.data_class
 
 data class NotificationItem(
     val title: String,

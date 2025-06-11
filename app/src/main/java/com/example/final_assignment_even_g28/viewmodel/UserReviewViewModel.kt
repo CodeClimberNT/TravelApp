@@ -5,14 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data.Collections
-import com.example.final_assignment_even_g28.model.Planner
 import com.example.final_assignment_even_g28.model.TravelProposalModel
-import com.example.final_assignment_even_g28.model.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.model.UserReview
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
+import com.example.final_assignment_even_g28.data_class.UserReview
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume

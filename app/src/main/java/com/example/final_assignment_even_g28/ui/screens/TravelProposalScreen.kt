@@ -39,7 +39,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Forest
 import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.PeopleOutline
 import androidx.compose.material.icons.outlined.Weekend
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -92,12 +91,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.rememberAsyncImagePainter
 import com.example.final_assignment_even_g28.R
-import com.example.final_assignment_even_g28.model.ExperienceComposition
-import com.example.final_assignment_even_g28.model.ItineraryStop
-import com.example.final_assignment_even_g28.model.ParticipantStatus
-import com.example.final_assignment_even_g28.model.Planner
-import com.example.final_assignment_even_g28.model.TravelProposal
-import com.example.final_assignment_even_g28.model.UserProfile
+import com.example.final_assignment_even_g28.data_class.ExperienceComposition
+import com.example.final_assignment_even_g28.data_class.ItineraryStop
+import com.example.final_assignment_even_g28.data_class.ParticipantStatus
+import com.example.final_assignment_even_g28.data_class.Planner
+import com.example.final_assignment_even_g28.data_class.TravelProposal
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation

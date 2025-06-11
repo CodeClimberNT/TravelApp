@@ -6,12 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import com.example.final_assignment_even_g28.data.Collections
-import com.example.final_assignment_even_g28.model.UserProfile
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.model.UserToSave
+import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.InfoFieldDefinition
 import com.example.final_assignment_even_g28.shared.validation.UserProfileError

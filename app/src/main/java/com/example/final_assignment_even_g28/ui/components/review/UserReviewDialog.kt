@@ -39,9 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.final_assignment_even_g28.model.ParticipantDetailed
-import com.example.final_assignment_even_g28.model.UserProfile
-import com.example.final_assignment_even_g28.model.UserReview
+import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
+import com.example.final_assignment_even_g28.data_class.UserProfile
+import com.example.final_assignment_even_g28.data_class.UserReview
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.getNameFromFullName

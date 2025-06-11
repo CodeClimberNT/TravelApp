@@ -1,11 +1,11 @@
 package com.example.final_assignment_even_g28.model
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.UserProfile
+import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
-import io.github.jan.supabase.auth.Auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -164,7 +164,7 @@ class UserProfileModel() {
 
             }
     }
-      fun getUserById(id: String): UserProfile{
+      fun getUserById(id: String): UserProfile {
         //get user by id from the list of all users
         return _allUsers.value.find { it.uid == id } ?: UserProfile()
      }

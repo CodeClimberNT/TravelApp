@@ -1,6 +1,6 @@
 package com.example.final_assignment_even_g28.utils
 
-import com.example.final_assignment_even_g28.model.UserProfile
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.google.firebase.Timestamp

@@ -1,4 +1,4 @@
-package com.example.final_assignment_even_g28.model
+package com.example.final_assignment_even_g28.data_class
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude

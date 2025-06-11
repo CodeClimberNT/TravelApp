@@ -1,22 +1,9 @@
-package com.example.final_assignment_even_g28.model
+package com.example.final_assignment_even_g28.data_class
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-
-
-/*
-IN DATABASE:
-user_review:
-id: Automatic,
-reviewedUserId: number,
-reviewerId: number,
-title: String
-rating: number,
-description: String,
-timestamp: timestamp,
- */
 
 @Serializable
 data class UserReview(
@@ -29,5 +16,5 @@ data class UserReview(
     @get:Exclude val localImages: List<String> = emptyList(),
     val rating: Float = 0f,
     val description: String = "",
-    @Contextual val timestamp: Timestamp = Timestamp.now(),
+    @Contextual val timestamp: Timestamp = Timestamp.Companion.now(),
 )

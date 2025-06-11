@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.final_assignment_even_g28.model.notificationItems
+import com.example.final_assignment_even_g28.data_class.notificationItems
 
 @Composable
 fun NotificationSettingsScreen() {

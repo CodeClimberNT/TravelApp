@@ -1,4 +1,4 @@
-package com.example.final_assignment_even_g28.model
+package com.example.final_assignment_even_g28.data_class
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
@@ -12,5 +12,5 @@ data class TravelReview(
     @get:Exclude val tempImages: List<String> = mutableListOf(),
     val rating: Float = 0f,
     val description: String = "",
-    val timestamp: Timestamp = Timestamp.now()
+    val timestamp: Timestamp = Timestamp.Companion.now()
 )

@@ -22,7 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.final_assignment_even_g28.model.TravelReview
+import com.example.final_assignment_even_g28.data_class.TravelReview
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 
 @OptIn(ExperimentalLayoutApi::class)

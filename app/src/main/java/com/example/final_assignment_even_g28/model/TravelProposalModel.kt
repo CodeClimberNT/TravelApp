@@ -4,6 +4,15 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.ActivityTag
+import com.example.final_assignment_even_g28.data_class.Filters
+import com.example.final_assignment_even_g28.data_class.Notification
+import com.example.final_assignment_even_g28.data_class.Participant
+import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
+import com.example.final_assignment_even_g28.data_class.ParticipantStatus
+import com.example.final_assignment_even_g28.data_class.TravelProposal
+import com.example.final_assignment_even_g28.data_class.TravelReview
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.utils.MAX_TIMESTAMP
 import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.google.firebase.Timestamp

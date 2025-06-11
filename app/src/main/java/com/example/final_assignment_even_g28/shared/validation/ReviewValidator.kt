@@ -1,6 +1,6 @@
 package com.example.final_assignment_even_g28.shared.validation
 
-import com.example.final_assignment_even_g28.model.TravelReview
+import com.example.final_assignment_even_g28.data_class.TravelReview
 
 data class ReviewError(
     val title: String = "",

@@ -1,6 +1,5 @@
 package com.example.final_assignment_even_g28.ui.screens
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -59,7 +58,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,7 +66,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.rememberAsyncImagePainter
 import com.example.final_assignment_even_g28.R
-import com.example.final_assignment_even_g28.model.Price
+import com.example.final_assignment_even_g28.data_class.Price
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.utils.AppFactory

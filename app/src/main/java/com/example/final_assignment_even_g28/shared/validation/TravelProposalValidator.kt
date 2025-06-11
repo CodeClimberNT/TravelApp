@@ -1,8 +1,8 @@
 package com.example.final_assignment_even_g28.shared.validation
 
-import com.example.final_assignment_even_g28.model.ActivityTag
-import com.example.final_assignment_even_g28.model.ItineraryStop
-import com.example.final_assignment_even_g28.model.Price
+import com.example.final_assignment_even_g28.data_class.ActivityTag
+import com.example.final_assignment_even_g28.data_class.ItineraryStop
+import com.example.final_assignment_even_g28.data_class.Price
 import com.google.firebase.Timestamp
 import java.util.Date
 

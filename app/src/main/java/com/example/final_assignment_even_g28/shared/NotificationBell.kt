@@ -1,6 +1,5 @@
 package com.example.final_assignment_even_g28.shared
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.final_assignment_even_g28.model.Notification
+import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel

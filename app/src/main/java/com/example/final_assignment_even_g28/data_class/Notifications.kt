@@ -1,8 +1,10 @@
-package com.example.final_assignment_even_g28.model
+package com.example.final_assignment_even_g28.data_class
 
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 data class Notification(
     @get:Exclude var id: String = "",
@@ -31,7 +33,7 @@ data class Notification(
         return if (isRecent()) {
             "now"
         } else {
-            java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+            SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 .format(timestamp.toDate())
         }
     }
