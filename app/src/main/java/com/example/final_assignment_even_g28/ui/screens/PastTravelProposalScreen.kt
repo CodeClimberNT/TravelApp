@@ -60,12 +60,14 @@ import com.example.final_assignment_even_g28.data_class.Planner
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.NeedToLogin
 import com.example.final_assignment_even_g28.ui.components.review.PastTravelReviews
 import com.example.final_assignment_even_g28.ui.components.review.ReviewDialog
 import com.example.final_assignment_even_g28.ui.components.review.UserReviewDialog
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +77,8 @@ fun PastTravelProposalScreen(
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     tripId: String,
-    userReviewVm: UserReviewViewModel,
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory),
+    userReviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
     snackBarHostState: SnackbarHostState,
     initialTabIndex: Int = 0
 ) {
@@ -84,6 +87,7 @@ fun PastTravelProposalScreen(
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
     val participants by tripVm.currentParticipants.collectAsState()
     val reviews by tripVm.currentReviews.collectAsState()
+    val loggedUser by userProfileViewModel.loggedUser.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -110,69 +114,75 @@ fun PastTravelProposalScreen(
                 onReviewButtonClick = { showReviewDialog = true })
         }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            ImageCarousel(travelProposal.images)
-            Spacer(modifier = Modifier.height(16.dp))
-            HeroSection(
-                title = travelProposal.title,
-                duration = tripVm.showDatesInTripInfo(
-                    travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
-                ),
-                tags = travelProposal.activities.map { it.value },
-                travelProposalVM = tripVm,
-                navActions = navActions,
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            InfoReviewTab(tabIndex, reviews.size, onTabSelected = { tabIndex = it })
-            when (tabIndex) {
-                0 -> {
-                    TripOverview(tripPlanner, tripVm)
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                    ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
-                    TripDescription(travelProposal.description)
-                    if (isLandscape) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    MaterialTheme.colorScheme.secondary
-                                )
-                                .padding(
-                                    horizontal = 16.dp
-                                ), verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp)
-                            ) {
-                                ItinerarySection(
-                                    travelProposal.itinerary
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(
-                                        start = 8.dp
-                                    )
-                            ) { TripMap() }
-                        }
-                    } else {
-                        ItinerarySection(travelProposal.itinerary)
-                        TripMap()
-                    }
-                }
 
-                1 -> {
-                    PastTravelReviews(reviews)
+        if (loggedUser.uid.isEmpty()){
+            //need to Login
+            NeedToLogin(navAction = navActions)
+        }else{
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                ImageCarousel(travelProposal.images)
+                Spacer(modifier = Modifier.height(16.dp))
+                HeroSection(
+                    title = travelProposal.title,
+                    duration = tripVm.showDatesInTripInfo(
+                        travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
+                    ),
+                    tags = travelProposal.activities.map { it.value },
+                    travelProposalVM = tripVm,
+                    navActions = navActions,
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                InfoReviewTab(tabIndex, reviews.size, onTabSelected = { tabIndex = it })
+                when (tabIndex) {
+                    0 -> {
+                        TripOverview(tripPlanner, tripVm)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
+                        TripDescription(travelProposal.description)
+                        if (isLandscape) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        MaterialTheme.colorScheme.secondary
+                                    )
+                                    .padding(
+                                        horizontal = 16.dp
+                                    ), verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp)
+                                ) {
+                                    ItinerarySection(
+                                        travelProposal.itinerary
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(
+                                            start = 8.dp
+                                        )
+                                ) { TripMap() }
+                            }
+                        } else {
+                            ItinerarySection(travelProposal.itinerary)
+                            TripMap()
+                        }
+                    }
+
+                    1 -> {
+                        PastTravelReviews(reviews)
+                    }
                 }
             }
         }

@@ -52,6 +52,7 @@ import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.NeedToLogin
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
@@ -65,7 +66,7 @@ fun MyTravelProposalList(
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-    val currentUser by userVm.selectedUserProfile.collectAsState()
+    val loggedUser by userVm.loggedUser.collectAsState()
     /* ------- tab state ------- */
     var tabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Current Proposal", "Past Proposal")
@@ -79,65 +80,66 @@ fun MyTravelProposalList(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
 
-            /* ----- headline & “plan trip” button ----- */
-            HeaderRow(
-                onPlanNew = {
-                    tripVm.clickPlanNewOwnTrip(currentUser?.uid ?: "0")
-                    navActions.navigateToCreateNewTravelProposal()
+        if (loggedUser.uid.isEmpty()) {
+            NeedToLogin(navAction = navActions)
+        }else{
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+            ) {
+                /* ----- headline & “plan trip” button ----- */
+                HeaderRow(
+                    onPlanNew = {
+                        tripVm.clickPlanNewOwnTrip(loggedUser.uid)
+                        navActions.navigateToCreateNewTravelProposal()
+                    }
+                )
+                /* ----- tabs ----- */
+                PrimaryTabRow(selectedTabIndex = tabIndex) {
+                    tabTitles.forEachIndexed { i, title ->
+                        Tab(
+                            selected = tabIndex == i,
+                            onClick = { tabIndex = i },
+                            text = { Text(title) },
+                            icon = {
+                                val icon =
+                                    when (i) {
+                                        0 -> Icons.Default.Bookmark
+                                        else ->
+                                            Icons.Default
+                                                .Reviews
+                                    }
+                                Icon(icon, contentDescription = null)
+                            }
+                        )
+                    }
                 }
-            )
-
-            /* ----- tabs ----- */
-            PrimaryTabRow(selectedTabIndex = tabIndex) {
-                tabTitles.forEachIndexed { i, title ->
-                    Tab(
-                        selected = tabIndex == i,
-                        onClick = { tabIndex = i },
-                        text = { Text(title) },
-                        icon = {
-                            val icon =
-                                when (i) {
-                                    0 -> Icons.Default.Bookmark
-                                    else ->
-                                        Icons.Default
-                                            .Reviews
-                                }
-                            Icon(icon, contentDescription = null)
-                        }
-                    )
-                }
-            }
-
-            /* ----- list content ----- */
-            when (tabIndex) {
-                0 -> {
-                    OwnedTravelProposalListColumn(
-                        tripVm,
-                        myProposals,
-                        Modifier
-                            .fillMaxHeight()
-                            .padding(horizontal = 15.dp),
-                        navActions,
-                        isPast = false
-                    )
-                }
-
-                1 -> {
-                    OwnedTravelProposalListColumn(
-                        tripVm,
-                        pastProposals,
-                        Modifier
-                            .fillMaxHeight()
-                            .padding(horizontal = 15.dp),
-                        navActions,
-                        isPast = true
-                    )
+                /* ----- list content ----- */
+                when (tabIndex) {
+                    0 -> {
+                        OwnedTravelProposalListColumn(
+                            tripVm,
+                            myProposals,
+                            Modifier
+                                .fillMaxHeight()
+                                .padding(horizontal = 15.dp),
+                            navActions,
+                            isPast = false
+                        )
+                    }
+                    1 -> {
+                        OwnedTravelProposalListColumn(
+                            tripVm,
+                            pastProposals,
+                            Modifier
+                                .fillMaxHeight()
+                                .padding(horizontal = 15.dp),
+                            navActions,
+                            isPast = true
+                        )
+                    }
                 }
             }
         }
