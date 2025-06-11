@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserToSave(
-    var id: Int,
     var uid: String, // Firebase UID used for Google Authentication
     var name: String,
     var surname: String,

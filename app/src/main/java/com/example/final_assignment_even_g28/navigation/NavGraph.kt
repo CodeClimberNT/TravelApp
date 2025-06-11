@@ -116,7 +116,6 @@ fun NavGraph(
 
         composable(Destinations.USER_REVIEW_PAGE_ROUTE) {
             MyUserReviewsList(
-                viewModel = reviewVm,
                 navActions = navActions,
                 bottomBarItem = BottomBarItem.Profile,
                 snackBarHostState = snackbarHostState,
@@ -137,7 +136,6 @@ fun NavGraph(
         }
         composable(Destinations.EDIT_PROFILE_ROUTE) {
             EditUserProfileInfo(
-                viewModel = userVm,
                 onBackClick = {
                     userVm.handleBackNavigation()
                     navActions.navigateToUserMainPage()

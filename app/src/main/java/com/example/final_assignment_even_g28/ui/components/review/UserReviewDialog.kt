@@ -281,8 +281,8 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, o
                             /*todo() change reviewer ID*/
                                     userReviewVm.writeReview(
                                         review = UserReview(
-                                        reviewedUserId = user.id,
-                                        reviewerId = 1,
+                                        reviewedUserUID = user.uid,
+                                        reviewerUID = "JkXtaeEEmsb0m459W2f2rTRZBpB2",
                                         title = textTitle.value,
                                         rating = reviewValue,
                                         description = textState.value,

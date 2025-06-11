@@ -26,21 +26,19 @@ class UserProfileModel() {
 
     init {
         // Initialize with mock data
-        _userProfiles.value = listOf(
-            UserProfile(1, "Johnny Stecchino", ProfilePictureData.Monogram("JD")),
-            UserProfile(2, "JaneS", ProfilePictureData.Monogram("JS")),
-            UserProfile(3, "Frank", ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)),
-            UserProfile(4, "Ginger", ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)),
-            UserProfile(5, "Bobby", ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)),
-            UserProfile(6, "Sammy", ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)),
-            UserProfile(7, "Donal", ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)),
-            UserProfile(
-                8,
-                "Z38KEZr6UbbGsITGtcAUZY5yUlu2",
-                "Test Google",
-                ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
-            ),
-        )
+        Collections.users.get().addOnSuccessListener { querySnapshot ->
+            val userList = mutableListOf<UserProfile>()
+            for(document in querySnapshot){
+                val user = document.toObject(UserProfile::class.java)
+                userList.add(user)
+            }
+            _userProfiles.value = userList
+
+            Log.d("User Profile","Load correctly ${userList.size} users")
+
+        }.addOnFailureListener { e ->
+            Log.e("User Profile","Error retrieving the users: $e")
+        }
     }
 
     fun login(email: String, password: String){
@@ -109,7 +107,6 @@ class UserProfileModel() {
                             .addOnSuccessListener { query ->
                                 val userCount = query.size()
                                 val savingUser = UserToSave(
-                                    id = userCount + 1,
                                     uid = user.uid,
                                     name = userToSign.name,
                                     surname = userToSign.surname,
@@ -174,24 +171,28 @@ class UserProfileModel() {
 
     }
 
-    fun getUserById(userId: Int) {
-        _selectedUserProfile.value = _userProfiles.value.find { it.id == userId }
+    fun getUserByUId(userId: String) {
+        _selectedUserProfile.value = _userProfiles.value.find { it.uid == userId }
     }
 
     fun getUserByUid(uid: String): UserProfile? {
         return _allUsers.value.firstOrNull { it.uid == uid }
     }
 
-    fun getNicknameByUid(userId: String): String? {
+    fun getNicknameByUID(userId: String): String? {
         return _userProfiles.value.firstOrNull { it.uid == userId }?.nickName
     }
-    fun getNicknameById(userId: Int?): String? {
-        return _userProfiles.value.firstOrNull { it.id == userId }?.nickName
+    fun getNicknameById(userId: String?): String? {
+        return _userProfiles.value.firstOrNull { it.uid == userId }?.nickName
+    }
+
+    fun getNameByUID(userUID: String): String{
+        return _userProfiles.value.firstOrNull(){ it.uid == userUID }?.name ?: "Unknow"
     }
 
     fun updateUserProfile(updatedProfile: UserProfile) {
         _userProfiles.value =
-            _userProfiles.value.map { if (it.id == updatedProfile.id) updatedProfile else it }
+            _userProfiles.value.map { if (it.uid == updatedProfile.uid) updatedProfile else it }
         _selectedUserProfile.value = updatedProfile
     }
 }

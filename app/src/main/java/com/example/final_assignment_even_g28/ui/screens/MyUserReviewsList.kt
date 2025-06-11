@@ -29,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.UserReview
+import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
@@ -49,22 +51,28 @@ import com.example.final_assignment_even_g28.ui.components.review.DisplayReviewI
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
-//OptIn(ExperimentalMaterial3Api::class)
+
+
+//account1 uid: gnAtiJ2STlaIu0i7l7DN6QpZCKq2
+//account 5 uid: JkXtaeEEmsb0m459W2f2rTRZBpB2
+
+//@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyUserReviewsList(
-    viewModel: UserReviewViewModel,
+    userReviewViewModel: UserReviewViewModel = viewModel(factory = AppFactory),
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory),
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-
     var tabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Made to you", "Made by you")
+    val profile = userProfileViewModel.loggedUser.collectAsState()
 
-    viewModel.getReviews()
+    userReviewViewModel.getReviews(profile.value.uid)
 
-    var reviewsMadeToMe = viewModel.othersReview
-    var reviewsMadeByMe = viewModel.myReviews
+    var reviewsMadeToMe = userReviewViewModel.othersReview.collectAsState()
+    var reviewsMadeByMe = userReviewViewModel.myReviews.collectAsState()
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -108,8 +116,8 @@ fun MyUserReviewsList(
             }
 
             when (tabIndex) {
-                0 -> ReviewsList(reviewsMadeToMe.value!!)
-                else -> ReviewsList(reviewsMadeByMe.value!!, displayReviewed = true)
+                0 -> ReviewsList(reviewsMadeToMe.value)
+                else -> ReviewsList(reviewsMadeByMe.value, displayReviewed = true)
             }
         }
     }
@@ -178,12 +186,12 @@ fun UserReviewCard(
         if (review.reviewerName.isNotEmpty())
             nickname = review.reviewerName
         else
-            nickname = userVm.getNicknameById(review.reviewerId) ?: "Unknown User"
+            nickname = review.reviewedName
     } else {
         if (review.reviewedName.isNotEmpty())
             nickname = review.reviewedName
         else
-            nickname = userVm.getNicknameById(review.reviewedUserId) ?: "Unknown User"
+            nickname = review.reviewerName
     }
 
     Card(

@@ -54,9 +54,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
 
-    fun getUserById(userId: Int) = model.getUserById(userId)
-    fun getUserByUid(uid: String) = model.getUserByUid(uid)
-    fun getNicknameById(userId: Int): String? = model.getNicknameById(userId)
+    fun getUserByUID(uid: String) = model.getUserByUid(uid)
+    fun getNicknameById(userId: Int): String? = model.getNicknameById(userId.toString())
+    fun getNicknameByUID(userUID: String): String? = model.getNicknameByUID(userUID)
+
     fun updateUserProfile(updatedProfile: UserProfile) = model.updateUserProfile(updatedProfile)
 
     var editingProfile: MutableState<UserProfile> = mutableStateOf<UserProfile>(UserProfile())
@@ -115,7 +116,6 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
             } else {
                 isEditing = false
                 val savingUser = UserToSave(
-                    id = draft.id,
                     uid = draft.uid,
                     name = draft.name,
                     surname = draft.surname,
