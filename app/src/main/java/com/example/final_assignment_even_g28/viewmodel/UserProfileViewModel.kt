@@ -37,6 +37,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     private var _userProfile by mutableStateOf(UserProfile())
     val userProfile: UserProfile get() = _userProfile
 
+    val isLoading: StateFlow<Boolean> = model.isSigningIn
+
     val selectedUserProfile: StateFlow<UserProfile?> = model.selectedUserProfile
 
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
@@ -76,7 +78,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun signUpWithGoogle(context: Context){
-        model.signUpWithGoogle(context)
+        viewModelScope.launch {
+            model.signUpWithGoogle(context)
+        }
     }
 
     fun deleteAccount(){
@@ -166,7 +170,7 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
 
 
     private fun getInitials(): String {
-        return loggedUser.value.name[0].toString() + loggedUser.value.surname[0].toString()
+        return loggedUser.value.name[0].toString() + { if (loggedUser.value.surname[0].toString().isNotEmpty())loggedUser.value.surname[0].toString() }
     }
 
     fun getProfilePicture(): ProfilePictureData {

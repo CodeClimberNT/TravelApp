@@ -1,21 +1,32 @@
 package com.example.final_assignment_even_g28.model
 
+import android.app.Activity
 import android.content.Context
+import android.util.Base64
 import android.util.Log
 import androidx.core.net.toUri
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.google.android.gms.tasks.Tasks
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.security.SecureRandom
 import java.util.UUID
 
 
@@ -33,6 +44,9 @@ class UserProfileModel() {
     private val _selectedUserProfile =
         MutableStateFlow<UserProfile?>(UserProfile(uid = "11", name = "Nick"))
     val selectedUserProfile: StateFlow<UserProfile?> = _selectedUserProfile
+
+    private val _isSigningIn = MutableStateFlow(false)
+    val isSigningIn: StateFlow<Boolean> = _isSigningIn.asStateFlow()
 
     init {
         // Initialize with mock data
@@ -116,8 +130,97 @@ class UserProfileModel() {
         _loggedUser.value = UserProfile()
     }
 
-    fun signUpWithGoogle(context: Context){
 
+    suspend fun signUpWithGoogle(context: Context) {
+        val activity = context as? Activity ?: return
+        val auth = Collections.auth
+        _isSigningIn.value = true
+
+        try {
+                Log.d("Sign Up", "Start try")
+                val credManager = CredentialManager.create(activity)
+
+                val googleOption =
+                    GetSignInWithGoogleOption.Builder(activity.getString(R.string.default_web_client_id))
+                        .setNonce(generateNonce())
+                        .build()
+                Log.d("Sign Up", "After Option")
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleOption)
+                    .build()
+                Log.d("Sign Up", "After request")
+
+                val result = credManager.getCredential(activity, request)
+                Log.d("Sign Up", "After Result")
+
+                val credential = result.credential
+                Log.d("Sign Up", "After Credential")
+
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    val firebaseCred =
+                        GoogleAuthProvider.getCredential(tokenCredential.idToken, null)
+                    auth.signInWithCredential(firebaseCred).addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            //Firebase user
+                            val user = auth.currentUser
+
+                            if(user!=null){
+                                Collections.users.document(user.uid).get()
+                                    .addOnSuccessListener { documentSnapshot ->
+                                        val userProfile = documentSnapshot.toObject(UserProfile::class.java)
+                                        Log.d("Login with Google", "User: $userProfile")
+
+                                        if (userProfile!= null){
+                                            loadUser(userProfile)
+                                        }else{
+                                            Collections.users.document(user.uid).set(
+                                                UserProfile(uid = user.uid,
+                                                            email = user.email.toString(),
+                                                            name = user.displayName.toString(),
+                                                            surname = "",
+                                                            rating = 0.0f,
+                                                            fullName = "",
+                                                            nickName = "",
+                                                            typeOfExperiences = emptyList(),
+                                                             mostDesiredDestination = "",
+                                                            phoneNumber = "",
+                                                            bio = "",
+                                                            badge = "",
+                                                            currentLevel = 0
+                                                )
+                                            )
+                                            loadUserByUID(user.uid)
+                                        }
+                                        Log.d("Login with Google", "User was registered: ${user.email}")
+                                    }.addOnFailureListener {
+                                        Log.e("Login with Google", "it was not possible to make the sign in")
+                                    }
+                            } else {
+                                Log.e("Login", "Authentication failed: ${task.exception?.message}")
+                            }
+                        }
+                    }
+                } else {
+                    Log.e(
+                        "Sign Up",
+                        "Unexpected credential type ${credential::class.java.simpleName}"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("Sign Up", "Google sign‑in failed: ${e.message}", e)
+            } finally {
+                _isSigningIn.value = false
+            }
+    }
+
+    private fun generateNonce(): String {
+        val bytes = ByteArray(16)
+        SecureRandom().nextBytes(bytes)
+        return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 
     fun signUp(userToSign: UserProfile, password: String){

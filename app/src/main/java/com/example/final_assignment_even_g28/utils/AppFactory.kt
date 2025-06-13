@@ -9,7 +9,6 @@ import com.example.final_assignment_even_g28.model.UserReviewModel
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
-import com.example.final_assignment_even_g28.viewmodel.auth.SignInViewModel
 
 object AppFactory : ViewModelProvider.Factory {
 
@@ -25,9 +24,6 @@ object AppFactory : ViewModelProvider.Factory {
 
             modelClass.isAssignableFrom(TravelProposalViewModel::class.java) ->
                 TravelProposalViewModel(travelProposalModel, userProfileModel) as T
-
-            modelClass.isAssignableFrom(SignInViewModel::class.java) ->
-                SignInViewModel() as T
 
             modelClass.isAssignableFrom(UserReviewViewModel::class.java) ->
                 UserReviewViewModel(reviewModel) as T
