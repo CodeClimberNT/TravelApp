@@ -79,6 +79,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         model.signUpWithGoogle(context)
     }
 
+    fun deleteAccount(){
+        model.deleteAccount()
+    }
+
     fun startEditing() {
         if (isEditing) {
             return
