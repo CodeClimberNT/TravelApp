@@ -3,6 +3,7 @@ package com.example.final_assignment_even_g28.ui.screens
 import android.Manifest
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.net.Uri
+import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -386,6 +387,7 @@ fun GenerateEditableFields(
                 onDateSelected = {
                     if (it != null) {
                         viewModel.editingProfile.value.dateOfBirth = Timestamp(it / 1000, 0)
+                        Log.d("Date Selector","Date selected: ${Timestamp(it / 1000, 0)}")
                     }
                 },
                 onDismiss = { selectDate = false },

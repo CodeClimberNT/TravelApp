@@ -12,7 +12,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.R
-import com.example.final_assignment_even_g28.viewmodel.auth.SignInViewModel
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.ui.components.sign_in.LogInForm
 import com.example.final_assignment_even_g28.ui.components.sign_in.RegistrationForm
@@ -21,28 +20,13 @@ import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 @Composable
 fun SignInScreen(navActions: Navigation,
-                 singInVM: SignInViewModel = viewModel(factory = AppFactory),
                  userVM: UserProfileViewModel = viewModel(factory = AppFactory),
                  ) {
     val context = LocalContext.current
-    val loading by singInVM.isSigningIn.collectAsState()
-    val success by singInVM.success.collectAsState()
-    val firebaseUser by singInVM.firebaseUser.collectAsState()
+    var loading = userVM.isLoading.collectAsState()
 
     var showRegisterModule by remember{ mutableStateOf(false)}
     var showLogin by remember{ mutableStateOf(false)}
-
-    LaunchedEffect(success) {
-        /*
-         if (success) {
-            if(userVM.setCurrentUser(firebaseUser!!.uid, firebaseUser!!.displayName!!, firebaseUser!!.email!!))
-                navActions.navigateToTravelList()
-            else
-                navActions.navigateToRegistrationForm()
-        }
-        * */
-
-    }
 
     Box(Modifier.fillMaxSize()) {
         Column(
@@ -58,10 +42,10 @@ fun SignInScreen(navActions: Navigation,
             )
             Text("Please login to continue", style = MaterialTheme.typography.bodyMedium)
 
-            if(loading)
+            if(loading.value)
                 CircularProgressIndicator()
             else{
-                GoogleSignInButton { singInVM.signIn(context) }
+                GoogleSignInButton { userVM.signUpWithGoogle(context) }
                 Button(onClick = { showRegisterModule = true }, modifier = Modifier
                     .width(240.dp)
                     .height(48.dp)) {

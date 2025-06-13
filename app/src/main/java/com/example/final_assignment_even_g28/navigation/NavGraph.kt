@@ -32,14 +32,12 @@ import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
-import com.example.final_assignment_even_g28.viewmodel.auth.SignInViewModel
 
 
 @Composable
 fun NavGraph(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
-    singInVm: SignInViewModel = viewModel(factory = AppFactory),
     reviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
     context: Context,
     navController: NavHostController = rememberNavController(),
