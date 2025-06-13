@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +35,8 @@ import com.google.android.material.textview.MaterialTextView
 fun LogInForm(navActions: Navigation, model: UserProfileViewModel = viewModel(factory = AppFactory), onDismissRequest: () -> Unit){
     var tempMail by remember { mutableStateOf("") }
     var tempPassword by remember { mutableStateOf("") }
+    var isMailEmpty by remember { mutableStateOf(false) }
+    var isPasswordEmpty by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismissRequest
@@ -56,19 +59,28 @@ fun LogInForm(navActions: Navigation, model: UserProfileViewModel = viewModel(fa
                     onValueChange = { tempMail = it },
                     label = { Text("Email") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = isMailEmpty,
+                    supportingText = { if (isMailEmpty)  Text(text = "Email Cannot be Empty", color = MaterialTheme.colorScheme.error) }
                 )
                 OutlinedTextField(
                     value = tempPassword,
                     onValueChange = { tempPassword = it },
                     label = { Text("Password") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = isPasswordEmpty,
+                    supportingText = { if (isPasswordEmpty)  Text(text = "Password Cannot be Empty", color = MaterialTheme.colorScheme.error) },
+                    visualTransformation = PasswordVisualTransformation(),
                 )
                 Spacer(Modifier.height(12.dp))
                 Button(onClick = {
-                    model.login(tempMail, tempPassword)
-                    navActions.navigateToUserMainPage()
+                    if (tempMail.isEmpty()){ isMailEmpty = true }
+                    if (tempPassword.isEmpty()){ isPasswordEmpty = true }
+                    if (isMailEmpty == false && isPasswordEmpty == false){
+                        model.login(tempMail, tempPassword)
+                        navActions.navigateToUserMainPage()
+                    }
                 }, modifier = Modifier
                     .width(240.dp)
                     .height(48.dp)) {

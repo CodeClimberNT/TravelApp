@@ -3,6 +3,8 @@ package com.example.final_assignment_even_g28.data_class
 import com.google.firebase.Timestamp
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import android.net.Uri
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 
 @Serializable
 data class UserToSave(
@@ -19,6 +21,7 @@ data class UserToSave(
     var badge: String,
     var currentLevel: Int,
     var rating: Float,
+    var image: ProfilePictureData
 ){/*
     constructor(id: Int, uid: String, name: String, surname: String, typeOfExperiences: List<String>,
                 mostDesiredDestination: String, phoneNumber: String, email: String, dateOfBirth: Timestamp, pastExperiences: List<String>,

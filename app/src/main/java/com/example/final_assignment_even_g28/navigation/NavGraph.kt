@@ -1,5 +1,6 @@
 package com.example.final_assignment_even_g28.navigation
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -39,6 +41,7 @@ fun NavGraph(
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     singInVm: SignInViewModel = viewModel(factory = AppFactory),
     reviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
+    context: Context,
     navController: NavHostController = rememberNavController(),
     navActions: Navigation = remember(navController) {
         Navigation(navController)
@@ -137,7 +140,7 @@ fun NavGraph(
         composable(Destinations.EDIT_PROFILE_ROUTE) {
             EditUserProfileInfo(
                 onBackClick = {
-                    userVm.handleBackNavigation()
+                    userVm.handleBackNavigation(context)
                     navActions.navigateToUserMainPage()
                 }
             )

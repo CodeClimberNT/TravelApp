@@ -1,13 +1,23 @@
 package com.example.final_assignment_even_g28.model
 
+import android.content.Context
 import android.util.Log
+import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
+import com.google.android.gms.tasks.Tasks
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
+
 
 class UserProfileModel() {
     private var _allUsers = MutableStateFlow<List<UserProfile>>(emptyList())
@@ -72,6 +82,19 @@ class UserProfileModel() {
             }
     }
 
+    fun deleteAccount(){
+        val auth = Collections.auth
+        val user = auth.currentUser
+
+
+        if(user != null){
+            user.delete()
+            Log.d("User Model","User eliminated")
+        }else{
+            Log.e("User Model","Impossible to eliminate the user")
+        }
+    }
+
     fun loadUserByUID(uid: String){
         Collections.users.document(uid).get()
             .addOnSuccessListener { documentSnapshot ->
@@ -120,6 +143,7 @@ class UserProfileModel() {
                                     badge = userToSign.badge,
                                     currentLevel = 1,
                                     rating = 0.0f,
+                                    image = userToSign.profilePicture
                                 )
                                 Collections.users.document(user.uid).set(savingUser)
                                     .addOnSuccessListener {
@@ -139,15 +163,33 @@ class UserProfileModel() {
             }
     }
 
-    fun editProfile(userToEdit: UserToSave){
-        Collections.users.document(userToEdit.uid)
-            .set(userToEdit).addOnSuccessListener {
-                Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
-                loadUserByUID(userToEdit.uid)
-            }.addOnFailureListener { e ->
-                Log.e("Edit User", "Error editing user: $e")
+    suspend fun editProfile(userToEdit: UserProfile, context: Context) {
+        try {
+            withContext(Dispatchers.IO) {
+                try {
+                    val documentRef = Collections.users.document(userToEdit.uid)
+                    Tasks.await(documentRef.set(userToEdit))
+
+                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
+
+                    when (userToEdit.isProfileImage) {
+                        "Monogram" -> {}
+                        "Icon" -> {}
+                        "Uri" -> {uploadUserProfileImage(userToEdit.uid, (userToEdit.profilePicture as ProfilePictureData.UriData).uri, context)}
+                    }
+
+                    loadUserByUID(userToEdit.uid)
+
+                } catch (e: Exception) {
+                    Log.e("Edit User", "Error editing user: ${e.message}")
+                }
             }
+        } catch (e: Exception) {
+            Log.e("Edit User", "Error in coroutine: ${e.message}")
+        }
     }
+
+
     fun getAllUsers() {
         Collections.users.get()
             .addOnSuccessListener { collections ->
@@ -161,6 +203,7 @@ class UserProfileModel() {
 
             }
     }
+
       fun getUserById(id: String): UserProfile {
         //get user by id from the list of all users
         return _allUsers.value.find { it.uid == id } ?: UserProfile()
@@ -169,10 +212,6 @@ class UserProfileModel() {
     fun getAvailableIcons(): List<IconType> {
         return IconType.toList()
 
-    }
-
-    fun getUserByUId(userId: String) {
-        _selectedUserProfile.value = _userProfiles.value.find { it.uid == userId }
     }
 
     fun getUserByUid(uid: String): UserProfile? {
@@ -194,5 +233,51 @@ class UserProfileModel() {
         _userProfiles.value =
             _userProfiles.value.map { if (it.uid == updatedProfile.uid) updatedProfile else it }
         _selectedUserProfile.value = updatedProfile
+
+    }
+
+    suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
+        return try {
+            val fileName =
+                "${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(8)}.jpg"
+            val filePath = "$userUID/$fileName"
+
+            Log.d("UserProfileModel", "Uploading image to path: $filePath")
+
+            val inputStream = context.contentResolver.openInputStream(imageUri.toUri())
+            val bytes = inputStream?.readBytes() ?: throw Exception("Failed to read image")
+            inputStream.close()
+
+            // Upload to Supabase
+            Collections.userImagesBucket.upload(filePath, bytes)
+
+            val publicUrl = Collections.userImagesBucket.publicUrl(filePath)
+
+            Log.d("UserProfileModel", "Image uploaded successfully to \"$publicUrl\"")
+            Result.success(publicUrl)
+        } catch (e: Exception) {
+            Log.e("UserProfileModel", "Upload failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteUserProfileImage(imageUrl: String): Result<Unit> {
+        return try {
+            val filePath = extractUserProfileFilePathFromUrl(imageUrl)
+            Log.d("ImageStorageModel", "Deleting image at path: $filePath")
+
+            Collections.userImagesBucket.delete(filePath)
+
+            Log.d("ImageStorageModel", "Image deleted successfully")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Delete failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private fun extractUserProfileFilePathFromUrl(url: String): String {
+        // Extract file path from Supabase public URL
+        return url.substringAfter(Collections.USER_IMAGES_BUCKET_PREFIX)
     }
 }
