@@ -75,6 +75,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         model.signUp(userToSign, password)
     }
 
+    fun signUpWithGoogle(context: Context){
+        model.signUpWithGoogle(context)
+    }
+
     fun startEditing() {
         if (isEditing) {
             return
@@ -158,12 +162,7 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
 
 
     private fun getInitials(): String {
-        val parts: List<String> = (loggedUser.value.name + loggedUser.value.surname).trim().split(" ")
-
-        return when (parts.size) {
-            0, 1 -> parts.firstOrNull()?.firstOrNull()?.toString() ?: ""
-            else -> "${parts.first().first()}${parts.last().first()}"
-        }
+        return loggedUser.value.name[0].toString() + loggedUser.value.surname[0].toString()
     }
 
     fun getProfilePicture(): ProfilePictureData {

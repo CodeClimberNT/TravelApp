@@ -116,7 +116,10 @@ class UserProfileModel() {
         _loggedUser.value = UserProfile()
     }
 
-    //TODO() Remove the user id
+    fun signUpWithGoogle(context: Context){
+
+    }
+
     fun signUp(userToSign: UserProfile, password: String){
         val auth = Collections.auth
 

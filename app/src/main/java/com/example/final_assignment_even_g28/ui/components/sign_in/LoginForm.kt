@@ -29,7 +29,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import com.google.android.material.textview.MaterialTextView
 
 @Composable
 fun LogInForm(navActions: Navigation, model: UserProfileViewModel = viewModel(factory = AppFactory), onDismissRequest: () -> Unit){

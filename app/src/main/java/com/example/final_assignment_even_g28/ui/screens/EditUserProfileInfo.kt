@@ -74,6 +74,7 @@ import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.utils.AppFactory
+import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -370,16 +371,15 @@ fun GenerateEditableFields(
 
         ActivityList()
 
-        /*
         OutlinedTextField(
+            value = dateBirth.toDateFormat(),
             onValueChange = { },
-            value = dateBirth,
-            label = "Date Of Birth",
-            enabled = false,
-            modifier = Modifier,
-            trailingIcon = IconButton(onClick = { selectDate = true }) { Icon(Icons.Default.CalendarMonth, contentDescription = "Open Date Picker") }
+            label = { Text("Date of Birth") },
+            trailingIcon = {
+                IconButton(onClick = { selectDate = true }) { Icon(Icons.Default.CalendarMonth, contentDescription = "Open Date Picker") }
+            },
         )
-        */
+
 
         if (selectDate){
             DateEditPickerModal(
