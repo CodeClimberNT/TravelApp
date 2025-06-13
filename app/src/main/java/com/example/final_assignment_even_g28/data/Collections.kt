@@ -30,9 +30,12 @@ object Collections {
     private const val C_NOTIFICATIONS = "notifications"
 
     private const val TRAVEL_IMAGES_BUCKET = "travel-images"
+    private const val USER_IMAGES_BUCKET = "user-images"
+
 
     // Format: https://project.supabase.co/storage/v1/object/public/travel-images/userId/tripId/filename
     const val TRAVEL_IMAGES_BUCKET_PREFIX = "/storage/v1/object/public/travel-images/"
+    const val USER_IMAGES_BUCKET_PREFIX = "/storage/v1/object/public/user-images/"
 
     private val db: FirebaseFirestore
         get() = Firebase.firestore
@@ -65,6 +68,7 @@ object Collections {
 
     val travelProposals = db.collection(C_TRAVEL_PROPOSALS)
     val travelImagesBucket = storage.from(TRAVEL_IMAGES_BUCKET)
+    val userImagesBucket = storage.from(USER_IMAGES_BUCKET)
 
     val notifications = db.collection(C_NOTIFICATIONS)
 

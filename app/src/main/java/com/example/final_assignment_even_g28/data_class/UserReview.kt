@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserReview(
-    val reviewedUserId: Int = 0,
-    val reviewerId: Int = 0,
+    val reviewedUserUID: String = "",
+    val reviewerUID: String = "",
     val reviewerName: String = "",
     val reviewedName: String = "",
     val title: String = "",

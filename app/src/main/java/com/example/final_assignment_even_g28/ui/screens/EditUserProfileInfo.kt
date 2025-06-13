@@ -3,10 +3,15 @@ package com.example.final_assignment_even_g28.ui.screens
 import android.Manifest
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.net.Uri
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,22 +29,30 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,7 +64,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
@@ -59,10 +74,14 @@ import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.utils.AppFactory
+import com.example.final_assignment_even_g28.utils.toDateFormat
+import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.firebase.Timestamp
+import kotlinx.datetime.LocalDate
 
 
 enum class CameraPopupState {
@@ -212,7 +231,7 @@ fun EditUserProfileInfo(
 
                         Button(onClick = {
                             if (viewModel.validateFields()) {
-                                viewModel.saveAndExitEditing()
+                                viewModel.saveAndExitEditing(ctx)
                                 onBackClick()
                             }
                         }) {
@@ -272,7 +291,7 @@ fun EditUserProfileInfo(
 
                             Button(onClick = {
                                 if (viewModel.validateFields()) {
-                                    viewModel.saveAndExitEditing()
+                                    viewModel.saveAndExitEditing(ctx)
                                     onBackClick()
                                 }
                             }) {
@@ -325,13 +344,18 @@ fun EditUserProfileInfo(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GenerateEditableFields(
-    fields: List<EditableFieldDefinition>
+    fields: List<EditableFieldDefinition>,
+    viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
+    var selectDate by remember {mutableStateOf(false)}
+    var dateBirth by remember {mutableStateOf(viewModel.editingProfile.value.dateOfBirth)}
+    val scrollState = rememberScrollState()
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()//.verticalScroll(scrollState),
     ) {
         fields.forEach {
             EditableTextField(
@@ -344,9 +368,79 @@ fun GenerateEditableFields(
                 enabled = it.editable
             )
         }
+
+        ActivityList()
+
+        OutlinedTextField(
+            value = dateBirth.toDateFormat(),
+            onValueChange = { },
+            label = { Text("Date of Birth") },
+            trailingIcon = {
+                IconButton(onClick = { selectDate = true }) { Icon(Icons.Default.CalendarMonth, contentDescription = "Open Date Picker") }
+            },
+        )
+
+
+        if (selectDate){
+            DateEditPickerModal(
+                onDateSelected = {
+                    if (it != null) {
+                        viewModel.editingProfile.value.dateOfBirth = Timestamp(it / 1000, 0)
+                    }
+                },
+                onDismiss = { selectDate = false },
+            )
+        }
     }
 }
 
+@Composable
+fun ActivityList(tripVm: TravelProposalViewModel = viewModel(factory = AppFactory)){
+    Text(
+        text = "Activities preferences",
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(12.dp)
+    ) {
+
+        tripVm.getAllActivityTags().forEach { activity ->
+            FilterChip(
+                selected = tripVm.filters.activities.contains(activity.first) == true,
+                onClick = {},
+                label = { Text(activity.first.value) })
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateEditPickerModal(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val datePickerState = rememberDatePickerState()
+
+    DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
+        TextButton(onClick = {
+            onDateSelected(datePickerState.selectedDateMillis)
+            onDismiss()
+        }) {
+            Text("OK")
+        }
+    }, dismissButton = {
+        TextButton(onClick = onDismiss) {
+            Text("Cancel")
+        }
+    }) {
+        DatePicker(state = datePickerState)
+    }
+}
 
 @Composable
 fun CameraPopup(

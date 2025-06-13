@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.final_assignment_even_g28.model.TravelProposalModel
 import com.example.final_assignment_even_g28.model.UserProfileModel
+import com.example.final_assignment_even_g28.model.UserReviewModel
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
@@ -14,6 +15,7 @@ object AppFactory : ViewModelProvider.Factory {
 
     val travelProposalModel = TravelProposalModel()
     val userProfileModel = UserProfileModel()
+    val reviewModel = UserReviewModel()
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
@@ -28,7 +30,8 @@ object AppFactory : ViewModelProvider.Factory {
                 SignInViewModel() as T
 
             modelClass.isAssignableFrom(UserReviewViewModel::class.java) ->
-                UserReviewViewModel() as T
+                UserReviewViewModel(reviewModel) as T
+
 
             else -> throw IllegalArgumentException("Unknown ViewModel class")
         }

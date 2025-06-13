@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.navigation.NavGraph
 import com.example.final_assignment_even_g28.utils.AppFactory
@@ -22,7 +23,9 @@ class MainActivity : ComponentActivity() {
 //                viewModel.deleteAllProposals()
 //                deleteAllTravels = true
 //            }
-            NavGraph()
+            NavGraph(
+                context = LocalContext.current
+            )
         }
     }
 }
