@@ -1,6 +1,7 @@
 package com.example.final_assignment_even_g28
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -72,7 +75,7 @@ fun ProfileScreen(
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-    val profile by viewModel.loggedUser.collectAsState()
+    val profile by viewModel.editingProfile.collectAsState()
 
         Scaffold(
             snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -88,6 +91,7 @@ fun ProfileScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Log.d("INIT","User inside Profile Screen: $profile")
                 if (profile.uid.isEmpty()){
                     SignInScreen(navActions)
                 }else{

@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import androidx.navigation.NavDestination
 import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.UserProfile
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.security.SecureRandom
+import com.google.firebase.Timestamp
 import java.util.UUID
 
 
@@ -47,6 +49,7 @@ class UserProfileModel() {
 
     private val _isSigningIn = MutableStateFlow(false)
     val isSigningIn: StateFlow<Boolean> = _isSigningIn.asStateFlow()
+
 
     init {
         // Initialize with mock data
@@ -269,29 +272,30 @@ class UserProfileModel() {
             }
     }
 
-    suspend fun editProfile(userToEdit: UserProfile, context: Context) {
-        try {
-            withContext(Dispatchers.IO) {
-                try {
-                    val documentRef = Collections.users.document(userToEdit.uid)
-                    Tasks.await(documentRef.set(userToEdit))
+    fun editProfile(userToSave: UserProfile) {
+        Log.d("Edit User","User to save pref: ${userToSave.typeOfExperiences} ")
 
-                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
-
-                    when (userToEdit.isProfileImage) {
-                        "Monogram" -> {}
-                        "Icon" -> {}
-                        "Uri" -> {uploadUserProfileImage(userToEdit.uid, (userToEdit.profilePicture as ProfilePictureData.UriData).uri, context)}
-                    }
-
-                    loadUserByUID(userToEdit.uid)
-
-                } catch (e: Exception) {
-                    Log.e("Edit User", "Error editing user: ${e.message}")
+        Collections.users.document(userToSave.uid).set(
+            UserProfile(
+                name = userToSave.name,
+                surname = userToSave.surname,
+                uid = userToSave.uid,
+                email = userToSave.email,
+                dateOfBirth = userToSave.dateOfBirth,
+                bio = userToSave.bio,
+                phoneNumber = userToSave.phoneNumber,
+                mostDesiredDestination = userToSave.mostDesiredDestination,
+                typeOfExperiences = userToSave.typeOfExperiences
+            ),
+        )
+            .addOnCompleteListener { snapshot ->
+                if (snapshot.isSuccessful){
+                    Log.d("Edit User","User with uid ${userToSave.uid} correctly edited")
+                    _loggedUser.value = userToSave
                 }
-            }
-        } catch (e: Exception) {
-            Log.e("Edit User", "Error in coroutine: ${e.message}")
+                if (snapshot.isCanceled){
+                    Log.e("Edit User","Error editing profile")
+                }
         }
     }
 
