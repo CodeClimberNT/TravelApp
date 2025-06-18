@@ -30,6 +30,8 @@ class TravelProposalModel {
     private val imageStorageModel = ImageStorageModel()
     private val userModel = UserProfileModel()
 
+    //TODO: add private member with mutableStateFlow and StateFlow
+
     fun getFilteredTravelProposals(
         filters: Filters
     ): Flow<List<TravelProposal>> = callbackFlow {

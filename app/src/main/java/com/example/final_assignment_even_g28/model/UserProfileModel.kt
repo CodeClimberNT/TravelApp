@@ -18,13 +18,10 @@ import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 import java.util.UUID
@@ -39,7 +36,6 @@ class UserProfileModel() {
 
     private val _userProfiles = MutableStateFlow<List<UserProfile>>(emptyList())
     val userProfiles: StateFlow<List<UserProfile>> = _userProfiles
-
 
     private val _selectedUserProfile =
         MutableStateFlow<UserProfile?>(UserProfile(uid = "11", name = "Nick"))
@@ -63,6 +59,8 @@ class UserProfileModel() {
         }.addOnFailureListener { e ->
             Log.e("User Profile","Error retrieving the users: $e")
         }
+
+        getAllUsers()
     }
 
     fun login(email: String, password: String){

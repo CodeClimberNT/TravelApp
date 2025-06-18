@@ -72,8 +72,8 @@ fun MyTravelProposalList(
     val tabTitles = listOf("Current Proposal", "Past Proposal")
 
     /* ------- data streams ------- */
-    val myProposals by tripVm.myTravelProposals.collectAsState()
-    val pastProposals by tripVm.pastTravelProposals.collectAsState()
+    val myProposals by tripVm.myTravelProposals.collectAsState(initial = emptyList())
+    val pastProposals by tripVm.pastTravelProposals.collectAsState(initial = emptyList())
 
     Scaffold(
         bottomBar = { CustomBottomBar(navActions, selectedItem = bottomBarItem) },

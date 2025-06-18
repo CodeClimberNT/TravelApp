@@ -1,6 +1,5 @@
 package com.example.final_assignment_even_g28
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -64,7 +63,6 @@ sealed interface ProfileEvent {
     object LogoutClicked : ProfileEvent
 }
 
-@SuppressLint("SuspiciousIndentation")
 @Composable
 fun ProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
@@ -74,33 +72,33 @@ fun ProfileScreen(
 ) {
     val profile by viewModel.loggedUser.collectAsState()
 
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackBarHostState) },
-            bottomBar = { CustomBottomBar(navActions, bottomBarItem) },
-            modifier = Modifier.fillMaxSize()
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (profile.uid.isEmpty()){
-                    SignInScreen(navActions)
-                }else{
-                    ProfileHeader(profile, navActions = navActions)
-                    Spacer(modifier = Modifier.height(40.dp))
-                    ProfileButtonList(
-                        navActions = navActions,
-                        viewModel
-                    )
-                }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+        bottomBar = { CustomBottomBar(navActions, bottomBarItem) },
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (profile.uid.isEmpty()) {
+                SignInScreen(navActions)
+            } else {
+                ProfileHeader(profile, navActions = navActions)
+                Spacer(modifier = Modifier.height(40.dp))
+                ProfileButtonList(
+                    navActions = navActions,
+                    viewModel
+                )
             }
         }
     }
+}
 
 @Composable
 fun ProfileHeader(
@@ -197,7 +195,9 @@ fun ProfileButtonList(
                             ProfileEvent.ProfileInfo -> navActions.navigateToProfile()
                             ProfileEvent.BadgesClicked -> {} //navActions.navigateToBadgesScreen()
                             ProfileEvent.ReviewsClicked -> navActions.navigateToUserReview()
-                            ProfileEvent.SettingsClicked -> {navActions.navigateToSettings()} //navActions.navigateToSettingsScreen()
+                            ProfileEvent.SettingsClicked -> {
+                                navActions.navigateToSettings()
+                            } //navActions.navigateToSettingsScreen()
                             else -> {} // Handle other events as needed
                         }
                     },

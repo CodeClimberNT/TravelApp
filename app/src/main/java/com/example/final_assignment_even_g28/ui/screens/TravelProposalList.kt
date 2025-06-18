@@ -83,17 +83,21 @@ fun TravelProposalList(
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = { CustomBottomBar(navActions, selectedItem = bottomBarItem) },
+        topBar = { },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(start = 15.dp, end = 15.dp, top = 30.dp)) {
+        Column(modifier = Modifier
+            .padding(innerPadding)
+            .padding(start = 15.dp, end = 15.dp)) {
             FilterForm(tripVm)
+            Spacer(modifier = Modifier.height(16.dp))
             if (filteredTravelProposal.isNotEmpty()) {
                 TravelProposalListColumn(
                     tripVm,
                     filteredTravelProposal,
                     Modifier
-                        .fillMaxHeight()
-                        .padding(innerPadding),
+                        .fillMaxHeight(),
+//                        .padding(innerPadding),
                     navActions
                 )
             } else {

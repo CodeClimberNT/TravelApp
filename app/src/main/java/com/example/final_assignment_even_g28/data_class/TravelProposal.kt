@@ -95,5 +95,6 @@ data class TravelProposal(
         maxParticipant = 0,
         participants = mutableListOf(),
     )
+
 }
 
