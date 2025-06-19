@@ -26,17 +26,25 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -51,6 +59,7 @@ import com.example.final_assignment_even_g28.ui.screens.SignInScreen
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
+import kotlinx.coroutines.launch
 
 
 sealed interface ProfileEvent {
@@ -63,6 +72,7 @@ sealed interface ProfileEvent {
     object LogoutClicked : ProfileEvent
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
@@ -71,6 +81,9 @@ fun ProfileScreen(
     snackBarHostState: SnackbarHostState
 ) {
     val profile by viewModel.loggedUser.collectAsState()
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBadgesSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -95,6 +108,25 @@ fun ProfileScreen(
                     navActions = navActions,
                     viewModel
                 )
+            }
+        }
+        if (showBadgesSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBadgesSheet = false
+                },
+                sheetState = sheetState
+            ) {
+                // Sheet content
+                Button(onClick = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            showBadgesSheet = false
+                        }
+                    }
+                }) {
+                    Text("Hide bottom sheet")
+                }
             }
         }
     }
@@ -166,7 +198,6 @@ fun ProfileButtonList(
     navActions: Navigation,
     viewModel: UserProfileViewModel
 ) {
-
     val actions = listOf(
         Triple("Personal Info", Icons.Outlined.Info, ProfileEvent.ProfileInfo),
         Triple("Your Badges", Icons.Outlined.BookmarkBorder, ProfileEvent.BadgesClicked),

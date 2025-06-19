@@ -3,7 +3,6 @@ package com.example.final_assignment_even_g28.data_class
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Serializable
-import java.util.Date
 
 data class ExperienceComposition(
     val adventure: Int = 0,
@@ -77,24 +76,5 @@ data class TravelProposal(
     val itinerary: List<ItineraryStop> = emptyList(),
     val maxParticipant: Int = 0,
     var participants: MutableList<Participant> = mutableListOf(),
-) {
-    constructor(
-        tripPlannerId: String = ""
-    ) : this(
-        id = "",
-        title = "",
-        images = emptyList(),
-        price = Price(0, 0),
-        description = "",
-        tripStartDate = Timestamp(Date(0)),
-        tripEndDate = Timestamp(Date(0)),
-        tripPlannerId = tripPlannerId,
-        activities = emptyList(),
-        experienceComposition = ExperienceComposition(0, 0, 0, 0),
-        itinerary = emptyList(),
-        maxParticipant = 0,
-        participants = mutableListOf(),
-    )
-
-}
+)
 

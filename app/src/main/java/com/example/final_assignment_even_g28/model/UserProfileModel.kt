@@ -187,7 +187,7 @@ class UserProfileModel() {
                                                              mostDesiredDestination = "",
                                                             phoneNumber = "",
                                                             bio = "",
-                                                            badge = "",
+                                                    badge = null,
                                                             currentLevel = 0
                                                 )
                                             )

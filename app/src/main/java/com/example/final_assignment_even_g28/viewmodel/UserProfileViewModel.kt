@@ -10,9 +10,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.BadgeIconType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.InfoFieldDefinition
 import com.example.final_assignment_even_g28.shared.validation.UserProfileError
@@ -220,7 +220,7 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
             editingProfile.value.copy(pastExperiences = listOf(newPastExperiences))
     }
 
-    fun updateBadge(newBadge: String) {
+    fun updateBadge(newBadge: BadgeIconType) {
         editingProfile.value = editingProfile.value.copy(badge = newBadge)
     }
 

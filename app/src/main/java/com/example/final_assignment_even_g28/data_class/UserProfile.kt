@@ -21,7 +21,8 @@ data class UserProfile(
     @Contextual var dateOfBirth: Timestamp = Timestamp.Companion.now(),
     var pastExperiences: List<String> = emptyList(),
     var bio: String = "",
-    var badge: String = "",
+    var badge: BadgeIconType? = null,
+    var badges: List<Badge> = LocalBadgeRepository.badges,
     var currentLevel: Int = 1,
     var rating: Float = 0.0f,
     var isProfileImage: String = "Monogram",
@@ -38,7 +39,7 @@ data class UserProfile(
         email = "",
         pastExperiences = emptyList(),
         bio = "",
-        badge = "",
+        badge = null,
         currentLevel = 1,
         rating = 0.0F,
         profilePicture = ProfilePictureData.Monogram("")
@@ -54,7 +55,7 @@ data class UserProfile(
         email = "",
         pastExperiences = emptyList(),
         bio = "",
-        badge = "",
+        badge = null,
         currentLevel = 1,
         rating = 0.0F,
         profilePicture = profilePicture
@@ -70,7 +71,7 @@ data class UserProfile(
         email = "",
         pastExperiences = emptyList(),
         bio = "",
-        badge = "",
+        badge = null,
         currentLevel = 1,
         rating = 0.0F,
         profilePicture = profilePicture
@@ -86,7 +87,7 @@ data class UserProfile(
         email = "",
         pastExperiences = emptyList(),
         bio = description,
-        badge = "",
+        badge = null,
         currentLevel = 1,
         rating = rating,
         profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
@@ -103,7 +104,7 @@ data class UserProfile(
         email = contact,
         pastExperiences = emptyList(),
         bio = "",
-        badge = "",
+        badge = null,
         currentLevel = 1,
         rating = rating,
         profilePicture = avatar
@@ -119,7 +120,7 @@ data class UserProfile(
         email = email,
         pastExperiences = emptyList(),
         bio = "",
-        badge = "",
+        badge = null,
         currentLevel = 1,
         rating = 0.0F,
         profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
