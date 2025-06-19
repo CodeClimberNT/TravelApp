@@ -28,8 +28,8 @@ import java.util.UUID
 
 
 class UserProfileModel() {
-    private var _allUsers = MutableStateFlow<List<UserProfile>>(emptyList())
-    val allUsers: StateFlow<List<UserProfile>> get() = _allUsers
+//    private var _allUsers = MutableStateFlow<List<UserProfile>>(emptyList())
+//    val allUsers: StateFlow<List<UserProfile>> get() = _allUsers
 
     private var _loggedUser = MutableStateFlow<UserProfile>(UserProfile())
     val loggedUser: StateFlow<UserProfile> get() = _loggedUser
@@ -48,22 +48,22 @@ class UserProfileModel() {
         // Initialize with mock data
         Collections.users.get().addOnSuccessListener { querySnapshot ->
             val userList = mutableListOf<UserProfile>()
-            for(document in querySnapshot){
+            for (document in querySnapshot) {
                 val user = document.toObject(UserProfile::class.java)
                 userList.add(user)
             }
             _userProfiles.value = userList
 
-            Log.d("User Profile","Load correctly ${userList.size} users")
+            Log.d("User Profile", "Load correctly ${userList.size} users")
 
         }.addOnFailureListener { e ->
-            Log.e("User Profile","Error retrieving the users: $e")
+            Log.e("User Profile", "Error retrieving the users: $e")
         }
 
-        getAllUsers()
+//        getAllUsers()
     }
 
-    fun login(email: String, password: String){
+    fun login(email: String, password: String) {
         val auth = Collections.auth
 
         //login con username and password
@@ -73,16 +73,19 @@ class UserProfileModel() {
                     //Firebase user
                     val user = auth.currentUser
 
-                    if(user!=null){
+                    if (user != null) {
                         Collections.users.document(user.uid).get()
                             .addOnSuccessListener { documentSnapshot ->
                                 val userProfile = documentSnapshot.toObject(UserProfile::class.java)
-                                if (userProfile!= null){
+                                if (userProfile != null) {
                                     loadUser(userProfile)
                                 }
                             }.addOnFailureListener {
                                 //an user with that UID does not exists
-                                Log.e("Login","Impossible to retrieve a user with this UID: ${user.uid}")
+                                Log.e(
+                                    "Login",
+                                    "Impossible to retrieve a user with this UID: ${user.uid}"
+                                )
                             }
                         Log.d("Login", "User logged in successfully: ${user.email}")
                     } else {
@@ -90,40 +93,41 @@ class UserProfileModel() {
                     }
                 }
             }.addOnFailureListener {
-                Log.e("Login","Impossible to login with this mail and password")
+                Log.e("Login", "Impossible to login with this mail and password")
             }
     }
 
-    fun deleteAccount(){
+    fun deleteAccount() {
         val auth = Collections.auth
         val user = auth.currentUser
 
 
-        if(user != null){
+        if (user != null) {
             user.delete()
-            Log.d("User Model","User eliminated")
-        }else{
-            Log.e("User Model","Impossible to eliminate the user")
+            Log.d("User Model", "User eliminated")
+        } else {
+            Log.e("User Model", "Impossible to eliminate the user")
         }
     }
 
-    fun loadUserByUID(uid: String){
+    fun loadUserByUID(uid: String) {
         Collections.users.document(uid).get()
             .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()){
-                    Log.d("Load User","Loading User with UID: $uid")
+                if (documentSnapshot.exists()) {
+                    Log.d("Load User", "Loading User with UID: $uid")
                     val userProfile = documentSnapshot.toObject(UserProfile::class.java)
                     _loggedUser.value = userProfile!!
                 }
             }.addOnFailureListener {
-                Log.e("Load User","Failed to load the user with UID: $uid")
+                Log.e("Load User", "Failed to load the user with UID: $uid")
             }
     }
+
     fun loadUser(user: UserProfile) {
         _loggedUser.value = user
     }
 
-    fun logOut(){
+    fun logOut() {
         Collections.auth.signOut()
         _loggedUser.value = UserProfile()
     }
@@ -135,84 +139,89 @@ class UserProfileModel() {
         _isSigningIn.value = true
 
         try {
-                Log.d("Sign Up", "Start try")
-                val credManager = CredentialManager.create(activity)
+            Log.d("Sign Up", "Start try")
+            val credManager = CredentialManager.create(activity)
 
-                val googleOption =
-                    GetSignInWithGoogleOption.Builder(activity.getString(R.string.default_web_client_id))
-                        .setNonce(generateNonce())
-                        .build()
-                Log.d("Sign Up", "After Option")
-
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleOption)
+            val googleOption =
+                GetSignInWithGoogleOption.Builder(activity.getString(R.string.default_web_client_id))
+                    .setNonce(generateNonce())
                     .build()
-                Log.d("Sign Up", "After request")
+            Log.d("Sign Up", "After Option")
 
-                val result = credManager.getCredential(activity, request)
-                Log.d("Sign Up", "After Result")
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleOption)
+                .build()
+            Log.d("Sign Up", "After request")
 
-                val credential = result.credential
-                Log.d("Sign Up", "After Credential")
+            val result = credManager.getCredential(activity, request)
+            Log.d("Sign Up", "After Result")
 
-                if (credential is CustomCredential &&
-                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-                ) {
-                    val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                    val firebaseCred =
-                        GoogleAuthProvider.getCredential(tokenCredential.idToken, null)
-                    auth.signInWithCredential(firebaseCred).addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            //Firebase user
-                            val user = auth.currentUser
+            val credential = result.credential
+            Log.d("Sign Up", "After Credential")
 
-                            if(user!=null){
-                                Collections.users.document(user.uid).get()
-                                    .addOnSuccessListener { documentSnapshot ->
-                                        val userProfile = documentSnapshot.toObject(UserProfile::class.java)
-                                        Log.d("Login with Google", "User: $userProfile")
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                val firebaseCred =
+                    GoogleAuthProvider.getCredential(tokenCredential.idToken, null)
+                auth.signInWithCredential(firebaseCred).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        //Firebase user
+                        val user = auth.currentUser
 
-                                        if (userProfile!= null){
-                                            loadUser(userProfile)
-                                        }else{
-                                            Collections.users.document(user.uid).set(
-                                                UserProfile(uid = user.uid,
-                                                            email = user.email.toString(),
-                                                            name = user.displayName.toString(),
-                                                            surname = "",
-                                                            rating = 0.0f,
-                                                            fullName = "",
-                                                            nickName = "",
-                                                            typeOfExperiences = emptyList(),
-                                                             mostDesiredDestination = "",
-                                                            phoneNumber = "",
-                                                            bio = "",
-                                                    badge = null,
-                                                            currentLevel = 0
-                                                )
+                        if (user != null) {
+                            Collections.users.document(user.uid).get()
+                                .addOnSuccessListener { documentSnapshot ->
+                                    val userProfile =
+                                        documentSnapshot.toObject(UserProfile::class.java)
+                                    Log.d("Login with Google", "User: $userProfile")
+
+                                    if (userProfile != null) {
+                                        loadUser(userProfile)
+                                    } else {
+                                        Collections.users.document(user.uid).set(
+                                            UserProfile(
+                                                uid = user.uid,
+                                                email = user.email.toString(),
+                                                name = user.displayName.toString(),
+                                                surname = "",
+                                                rating = 0.0f,
+                                                fullName = "",
+                                                nickName = "",
+                                                typeOfExperiences = emptyList(),
+                                                mostDesiredDestination = "",
+                                                phoneNumber = "",
+                                                bio = "",
+                                                badge = null,
+                                                currentLevel = 0
                                             )
-                                            loadUserByUID(user.uid)
-                                        }
-                                        Log.d("Login with Google", "User was registered: ${user.email}")
-                                    }.addOnFailureListener {
-                                        Log.e("Login with Google", "it was not possible to make the sign in")
+                                        )
+                                        loadUserByUID(user.uid)
                                     }
-                            } else {
-                                Log.e("Login", "Authentication failed: ${task.exception?.message}")
-                            }
+                                    Log.d("Login with Google", "User was registered: ${user.email}")
+                                }.addOnFailureListener {
+                                    Log.e(
+                                        "Login with Google",
+                                        "it was not possible to make the sign in"
+                                    )
+                                }
+                        } else {
+                            Log.e("Login", "Authentication failed: ${task.exception?.message}")
                         }
                     }
-                } else {
-                    Log.e(
-                        "Sign Up",
-                        "Unexpected credential type ${credential::class.java.simpleName}"
-                    )
                 }
-            } catch (e: Exception) {
-                Log.e("Sign Up", "Google sign‑in failed: ${e.message}", e)
-            } finally {
-                _isSigningIn.value = false
+            } else {
+                Log.e(
+                    "Sign Up",
+                    "Unexpected credential type ${credential::class.java.simpleName}"
+                )
             }
+        } catch (e: Exception) {
+            Log.e("Sign Up", "Google sign‑in failed: ${e.message}", e)
+        } finally {
+            _isSigningIn.value = false
+        }
     }
 
     private fun generateNonce(): String {
@@ -221,7 +230,7 @@ class UserProfileModel() {
         return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 
-    fun signUp(userToSign: UserProfile, password: String){
+    fun signUp(userToSign: UserProfile, password: String) {
         val auth = Collections.auth
 
         auth.createUserWithEmailAndPassword(userToSign.email, password)
@@ -251,7 +260,10 @@ class UserProfileModel() {
                                 )
                                 Collections.users.document(user.uid).set(savingUser)
                                     .addOnSuccessListener {
-                                        Log.d("Firestore", "User successfully added with uid: ${user.uid}")
+                                        Log.d(
+                                            "Firestore",
+                                            "User successfully added with uid: ${user.uid}"
+                                        )
                                         login(userToSign.email, password)
                                     }.addOnFailureListener { e ->
                                         Log.e("Firestore", "Error adding user to the server: $e")
@@ -263,7 +275,7 @@ class UserProfileModel() {
                     }
                 }
             }.addOnFailureListener {
-                Log.e("SignUp","Impossible to SignUp")
+                Log.e("SignUp", "Impossible to SignUp")
             }
     }
 
@@ -279,7 +291,13 @@ class UserProfileModel() {
                     when (userToEdit.isProfileImage) {
                         "Monogram" -> {}
                         "Icon" -> {}
-                        "Uri" -> {uploadUserProfileImage(userToEdit.uid, (userToEdit.profilePicture as ProfilePictureData.UriData).uri, context)}
+                        "Uri" -> {
+                            uploadUserProfileImage(
+                                userToEdit.uid,
+                                (userToEdit.profilePicture as ProfilePictureData.UriData).uri,
+                                context
+                            )
+                        }
                     }
 
                     loadUserByUID(userToEdit.uid)
@@ -294,24 +312,24 @@ class UserProfileModel() {
     }
 
 
-    fun getAllUsers() {
-        Collections.users.get()
-            .addOnSuccessListener { collections ->
-                var users = mutableListOf<UserProfile>()
-                collections.forEach { document ->
-                    val user = document.toObject(UserProfile::class.java)
-                    users.add(user)
-                }
+//    fun getAllUsers() {
+//        Collections.users.get()
+//            .addOnSuccessListener { collections ->
+//                var users = mutableListOf<UserProfile>()
+//                collections.forEach { document ->
+//                    val user = document.toObject(UserProfile::class.java)
+//                    users.add(user)
+//                }
+//
+//                _allUsers.value = users
+//
+//            }
+//    }
 
-                _allUsers.value = users
-
-            }
-    }
-
-      fun getUserById(id: String): UserProfile {
+    fun getUserById(id: String): UserProfile {
         //get user by id from the list of all users
-        return _allUsers.value.find { it.uid == id } ?: UserProfile()
-     }
+        return _userProfiles.value.find { it.uid == id } ?: UserProfile()
+    }
 
     fun getAvailableIcons(): List<IconType> {
         return IconType.toList()
@@ -319,18 +337,15 @@ class UserProfileModel() {
     }
 
     fun getUserByUid(uid: String): UserProfile? {
-        return _allUsers.value.firstOrNull { it.uid == uid }
+        return _userProfiles.value.firstOrNull { it.uid == uid }
     }
 
     fun getNicknameByUID(userId: String): String? {
         return _userProfiles.value.firstOrNull { it.uid == userId }?.nickName
     }
-    fun getNicknameById(userId: String?): String? {
-        return _userProfiles.value.firstOrNull { it.uid == userId }?.nickName
-    }
 
-    fun getNameByUID(userUID: String): String{
-        return _userProfiles.value.firstOrNull(){ it.uid == userUID }?.name ?: "Unknow"
+    fun getNameByUID(userUID: String): String {
+        return _userProfiles.value.firstOrNull() { it.uid == userUID }?.name ?: "Unknow"
     }
 
     fun updateUserProfile(updatedProfile: UserProfile) {
@@ -340,7 +355,11 @@ class UserProfileModel() {
 
     }
 
-    suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
+    suspend fun uploadUserProfileImage(
+        userUID: String,
+        imageUri: String,
+        context: Context
+    ): Result<String> {
         return try {
             val fileName =
                 "${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(8)}.jpg"

@@ -21,6 +21,8 @@ data class UserProfile(
     @Contextual var dateOfBirth: Timestamp = Timestamp.Companion.now(),
     var pastExperiences: List<String> = emptyList(),
     var bio: String = "",
+    @get:Exclude
+    @set:Exclude
     var badge: BadgeIconType? = null,
     var badges: List<Badge> = LocalBadgeRepository.badges,
     var currentLevel: Int = 1,

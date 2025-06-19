@@ -44,12 +44,8 @@ fun NavGraph(
         Navigation(navController)
     }
 ) {
-
-
     val bottomBarItemSelected = remember { mutableStateOf(BottomBarItem.Explore) }
-
     val snackbarHostState = remember { SnackbarHostState() }
-
 
     //used for notification
     LaunchedEffect(Unit) {
@@ -159,12 +155,14 @@ fun NavGraph(
                     type = NavType.BoolType
                     defaultValue = false
                 }
-            ),)
-             { backStackEntry ->
+            ),
+        )
+        { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString(DestinationsArgs.TRIP_ID_ARG)
             val fromMyTripTab = backStackEntry.arguments?.getString(DestinationsArgs.MY_TRIP_TAB)
 
-            val showParticipants = backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_PARTICIPANTS) == true
+            val showParticipants =
+                backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_PARTICIPANTS) == true
 
             val selectedItem = if (fromMyTripTab?.contains(DestinationsArgs.MY_TRIP_TAB) == true) {
                 BottomBarItem.MyTrips
@@ -198,12 +196,12 @@ fun NavGraph(
                 }
             ),
 
-        ) { backStackEntry ->
+            ) { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString(DestinationsArgs.TRIP_ID_ARG)
             val fromMyTripTab = backStackEntry.arguments?.getString(DestinationsArgs.MY_TRIP_TAB)
 
             val showReviewsTab =
-                    backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_REVIEWS_TAB) == true
+                backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_REVIEWS_TAB) == true
 
             val selectedItem = if (fromMyTripTab?.contains(DestinationsArgs.MY_TRIP_TAB) == true) {
                 BottomBarItem.MyTrips

@@ -44,7 +44,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
 
     fun getUserByUID(uid: String) = model.getUserByUid(uid)
-    fun getNicknameById(userId: Int): String? = model.getNicknameById(userId.toString())
     fun getNicknameByUID(userUID: String): String? = model.getNicknameByUID(userUID)
 
     fun updateUserProfile(updatedProfile: UserProfile) = model.updateUserProfile(updatedProfile)

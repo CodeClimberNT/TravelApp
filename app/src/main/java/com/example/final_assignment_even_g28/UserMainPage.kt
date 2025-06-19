@@ -2,7 +2,9 @@ package com.example.final_assignment_even_g28
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -15,10 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -28,15 +32,20 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,9 +56,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.UserProfile
+import com.example.final_assignment_even_g28.data_class.toImageVector
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
@@ -83,7 +97,21 @@ fun ProfileScreen(
     val profile by viewModel.loggedUser.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    var showBadgesSheet by remember { mutableStateOf(false) }
+    var showBadgesBottomSheet by remember { mutableStateOf(false) }
+
+    fun showBadges() {
+        showBadgesBottomSheet = true
+        scope.launch { sheetState.show() }
+    }
+
+    fun hideBadges() {
+        showBadgesBottomSheet = false
+        scope.launch { sheetState.hide() }.invokeOnCompletion {
+            if (!sheetState.isVisible) {
+                showBadgesBottomSheet = false
+            }
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -106,28 +134,13 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(40.dp))
                 ProfileButtonList(
                     navActions = navActions,
+                    { showBadges() },
                     viewModel
                 )
             }
         }
-        if (showBadgesSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBadgesSheet = false
-                },
-                sheetState = sheetState
-            ) {
-                // Sheet content
-                Button(onClick = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            showBadgesSheet = false
-                        }
-                    }
-                }) {
-                    Text("Hide bottom sheet")
-                }
-            }
+        if (showBadgesBottomSheet) {
+            BadgesBottomSheet(sheetState = sheetState, onDismiss = { hideBadges() })
         }
     }
 }
@@ -196,6 +209,7 @@ fun ProfileHeader(
 @Composable
 fun ProfileButtonList(
     navActions: Navigation,
+    showBadges: () -> Unit,
     viewModel: UserProfileViewModel
 ) {
     val actions = listOf(
@@ -224,7 +238,10 @@ fun ProfileButtonList(
                     onClick = {
                         when (evt) {
                             ProfileEvent.ProfileInfo -> navActions.navigateToProfile()
-                            ProfileEvent.BadgesClicked -> {} //navActions.navigateToBadgesScreen()
+                            ProfileEvent.BadgesClicked -> {
+                                showBadges()
+                            }
+
                             ProfileEvent.ReviewsClicked -> navActions.navigateToUserReview()
                             ProfileEvent.SettingsClicked -> {
                                 navActions.navigateToSettings()
@@ -299,6 +316,155 @@ private fun LevelAndChips(level: Int, interests: List<String>) {
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BadgesBottomSheet(
+    sheetState: SheetState,
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
+    onDismiss: () -> Unit
+) {
+    val user by userVm.loggedUser.collectAsState()
+    val badges = user.badges.first()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                "Your Badges",
+                style = MaterialTheme.typography.headlineMedium,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            RowBadge(badges)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RowBadge(badge: Badge) {
+    Card(
+        elevation = CardDefaults.cardElevation(6.dp), colors = CardDefaults.cardColors(
+            MaterialTheme.colorScheme.secondaryContainer
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .height(128.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.weight(1f)
+            ) {
+                Spacer(Modifier.height(8.dp))
+                Icon(
+                    imageVector = badge.icon.toImageVector(),
+                    contentDescription = badge.title,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .border(
+                            BorderStroke(2.dp, MaterialTheme.colorScheme.onSecondaryContainer),
+                            shape = CircleShape
+                        )
+                        .padding(8.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                TextButton(onClick = {}, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = badge.title,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    Text(
+                        "Info",
+                        textDecoration = TextDecoration.Underline,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(3f)
+                    .fillMaxSize()
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                // Progress bar
+                val progressPercentage =
+                    badge.progress.current.toFloat() / badge.progress.total.toFloat()
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .height(48.dp)
+                ) {
+                    LinearProgressIndicator(
+                        progress = { progressPercentage },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(72.dp)
+                            .background(
+                                MaterialTheme.colorScheme.tertiary,
+                                RoundedCornerShape(36.dp)
+                            ),
+                        color = StarColor,
+                        trackColor = MaterialTheme.colorScheme.tertiary,
+                        strokeCap = StrokeCap.Round,
+
+                        )
+                    Text(
+                        text = "${badge.title}: ${badge.progress.current}/${badge.progress.total}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {}) {
+                    Text("Select this Badge")
+                }
+            }
+        }
+    }
+}
+
+
+/*
+* fun LinearProgressIndicator(
+    progress: () -> Float,
+    modifier: Modifier = Modifier,
+    color: Color = ProgressIndicatorDefaults.linearColor,
+    trackColor: Color = ProgressIndicatorDefaults.linearTrackColor,
+    strokeCap: StrokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+    gapSize: Dp = ProgressIndicatorDefaults.LinearIndicatorTrackGapSize,
+    drawStopIndicator: DrawScope.() -> Unit = {
+        drawStopIndicator(
+            drawScope = this,
+            stopSize = ProgressIndicatorDefaults.LinearTrackStopIndicatorSize,
+            color = color,
+            strokeCap = strokeCap
+        )
+    },
+) {
+*
+* */
 
 //@Preview(showBackground = true)
 //@Composable
