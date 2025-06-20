@@ -465,32 +465,45 @@ class UserProfileModel() {
     }
 
     fun migrateNotificationSettings(userId: String) {
-        val defaultNotificationSettings = listOf(
-            NotificationPreference("lastMinute", true),
-            NotificationPreference("newApplication", true),
-            NotificationPreference("reviewReceivedForPastTrip", true),
-            NotificationPreference("statusUpdateOnPendingApplication", true),
-            NotificationPreference("checkRecommended", true)
-        )
+        if (!userId.isEmpty()) {
+            Log.e("Migration", "User ID is empty, skipping migration")
 
-        Collections.users.document(userId).get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val data = documentSnapshot.data
-                    if (data != null && !data.containsKey("notificationSettings")) {
-                        Collections.users.document(userId)
-                            .update("notificationSettings", defaultNotificationSettings)
-                            .addOnSuccessListener {
-                                Log.d("Migration", "Added notificationSettings for user $userId")
-                            }
-                            .addOnFailureListener { error ->
-                                Log.e("Migration", "Failed to add notificationSettings: ${error.message}")
-                            }
+            val defaultNotificationSettings = listOf(
+                NotificationPreference("lastMinute", true),
+                NotificationPreference("newApplication", true),
+                NotificationPreference("reviewReceivedForPastTrip", true),
+                NotificationPreference("statusUpdateOnPendingApplication", true),
+                NotificationPreference("checkRecommended", true)
+            )
+
+            Collections.users.document(userId).get()
+                .addOnSuccessListener { documentSnapshot ->
+                    if (documentSnapshot.exists()) {
+                        val data = documentSnapshot.data
+                        if (data != null && !data.containsKey("notificationSettings")) {
+                            Collections.users.document(userId)
+                                .update("notificationSettings", defaultNotificationSettings)
+                                .addOnSuccessListener {
+                                    Log.d(
+                                        "Migration",
+                                        "Added notificationSettings for user $userId"
+                                    )
+                                }
+                                .addOnFailureListener { error ->
+                                    Log.e(
+                                        "Migration",
+                                        "Failed to add notificationSettings: ${error.message}"
+                                    )
+                                }
+                        }
                     }
                 }
-            }
-            .addOnFailureListener { error ->
-                Log.e("Migration", "Failed to retrieve user $userId: ${error.message}")
-            }
+                .addOnFailureListener { error ->
+                    Log.e("Migration", "Failed to retrieve user $userId: ${error.message}")
+                }
+        }
+        else {
+            Log.e("Migration", "User ID is empty, skipping migration")
+        }
     }
 }

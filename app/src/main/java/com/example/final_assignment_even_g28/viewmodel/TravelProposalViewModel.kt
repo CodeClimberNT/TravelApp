@@ -161,7 +161,19 @@ class TravelProposalViewModel(
 
     private fun getNotification() {
         viewModelScope.launch {
-            tripModel.getNotifications(currentUser.value.uid).collect { notifications ->
+            val toggleToNotificationTypes = mapOf(
+                "lastMinute" to listOf("lastMinute"),
+                "newApplication" to listOf("newApplication"),
+                "reviewReceivedForPastTrip" to listOf("reviewReceivedForPastTrip"),
+                "checkRecommended" to listOf("checkRecommended"),
+                "statusUpdateOnPendingApplication" to listOf("participantApproved", "participantRejected")
+            )
+
+            val excludedNotificationTypes = userModel.loggedUser.value.notificationSettings
+                .filter { !it.enabled }
+                .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
+            Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
+            tripModel.getNotifications(currentUser.value.uid, excludedNotificationTypes).collect { notifications ->
                 // NOTIFICATION BELL
                 _notifications.value = notifications
 
@@ -178,6 +190,7 @@ class TravelProposalViewModel(
                         existingNotificationIds.add(notification.id)
                         _newTravelProposalNotification.value = notification
                         Log.d("New Notification", "New notification: ${notification.title}")
+                        Log.d("New Notification", "New notification: ${_newTravelProposalNotification.value}")
                     }
                 }
             }
@@ -817,6 +830,23 @@ class TravelProposalViewModel(
         }
 
         toggleFilterBar()
+    }
+    fun getFilteredNotifications(): List<Notification> {
+        val toggleToNotificationTypes = mapOf(
+            "lastMinute" to listOf("lastMinute"),
+            "newApplication" to listOf("newApplication"),
+            "reviewReceivedForPastTrip" to listOf("reviewReceivedForPastTrip"),
+            "checkRecommended" to listOf("checkRecommended"),
+            "statusUpdateOnPendingApplication" to listOf("participantApproved", "participantRejected") // Mapping per statusUpdate
+        )
+
+        val activeNotificationTypes = userModel.loggedUser.value.notificationSettings
+            .filter { it.enabled }
+            .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
+
+        return _notifications.value.filter { notification ->
+            activeNotificationTypes.contains(notification.type)
+        }
     }
 
     private fun todayDate(): String {

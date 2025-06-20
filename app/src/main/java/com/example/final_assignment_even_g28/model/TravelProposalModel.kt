@@ -721,7 +721,8 @@ class TravelProposalModel {
     }
 
 
-    fun getNotifications(userId: String): Flow<List<Notification>> = callbackFlow {
+    fun getNotifications(userId: String, excludedNotificationTypes: List<String>): Flow<List<Notification>> = callbackFlow {
+        Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes")
         val listener = Collections.notifications
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -740,6 +741,8 @@ class TravelProposalModel {
                             null
                         }
                     }.filter { notification ->
+                        !excludedNotificationTypes.contains(notification.type)
+                    }.filter { notification ->
                         // Filtra le notifiche per destinatario
                         when (notification.type) {
                             "newProposal" -> notification.notificationOwnerId != userId
@@ -754,7 +757,7 @@ class TravelProposalModel {
                             "lastMinuteAutomatic" -> notification.applicantId == userId
                             "checkRecommended" -> notification.applicantId == userId
                             else -> false
-                        }
+                        } && !excludedNotificationTypes.contains(notification.type)
                     }
                     trySend(notifications)
                 } else {
