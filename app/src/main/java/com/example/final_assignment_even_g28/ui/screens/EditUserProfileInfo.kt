@@ -197,7 +197,6 @@ fun EditUserProfileInfo(
                     Spacer(Modifier.height(16.dp))
 
                     ProfilePicture(
-                        profilePicture = profilePicture,
                         showCameraButton = true,
                         userProfileViewModel = viewModel,
                         onCameraClick = {
@@ -237,7 +236,7 @@ fun EditUserProfileInfo(
 
                         Button(onClick = {
                             if (viewModel.validateFields()) {
-                                viewModel.saveAndExitEditing()
+                                viewModel.saveAndExitEditing(ctx)
                                 onBackClick()
                             }
                         }) {
@@ -254,7 +253,6 @@ fun EditUserProfileInfo(
                         .padding(16.dp, 0.dp)
                 ) {
                     ProfilePicture(
-                        profilePicture = profilePicture,
                         showCameraButton = true,
                         userProfileViewModel = viewModel,
                         onCameraClick = {
@@ -297,7 +295,7 @@ fun EditUserProfileInfo(
 
                             Button(onClick = {
                                 if (viewModel.validateFields()) {
-                                    viewModel.saveAndExitEditing()
+                                    viewModel.saveAndExitEditing(ctx)
                                     onBackClick()
                                 }
                             }) {

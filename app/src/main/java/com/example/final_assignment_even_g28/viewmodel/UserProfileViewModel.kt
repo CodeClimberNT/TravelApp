@@ -1,21 +1,25 @@
 package com.example.final_assignment_even_g28.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AirplanemodeActive
+import androidx.compose.material.icons.filled.House
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.Tram
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
-import com.example.final_assignment_even_g28.data_class.ActivityTag
-import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.InfoFieldDefinition
 import com.example.final_assignment_even_g28.shared.validation.UserProfileError
@@ -28,15 +32,6 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-
-/*
-* FOR LOGIN:
-* mail: account@yahoo.com
-* password: accountpassword
-* */
-
 
 class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     private var _userProfile by mutableStateOf(UserProfile())
@@ -118,18 +113,53 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
 
-     fun saveAndExitEditing() {
-         isEditing = false
-         model.editProfile(editingProfile.value)
-         Log.d("Edit User","Saving Profile: ${editingProfile.value}")
+     fun saveAndExitEditing(context: Context) {
+         viewModelScope.launch {
+             isEditing = false
+             model.editProfile(editingProfile.value, context)
+             Log.d("Edit User","Saving Profile: ${editingProfile.value}")
+         }
     }
 
      fun handleBackNavigation(context: Context) {
         if (validateFields()) {
-            saveAndExitEditing()
+            saveAndExitEditing(context)
         } else {
             cancelChanges()
         }
+    }
+
+    fun getIcon(iconName: String): ImageVector{
+        when (iconName){
+            "Icon(icon=DIRECTIONS_WALK)" -> {
+                return Icons.AutoMirrored.Default.DirectionsWalk
+            }
+            "Icon(icon=HOUSE)" -> {
+                return Icons.Default.House
+            }
+            "Icon(icon=ACCOUNT_CIRCLE)" -> {
+                return Icons.Default.AccountCircle
+            }
+            "Icon(icon=TRAIN)" -> {
+                return Icons.Default.Train
+            }
+            "Icon(icon=TRAM)" -> {
+                return Icons.Default.Tram
+            }
+            "Icon(icon=AIRPLANE)" -> {
+                return Icons.Default.AirplanemodeActive
+            }
+            else -> {
+                return Icons.Default.AccountCircle
+            }
+        }
+    }
+
+    fun getIconNameFromString(iconString: String): String? {
+        val regex = """Icon\(icon=([A-Z_]+)\)""".toRegex()
+        val matchResult = regex.find(iconString)
+
+        return matchResult?.groups?.get(1)?.value
     }
 
     fun getIconsList(): List<Any> {
@@ -138,8 +168,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         val iconsList = model.getAvailableIcons() + initials
         val profilePicture = _userProfile.profilePicture
 
-        return when (profilePicture) {
-            is ProfilePictureData.Monogram -> {
+        return when (_userProfile.isProfileImage) {
+            "Monogram" -> {
                 iconsList.toMutableList().apply {
                     // I hope the compiler optimize this
                     val target = initials
@@ -148,33 +178,36 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 }
             }
 
-            is ProfilePictureData.Icon -> {
+            "Icon" -> {
                 iconsList.toMutableList().apply {
-                    val target = profilePicture.icon
-                    remove(target)
-                    add(0, target)
+                    val target = getIconNameFromString(_userProfile.profilePicture)
+                    if(target?.isNotEmpty() == true){
+                        remove(target)
+                        add(0, target)
+                    }
                 }
             }
-
-            is ProfilePictureData.UriData -> {
+            "Uri" -> {
                 iconsList
+            }
+            else -> {
+                emptyList()
             }
         }
     }
 
 
-    private fun getInitials(): String {
-        return loggedUser.value.name[0].toString() + " " + { if (loggedUser.value.surname[0].toString().isNotEmpty())loggedUser.value.surname[0].toString() }
-    }
+     fun getInitials(): String {
+         if (editingProfile.value.surname.isEmpty())
+            return (editingProfile.value.name[0]).toString()
+         return (editingProfile.value.name[0].toString() + editingProfile.value.surname[0].toString())
+     }
 
-    fun getProfilePicture(): ProfilePictureData {
-        return loggedUser.value.profilePicture
+    fun getInitialsFromUser(user: UserProfile): String{
+        if (user.surname.isEmpty())
+            return (user.name[0]).toString()
+        return (user.name[0].toString() + user.surname[0].toString())
     }
-
-    fun getEditingProfilePicture(): ProfilePictureData {
-        return editingProfile.value.profilePicture
-    }
-
 
     fun updateName(name: String) {
         _editingProfile.value = _editingProfile.value.copy(name = name)
@@ -218,24 +251,32 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun updateProfilePicture() {
         _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = ProfilePictureData.Monogram(getInitials()),
+            profilePicture = ProfilePictureData.Monogram(getInitials()).toString(),
             isProfileImage = "Monogram"
         )
     }
 
     fun updateProfilePicture(icon: IconType) {
         _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = ProfilePictureData.Icon(icon),
+            profilePicture = ProfilePictureData.Icon(icon).toString(),
             isProfileImage = "Icon"
         )
     }
 
     fun updateProfilePicture(imageUri: String) {
         _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = ProfilePictureData.UriData(imageUri),
+            profilePicture = ProfilePictureData.UriData(imageUri).toString(),
             isProfileImage = "Uri"
         )
 
+    }
+
+    fun getImageProfile(userUID: String): String{
+       return model.getImageUrlFromSupabase(userUID)
+    }
+
+    fun getUriImage(imageUri: String): Uri{
+       return model.fromStringToUri(imageUri)
     }
 
     fun updateAddTypeOfExperiences(experience: String){
@@ -359,5 +400,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1 == password2)
     }
 
+    fun gainExp(value: Int, context: Context){
+        viewModelScope.launch {
+            model.gainExp(value, context)
+        }
+    }
 
 }

@@ -58,7 +58,6 @@ fun ShowUserProfileInfo(
 ) {
     val profile by viewModel.loggedUser.collectAsState()
     val ctx = LocalContext.current
-    val profilePicture = viewModel.getProfilePicture()
     var isLandScape by remember {
         mutableStateOf(
             ctx.resources.configuration.orientation == ORIENTATION_LANDSCAPE
@@ -125,7 +124,6 @@ fun ShowUserProfileInfo(
                 Spacer(Modifier.height(16.dp))
 
                 ProfilePicture(
-                    profilePicture = profilePicture,
                     isLandScape = isLandScape
                 )
                 Spacer(Modifier.height(16.dp))
@@ -141,7 +139,6 @@ fun ShowUserProfileInfo(
                     .padding(innerPadding)
             ) {
                 ProfilePicture(
-                    profilePicture = profilePicture,
                     isLandScape = isLandScape
                 )
                 Spacer(Modifier.width(16.dp))
