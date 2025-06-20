@@ -23,7 +23,7 @@ data class UserProfile(
     var bio: String = "",
     @get:Exclude
     @set:Exclude
-    var badge: BadgeIconType? = null,
+    var badge: BadgeIconType? = BadgeIconType.AIRPLANE,
     var badges: List<Badge> = LocalBadgeRepository.badges,
     var currentLevel: Int = 1,
     var rating: Float = 0.0f,
@@ -41,7 +41,7 @@ data class UserProfile(
         email = "",
         pastExperiences = emptyList(),
         bio = "",
-        badge = null,
+        badge = BadgeIconType.AIRPLANE,
         currentLevel = 1,
         rating = 0.0F,
         profilePicture = ProfilePictureData.Monogram("")

@@ -5,4 +5,7 @@
     </string>
     <string name="participants">participants</string>
     <string name="login_prompt">Please login to continue</string>
+    <string name="your_badges">Your Badges</string>
+    <string name="select_this_badge">Select this Badge</string>
+    <string name="to_unlock">to unlock</string>
 </resources>

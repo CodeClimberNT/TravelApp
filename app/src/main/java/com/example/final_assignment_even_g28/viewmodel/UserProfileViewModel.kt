@@ -57,8 +57,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     init {
         val currentUser = Collections.auth.currentUser
-        if (currentUser != null){
-               model.loadUserByUID(currentUser.uid)
+        if (currentUser != null) {
+            model.loadUserByUID(currentUser.uid)
         }
         editingProfile.value = loggedUser.value
     }
@@ -76,13 +76,13 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         model.signUp(userToSign, password)
     }
 
-    fun signUpWithGoogle(context: Context){
+    fun signUpWithGoogle(context: Context) {
         viewModelScope.launch {
             model.signUpWithGoogle(context)
         }
     }
 
-    fun deleteAccount(){
+    fun deleteAccount() {
         model.deleteAccount()
     }
 
@@ -100,36 +100,36 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         editingProfile.value = loggedUser.value
     }
 
-/*
-fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean {
-        getUserByUid(userId)
-        if (selectedUserProfile.value != null) {
-            _userProfile = selectedUserProfile.value!!
-            return true
-        } else {
-            _userProfile = UserProfile(userId, userName, userEmail)
-            return false
+    /*
+    fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean {
+            getUserByUid(userId)
+            if (selectedUserProfile.value != null) {
+                _userProfile = selectedUserProfile.value!!
+                return true
+            } else {
+                _userProfile = UserProfile(userId, userName, userEmail)
+                return false
+            }
         }
+     */
+
+
+    fun saveAndExitEditing(context: Context) {
+        viewModelScope.launch {
+            editingProfile.value.let { draft ->
+                val errors = UserProfileValidator().validate(draft)
+                if (errors.asList().any { it.isNotEmpty() }) {
+                    _validationErrors = errors
+                } else {
+                    isEditing = false
+                    model.editProfile(editingProfile.value, context)
+                }
+            }
+        }
+
     }
- */
 
-
-     fun saveAndExitEditing(context: Context) {
-         viewModelScope.launch {
-             editingProfile.value.let { draft ->
-                 val errors = UserProfileValidator().validate(draft)
-                 if (errors.asList().any { it.isNotEmpty() }) {
-                     _validationErrors = errors
-                 } else {
-                     isEditing = false
-                     model.editProfile(editingProfile.value, context)
-                 }
-             }
-         }
-
-    }
-
-     fun handleBackNavigation(context: Context) {
+    fun handleBackNavigation(context: Context) {
         if (validateFields()) {
             saveAndExitEditing(context)
         } else {
@@ -169,7 +169,11 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
 
 
     private fun getInitials(): String {
-        return loggedUser.value.name[0].toString() + { if (loggedUser.value.surname[0].toString().isNotEmpty())loggedUser.value.surname[0].toString() }
+        return loggedUser.value.name[0].toString() + {
+            if (loggedUser.value.surname[0].toString()
+                    .isNotEmpty()
+            ) loggedUser.value.surname[0].toString()
+        }
     }
 
     fun getProfilePicture(): ProfilePictureData {
@@ -219,8 +223,10 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
             editingProfile.value.copy(pastExperiences = listOf(newPastExperiences))
     }
 
-    fun updateBadge(newBadge: BadgeIconType) {
-        editingProfile.value = editingProfile.value.copy(badge = newBadge)
+    fun updateBadge(newBadge: BadgeIconType, context: Context) {
+        viewModelScope.launch {
+            model.updateUserProfileBadge(loggedUser.value.uid, newBadge, context)
+        }
     }
 
     fun updateCurrentLevel(newLevel: Int) {
@@ -363,9 +369,11 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
         )
     }
 
-    fun isRegistrationDataCorrect(name: String, surname: String,
-                                  email: String, password1: String,
-                                    password2: String) : Boolean{
+    fun isRegistrationDataCorrect(
+        name: String, surname: String,
+        email: String, password1: String,
+        password2: String
+    ): Boolean {
         val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$"
         return (name.isNotEmpty() && surname.isNotEmpty()
                 && email.matches(emailRegex.toRegex())

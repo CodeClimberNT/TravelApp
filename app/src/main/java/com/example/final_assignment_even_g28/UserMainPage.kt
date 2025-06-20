@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -58,6 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -325,8 +326,8 @@ fun BadgesBottomSheet(
     onDismiss: () -> Unit
 ) {
     val user by userVm.loggedUser.collectAsState()
-    val badges = user.badges.first()
-
+    val badges = user.badges
+    val scrollState = rememberScrollState()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
@@ -337,18 +338,31 @@ fun BadgesBottomSheet(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                "Your Badges",
+                stringResource(R.string.your_badges),
                 style = MaterialTheme.typography.headlineMedium,
             )
             Spacer(modifier = Modifier.height(24.dp))
-            RowBadge(badges)
+            Column(modifier = Modifier.verticalScroll(scrollState)) {
+                badges.forEach { badge ->
+                    RowBadge(badge)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RowBadge(badge: Badge) {
+fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
+    val ctx = LocalContext.current
+    // Limit percentage to 100%
+    val progressPercentage =
+        (badge.progress.current.toFloat() / badge.progress.total.toFloat()).coerceIn(
+            0f,
+            1f
+        )
+    val isCompleted = badge.progress.current == badge.progress.total
     Card(
         elevation = CardDefaults.cardElevation(6.dp), colors = CardDefaults.cardColors(
             MaterialTheme.colorScheme.secondaryContainer
@@ -358,7 +372,7 @@ fun RowBadge(badge: Badge) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
                 .height(128.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -397,74 +411,44 @@ fun RowBadge(badge: Badge) {
             Spacer(Modifier.width(8.dp))
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
                     .weight(3f)
                     .fillMaxSize()
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
-                // Progress bar
-                val progressPercentage =
-                    badge.progress.current.toFloat() / badge.progress.total.toFloat()
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .height(48.dp)
-                ) {
-                    LinearProgressIndicator(
-                        progress = { progressPercentage },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(72.dp)
-                            .background(
-                                MaterialTheme.colorScheme.tertiary,
-                                RoundedCornerShape(36.dp)
-                            ),
-                        color = StarColor,
-                        trackColor = MaterialTheme.colorScheme.tertiary,
-                        strokeCap = StrokeCap.Round,
+                Text(
+                    text = badge.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
 
-                        )
-                    Text(
-                        text = "${badge.title}: ${badge.progress.current}/${badge.progress.total}",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = {}) {
-                    Text("Select this Badge")
+                LinearProgressIndicator(
+                    progress = { progressPercentage },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        // background color as the trackColor to fill the gap
+                        .background(
+                            MaterialTheme.colorScheme.tertiary,
+                            RoundedCornerShape(36.dp)
+                        ),
+                    color = StarColor,
+                    trackColor = MaterialTheme.colorScheme.tertiary,
+                    strokeCap = StrokeCap.Round,
+                )
+
+                Button(onClick = { userVm.updateBadge(badge.icon, ctx) }, enabled = isCompleted) {
+                    if (isCompleted) {
+                        Text(stringResource(R.string.select_this_badge))
+                    } else {
+                        Text("${badge.progress.current}/${badge.progress.total} ${stringResource(R.string.to_unlock)}")
+                    }
                 }
             }
         }
     }
 }
 
-
-/*
-* fun LinearProgressIndicator(
-    progress: () -> Float,
-    modifier: Modifier = Modifier,
-    color: Color = ProgressIndicatorDefaults.linearColor,
-    trackColor: Color = ProgressIndicatorDefaults.linearTrackColor,
-    strokeCap: StrokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-    gapSize: Dp = ProgressIndicatorDefaults.LinearIndicatorTrackGapSize,
-    drawStopIndicator: DrawScope.() -> Unit = {
-        drawStopIndicator(
-            drawScope = this,
-            stopSize = ProgressIndicatorDefaults.LinearTrackStopIndicatorSize,
-            color = color,
-            strokeCap = strokeCap
-        )
-    },
-) {
-*
-* */
 
 //@Preview(showBackground = true)
 //@Composable

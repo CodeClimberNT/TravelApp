@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +37,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
+import com.example.final_assignment_even_g28.data_class.toImageVector
+import com.example.final_assignment_even_g28.ui.theme.StarColor
+import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import kotlinx.serialization.Serializable
 
@@ -62,13 +67,15 @@ fun ProfilePicture(
     profilePicture: ProfilePictureData,
     isLandScape: Boolean,
     showCameraButton: Boolean = false,
-    userProfileViewModel: UserProfileViewModel? = null,
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory),
     isDashboard: Boolean = false,
     onCameraClick: (() -> Unit)? = null,
     onRemoveClick: () -> Unit = {},
 ) {
     val avatarSize = if (isDashboard) 72.dp else 150.dp
     val isEditing by remember { mutableStateOf(showCameraButton && onCameraClick != null) }
+    val user by userProfileViewModel.loggedUser.collectAsState()
+    val badge = user.badge
 
     // For some reason the type must be explicitly declared
     val boxModifier: MutableState<Modifier> = remember {
@@ -93,7 +100,6 @@ fun ProfilePicture(
                 }
 
             }
-
     }
 
     Box(
@@ -144,13 +150,44 @@ fun ProfilePicture(
                     )
                 }
             }
+            if (badge != null && isDashboard) {
+                Box(
+                    modifier = Modifier.matchParentSize()
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .align(Alignment.BottomEnd)
+                                .background(
+                                    MaterialTheme.colorScheme
+                                        .tertiaryContainer,
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    2.dp,
+                                    StarColor,
+                                    shape = CircleShape
+                                )
+                    ) {
+                        Icon(
+                            imageVector = badge.toImageVector(),
+                            contentDescription = "Profile Badge",
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+
         } else {
             // Editing Profile Picture
 
             when (profilePicture) {
 
                 is ProfilePictureData.Monogram, is ProfilePictureData.Icon -> {
-                    userProfileViewModel?.let { IconCarousel(it, isLandScape = isLandScape) }
+                    IconCarousel(userProfileViewModel, isLandScape = isLandScape)
                 }
 
                 is ProfilePictureData.UriData -> {

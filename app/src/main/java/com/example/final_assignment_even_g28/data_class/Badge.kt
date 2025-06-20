@@ -91,7 +91,7 @@ object LocalBadgeRepository {
             title = "Travel In Pack",
             icon = BadgeIconType.PEOPLE,
             description = "Apply to 5 trips that have at least 3 people approved.",
-            progress = Progress(3, 5)
+            progress = Progress(5, 5)
         ),
         Badge(
             id = "badge2",
@@ -105,7 +105,7 @@ object LocalBadgeRepository {
             title = "Explorer",
             icon = BadgeIconType.TRAIN,
             description = "Be approved in 5 trips.",
-            progress = Progress(0, 5)
+            progress = Progress(5, 5)
         ),
         Badge(
             id = "badge3",

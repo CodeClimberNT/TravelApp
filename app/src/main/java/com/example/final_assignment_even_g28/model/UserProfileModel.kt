@@ -10,6 +10,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.BadgeIconType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
@@ -301,6 +302,46 @@ class UserProfileModel() {
                     }
 
                     loadUserByUID(userToEdit.uid)
+
+                } catch (e: Exception) {
+                    Log.e("Edit User", "Error editing user: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Edit User", "Error in coroutine: ${e.message}")
+        }
+    }
+
+    suspend fun updateUserProfileBadge(userUID: String, newBadge: BadgeIconType, context: Context) {
+        try {
+            withContext(Dispatchers.Main) {
+                try {
+                    Log.d("Edit User", "Updating badge for user with UID: $userUID")
+                    Log.d("Edit User", "New badge: $newBadge")
+                    _loggedUser.value.badge = newBadge
+                    Log.d("Edit User", "Logged user badge updated: ${_loggedUser.value.badge}")
+                    // FIXME: use the commented code when the code is merged with the others
+//                    val documentRef = Collections.users.document(userUID)
+//                    val userToEdit = _userProfiles.value.firstOrNull { it.uid == userUID }
+//                        ?: throw Exception("User with UID $userUID not found")
+//                    userToEdit.badge = newBadge
+//                    Tasks.await(documentRef.set(userToEdit))
+//
+//                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
+//
+//                    when (userToEdit.isProfileImage) {
+//                        "Monogram" -> {}
+//                        "Icon" -> {}
+//                        "Uri" -> {
+//                            uploadUserProfileImage(
+//                                userToEdit.uid,
+//                                (userToEdit.profilePicture as ProfilePictureData.UriData).uri,
+//                                context
+//                            )
+//                        }
+//                    }
+//
+//                    loadUserByUID(userToEdit.uid)
 
                 } catch (e: Exception) {
                     Log.e("Edit User", "Error editing user: ${e.message}")
