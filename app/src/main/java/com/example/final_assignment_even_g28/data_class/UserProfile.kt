@@ -8,6 +8,19 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class NotificationPreference(
+    var type: String = "",
+    var enabled: Boolean = false
+) {
+    constructor(type: String) : this(type, true)
+
+    constructor(type: String, enabled: Boolean, uid: String) : this(type, enabled) {
+        this.type = type
+        this.enabled = enabled
+    }
+}
+
+@Serializable
 data class UserProfile(
     var uid: String = "", // Firebase UID used for Google Authentication
     var name: String = "",
@@ -28,6 +41,13 @@ data class UserProfile(
     var currentLevel: Int = 1,
     var rating: Float = 0.0f,
     var isProfileImage: String = "Monogram",
+    var notificationSettings: List<NotificationPreference> = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
     @get:Exclude
     var profilePicture: ProfilePictureData = ProfilePictureData.Monogram(""),
 ) {
@@ -44,7 +64,15 @@ data class UserProfile(
         badge = BadgeIconType.AIRPLANE,
         currentLevel = 1,
         rating = 0.0F,
-        profilePicture = ProfilePictureData.Monogram("")
+        notificationSettings = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
+        profilePicture = ProfilePictureData.Monogram(""),
+
     )
 
     constructor(nickName: String, profilePicture: ProfilePictureData) : this(
@@ -60,6 +88,13 @@ data class UserProfile(
         badge = null,
         currentLevel = 1,
         rating = 0.0F,
+        notificationSettings = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
         profilePicture = profilePicture
     )
 
@@ -76,6 +111,13 @@ data class UserProfile(
         badge = null,
         currentLevel = 1,
         rating = 0.0F,
+        notificationSettings = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
         profilePicture = profilePicture
     )
 
@@ -92,6 +134,13 @@ data class UserProfile(
         badge = null,
         currentLevel = 1,
         rating = rating,
+        notificationSettings = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
         profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
     )
 
@@ -109,6 +158,13 @@ data class UserProfile(
         badge = null,
         currentLevel = 1,
         rating = rating,
+        notificationSettings = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
         profilePicture = avatar
     )
 
@@ -125,8 +181,17 @@ data class UserProfile(
         badge = null,
         currentLevel = 1,
         rating = 0.0F,
+        notificationSettings = listOf(
+        NotificationPreference("lastMinute", true),
+        NotificationPreference("newApplication", true),
+        NotificationPreference("reviewReceivedForPastTrip", true),
+        NotificationPreference("statusUpdateOnPendingApplication", true),
+        NotificationPreference("checkRecommended", true)
+    ),
         profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
     )
+
+
 }
 
 typealias Planner = UserProfile

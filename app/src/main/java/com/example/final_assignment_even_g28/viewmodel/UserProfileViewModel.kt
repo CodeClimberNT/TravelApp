@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.BadgeIconType
+import com.example.final_assignment_even_g28.data_class.NotificationPreference
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
@@ -21,6 +22,7 @@ import com.example.final_assignment_even_g28.shared.validation.asList
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -61,6 +63,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             model.loadUserByUID(currentUser.uid)
         }
         editingProfile.value = loggedUser.value
+
     }
 
     fun login(email: String, password: String) {
@@ -84,6 +87,42 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun deleteAccount() {
         model.deleteAccount()
+    }
+
+
+//    fun updateNotificationSettings(settings: List<NotificationPreference>) {
+//        viewModelScope.launch {
+//            val currentUserUid = Collections.auth.currentUser?.uid ?: ""
+//            model.updateNotificationSettings(currentUserUid, settings)
+//            val updatedUser = loggedUser.value.copy(notificationSettings = settings)
+//            model.loadUser(updatedUser)
+//        }
+//    }
+
+//    fun updateSingleNotificationSetting(key: String, isEnabled: Boolean) {
+//        viewModelScope.launch {
+//            val currentUserUid = Collections.auth.currentUser?.uid ?: ""
+//            val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
+//                if (pref.type == key) pref.copy(enabled = isEnabled) else pref
+//            }
+//            Log.d("UpdateNotification", "Updated settings: $updatedSettings")
+//            model.updateNotificationSettings(currentUserUid, updatedSettings)
+//        }
+//    }
+
+    fun updateNotificationSetting(type: String, enabled: Boolean) {
+        viewModelScope.launch {
+            val currentUserUid = loggedUser.value.uid
+            val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
+                if (pref.type == type) pref.copy(enabled = enabled) else pref
+            }
+            model.updateNotificationSettings(currentUserUid, updatedSettings)
+            (model.loggedUser as MutableStateFlow).value = loggedUser.value.copy(notificationSettings = updatedSettings)
+        }
+    }
+
+    fun getNotificationSetting(type: String): Boolean {
+        return loggedUser.value.notificationSettings.find { it.type == type }?.enabled ?: false
     }
 
     fun startEditing() {
@@ -112,7 +151,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             }
         }
      */
-
 
     fun saveAndExitEditing(context: Context) {
         viewModelScope.launch {
@@ -380,6 +418,5 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1.isNotEmpty()
                 && password1 == password2)
     }
-
 
 }
