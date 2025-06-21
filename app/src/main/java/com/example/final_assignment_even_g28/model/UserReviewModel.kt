@@ -2,6 +2,7 @@ package com.example.final_assignment_even_g28.model
 
 import android.util.Log
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.data_class.UserReview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,7 +64,7 @@ class UserReviewModel(
             travelProposalModel.addNotification(
                 tripId = "",
                 title = review.title,
-                type = "userReviewReceived",
+                type = NotificationType.USER_REVIEW_RECEIVED,
                 notificationOwnerId = review.reviewerUID.toString(),
                 applicantId = review.reviewedUserUID.toString(),
                 tripPlannerId = null,

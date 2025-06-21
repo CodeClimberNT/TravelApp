@@ -13,7 +13,10 @@ import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.BadgeRepository
 import com.example.final_assignment_even_g28.data_class.BadgeType
+import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationPreference
+import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
+import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
@@ -23,15 +26,12 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -63,19 +63,26 @@ class UserProfileModel() {
 
     private fun loadAllUsers() {
         // Initialize with mock data
-        Collections.users.get().addOnSuccessListener { querySnapshot ->
-            val userList = mutableListOf<UserProfile>()
-            for (document in querySnapshot) {
-                val user = document.toObject(UserProfile::class.java)
-                userList.add(user)
+        try {
+            Collections.users.get().addOnSuccessListener { querySnapshot ->
+                val userList = mutableListOf<UserProfile>()
+                for (document in querySnapshot) {
+                    val user = document.toObject(UserProfile::class.java)
+                    userList.add(user)
+                }
+                _userProfiles.value = userList
+                Log.d("User Profile", "Load correctly ${userList.size} users")
+            }.addOnFailureListener { e ->
+                Log.e("User Profile", "Error retrieving the users: $e")
             }
-            _userProfiles.value = userList
-            Log.d("User Profile", "Load correctly ${userList.size} users")
-        }.addOnFailureListener { e ->
-            Log.e("User Profile", "Error retrieving the users: $e")
+            migrateNotificationSettings(Collections.auth.currentUser?.uid ?: "")
+            Log.d(
+                "UserProfileNotifications",
+                "Current user: ${Collections.auth.currentUser?.uid ?: "No user"}"
+            )
+        } catch (e: Exception) {
+            Log.e("UserProfileModel", "Error loading all users: ${e.message}")
         }
-         migrateNotificationSettings(Collections.auth.currentUser?.uid ?: "")
-        Log.d("UserProfileNotifications", "Current user: ${Collections.auth.currentUser?.uid ?: "No user"}")
 
     }
 
@@ -616,6 +623,15 @@ class UserProfileModel() {
 
                     badgeRef.update(updateMap).await()
 
+                    if (isCompleting) {
+                        addNotification(
+                            tripId = "",
+                            title = currentBadge.title,
+                            type = NotificationType.BADGE_UNLOCKED,
+                            notificationOwnerId = userUID,
+                        )
+                    }
+
                     Log.d(
                         "UserBadges",
                         "Updated badge $badgeId progress to $newCurrentProgress/${currentBadge.progress.total}"
@@ -672,7 +688,10 @@ class UserProfileModel() {
                 Log.d("UserProfileNotifications", "Notification settings updated successfully")
             }
             .addOnFailureListener { error ->
-                Log.e("UserProfileNotifications", "Failed to update notification settings: ${error.message}")
+                Log.e(
+                    "UserProfileNotifications",
+                    "Failed to update notification settings: ${error.message}"
+                )
             }
     }
 
@@ -681,11 +700,17 @@ class UserProfileModel() {
             Log.e("Migration", "User ID is empty, skipping migration")
 
             val defaultNotificationSettings = listOf(
-                NotificationPreference("lastMinute", true),
-                NotificationPreference("newApplication", true),
-                NotificationPreference("reviewReceivedForPastTrip", true),
-                NotificationPreference("statusUpdateOnPendingApplication", true),
-                NotificationPreference("checkRecommended", true)
+                NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+                NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+                NotificationPreference(
+                    NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP,
+                    true
+                ),
+                NotificationPreference(
+                    NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                    true
+                ),
+                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
             )
 
             Collections.users.document(userId).get()
@@ -713,9 +738,40 @@ class UserProfileModel() {
                 .addOnFailureListener { error ->
                     Log.e("Migration", "Failed to retrieve user $userId: ${error.message}")
                 }
-        }
-        else {
+        } else {
             Log.e("Migration", "User ID is empty, skipping migration")
         }
+    }
+
+
+    // FIXME: duplicate code, should be moved to a common place
+    private fun addNotification(
+        tripId: String,
+        title: String,
+        type: NotificationType,
+        notificationOwnerId: String,
+        applicantId: String? = null,
+        tripPlannerId: String? = null,
+        reviewedUser: String? = null
+    ) {
+        val notification = Notification(
+            tripId = tripId,
+            title = title,
+            type = type,
+            timestamp = Timestamp.now(),
+            read = emptyList(),
+            notificationOwnerId = notificationOwnerId,
+            applicantId = applicantId,
+            tripPlannerId = tripPlannerId,
+            reviewedUser = reviewedUser
+        )
+
+        Collections.notifications.add(notification)
+            .addOnSuccessListener {
+                Log.d("Notifications", "Notification added for trip: $title, type: $type")
+            }
+            .addOnFailureListener { error ->
+                Log.e("Notifications", "Failed to add notification: ${error.message}")
+            }
     }
 }

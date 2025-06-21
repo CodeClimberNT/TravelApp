@@ -16,6 +16,8 @@ import com.example.final_assignment_even_g28.data_class.ExperienceComposition
 import com.example.final_assignment_even_g28.data_class.Filters
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Notification
+import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
+import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
 import com.example.final_assignment_even_g28.data_class.ParticipantStatus
 import com.example.final_assignment_even_g28.data_class.Price
@@ -44,7 +46,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -166,13 +167,13 @@ class TravelProposalViewModel(
     private fun getNotification() {
         viewModelScope.launch {
             val toggleToNotificationTypes = mapOf(
-                "lastMinute" to listOf("lastMinute"),
-                "newApplication" to listOf("newApplication"),
-                "reviewReceivedForPastTrip" to listOf("reviewReceivedForPastTrip"),
-                "checkRecommended" to listOf("checkRecommended"),
-                "statusUpdateOnPendingApplication" to listOf(
-                    "participantApproved",
-                    "participantRejected"
+                NotificationPreferenceType.LAST_MINUTE to listOf(NotificationType.LAST_MINUTE),
+                NotificationPreferenceType.NEW_APPLICATION to listOf(NotificationType.NEW_APPLICATION),
+                NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP to listOf(NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP),
+                NotificationPreferenceType.CHECK_RECOMMENDED to listOf(NotificationType.CHECK_RECOMMENDED),
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION to listOf(
+                    NotificationType.PARTICIPANT_APPROVED,
+                    NotificationType.PARTICIPANT_REJECTED
                 )
             )
             val excludedNotificationTypes = userModel.loggedUser.value.notificationSettings
@@ -470,7 +471,7 @@ class TravelProposalViewModel(
                         tripModel.addNotification(
                             tripId = tripId,
                             title = title,
-                            type = "lastMinute",
+                            type = NotificationType.LAST_MINUTE,
                             notificationOwnerId = ownerId,
                             applicantId = ownerId
                         )
@@ -478,7 +479,7 @@ class TravelProposalViewModel(
                         tripModel.addNotification(
                             tripId = tripId,
                             title = title,
-                            type = "newProposal",
+                            type = NotificationType.NEW_PROPOSAL,
                             notificationOwnerId = ownerId
                         )
                     }
@@ -522,7 +523,7 @@ class TravelProposalViewModel(
                         tripModel.addNotification(
                             tempTravelProposal.id,
                             tempTravelProposal.title,
-                            "lastMinute",
+                            NotificationType.LAST_MINUTE,
                             currentUser.value.uid,
                             applicantId = currentUser.value.uid
                         )
@@ -869,39 +870,6 @@ class TravelProposalViewModel(
         toggleFilterBar()
     }
 
-    fun getFilteredNotifications(): List<Notification> {
-        val toggleToNotificationTypes = mapOf(
-            "lastMinute" to listOf("lastMinute"),
-            "newApplication" to listOf("newApplication"),
-            "reviewReceivedForPastTrip" to listOf("reviewReceivedForPastTrip"),
-            "checkRecommended" to listOf("checkRecommended"),
-            "statusUpdateOnPendingApplication" to listOf(
-                "participantApproved",
-                "participantRejected"
-            ) // Mapping per statusUpdate
-        )
-
-        val activeNotificationTypes = userModel.loggedUser.value.notificationSettings
-            .filter { it.enabled }
-            .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
-
-        return _notifications.value.filter { notification ->
-            activeNotificationTypes.contains(notification.type)
-        }
-    }
-
-    private fun todayDate(): String {
-        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return formatter.format(Date())
-    }
-
-    private fun tomorrowDate(): String {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, 1)
-        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return formatter.format(calendar.time)
-    }
-
     fun clickTripInfo(travelId: String, isPast: Boolean = false) {
         viewModelScope.launch {
             Log.d("TravelProposalViewModel", "Fetching travel proposal with ID: $travelId")
@@ -1009,33 +977,37 @@ class TravelProposalViewModel(
     }
 
     //dynamic message based on the type
-    fun getNotificationMessage(type: String, tripTitle: String, snackBar: Boolean): String {
+    fun getNotificationMessage(
+        type: NotificationType,
+        tripTitle: String,
+        snackBar: Boolean
+    ): String {
         if (snackBar) {
             return when (type) {
-                "newProposal" -> "New travel proposal added: $tripTitle"
-                "newApplication" -> "New application received for: $tripTitle"
-                "participantApproved" -> "You have been approved for this trip: $tripTitle"
-                "participantRejected" -> "Your application for the trip has been rejected: $tripTitle"
-                "reviewReceivedForPastTrip" -> "New review received for trip: $tripTitle"
-                "lastMinute" -> "Last minute proposal for trip: $tripTitle"
-                "checkRecommended" -> "Recommended trip based on your preferences for trip: $tripTitle"
-                "lastMinuteAutomatic" -> "Last minute proposal for trip: $tripTitle (automatic notification)"
-                "userReviewReceived" -> "A user has left a review for you"
-                "badgeUnlocked" -> "New Badge unlocked!"
+                NotificationType.NEW_PROPOSAL -> "New travel proposal added: $tripTitle"
+                NotificationType.NEW_APPLICATION -> "New application received for: $tripTitle"
+                NotificationType.PARTICIPANT_APPROVED -> "You have been approved for this trip: $tripTitle"
+                NotificationType.PARTICIPANT_REJECTED -> "Your application for the trip has been rejected: $tripTitle"
+                NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> "New review received for trip: $tripTitle"
+                NotificationType.LAST_MINUTE -> "Last minute proposal for trip: $tripTitle"
+                NotificationType.CHECK_RECOMMENDED -> "Recommended trip based on your preferences for trip: $tripTitle"
+                NotificationType.LAST_MINUTE_AUTOMATIC -> "Last minute proposal for trip: $tripTitle (automatic notification)"
+                NotificationType.USER_REVIEW_RECEIVED -> "A user has left a review for you"
+                NotificationType.BADGE_UNLOCKED -> "New Badge unlocked!"
                 else -> "Notification for trip: $tripTitle"
             }
         } else {
             return when (type) {
-                "newProposal" -> "$tripTitle: New travel proposal added"
-                "newApplication" -> "$tripTitle: New application received"
-                "participantApproved" -> "$tripTitle: You have been approved for this trip "
-                "participantRejected" -> "$tripTitle: Your application for the trip has been rejected"
-                "reviewReceivedForPastTrip" -> "$tripTitle: New review received for this trip"
-                "lastMinute" -> "$tripTitle: Last minute proposal for this trip"
-                "lastMinuteAutomatic" -> "$tripTitle: Last minute proposal for this trip (automatic notification)"
-                "checkRecommended" -> "$tripTitle: Recommended trip based on your preferences"
-                "userReviewReceived" -> "A user has left a review for you"
-                "badgeUnlocked" -> "You have unlocked a New Badge!"
+                NotificationType.NEW_PROPOSAL -> "$tripTitle: New travel proposal added"
+                NotificationType.NEW_APPLICATION -> "$tripTitle: New application received"
+                NotificationType.PARTICIPANT_APPROVED -> "$tripTitle: You have been approved for this trip "
+                NotificationType.PARTICIPANT_REJECTED -> "$tripTitle: Your application for the trip has been rejected"
+                NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> "$tripTitle: New review received for this trip"
+                NotificationType.LAST_MINUTE -> "$tripTitle: Last minute proposal for this trip"
+                NotificationType.CHECK_RECOMMENDED -> "$tripTitle: Recommended trip based on your preferences"
+                NotificationType.LAST_MINUTE_AUTOMATIC -> "$tripTitle: Last minute proposal for this trip (automatic notification)"
+                NotificationType.USER_REVIEW_RECEIVED -> "A user has left a review for you"
+                NotificationType.BADGE_UNLOCKED -> "You have unlocked a New Badge!"
                 else -> "$tripTitle: Notification for trip "
             }
         }
@@ -1078,7 +1050,7 @@ class TravelProposalViewModel(
 
             val hasExistingLastMinuteNotification = _notifications.value.any { notification ->
                 notification.tripId == proposal.id &&
-                        notification.type == "lastMinute" &&
+                        notification.type == NotificationType.LAST_MINUTE &&
                         notification.applicantId == currentUser.value.uid
 
 
@@ -1093,7 +1065,7 @@ class TravelProposalViewModel(
                 tripModel.addNotification(
                     tripId = proposal.id,
                     title = proposal.title,
-                    type = "lastMinuteAutomatic",
+                    type = NotificationType.LAST_MINUTE_AUTOMATIC,
                     notificationOwnerId = "Automatic",
                     applicantId = currentUser.value.uid,
                     tripPlannerId = proposal.tripPlannerId,
@@ -1124,7 +1096,7 @@ class TravelProposalViewModel(
 
             val hasExistingRecommendedNotification = _notifications.value.any { notification ->
                 notification.tripId == proposal.id &&
-                        notification.type == "checkRecommended" &&
+                        notification.type == NotificationType.CHECK_RECOMMENDED &&
                         notification.applicantId == currentUser.value.uid
             }
 
@@ -1147,7 +1119,7 @@ class TravelProposalViewModel(
                 tripModel.addNotification(
                     tripId = proposal.id,
                     title = proposal.title,
-                    type = "checkRecommended",
+                    type = NotificationType.CHECK_RECOMMENDED,
                     notificationOwnerId = "Automatic",
                     applicantId = currentUser.value.uid,
                     tripPlannerId = proposal.tripPlannerId,
@@ -1174,7 +1146,7 @@ class TravelProposalViewModel(
 
     fun handleNotificationNavigation(notification: Notification, navActions: Navigation) {
         when (notification.type) {
-            "newApplication" -> {
+            NotificationType.NEW_APPLICATION -> {
                 navActions.navigateToTripInfo(
                     tripId = notification.tripId,
                     fromMyTripTab = true,
@@ -1182,7 +1154,7 @@ class TravelProposalViewModel(
                 )
             }
 
-            "reviewReceivedForPastTrip" -> {
+            NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
                 navActions.navigateToPastTravelProposalInfo(
                     tripId = notification.tripId,
                     fromMyTripTab = true,
@@ -1190,7 +1162,7 @@ class TravelProposalViewModel(
                 )
             }
 
-            "userReviewReceived" -> {
+            NotificationType.USER_REVIEW_RECEIVED -> {
                 navActions.navigateToUserReview()
             }
 

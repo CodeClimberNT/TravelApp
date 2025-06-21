@@ -7,6 +7,7 @@ import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.Filters
 import com.example.final_assignment_even_g28.data_class.Notification
+import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.data_class.Participant
 import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
 import com.example.final_assignment_even_g28.data_class.ParticipantStatus
@@ -369,7 +370,7 @@ class TravelProposalModel(
             addNotification(
                 tripId = tripId,
                 title = tripTitle,
-                type = "reviewReceivedForPastTrip",
+                type = NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP,
                 notificationOwnerId = review.reviewerId,
                 tripPlannerId = plannerId,
                 reviewedUser = review.reviewerId
@@ -410,7 +411,7 @@ class TravelProposalModel(
                 addNotification(
                     trip.id,
                     trip.title,
-                    "participantApproved",
+                    NotificationType.PARTICIPANT_APPROVED,
                     trip.tripPlannerId,
                     applicantId = userId,
                     trip.tripPlannerId
@@ -420,7 +421,7 @@ class TravelProposalModel(
         addNotification(
             trip.id,
             trip.title,
-            "participantApproved",
+            NotificationType.PARTICIPANT_APPROVED,
             trip.tripPlannerId,
             applicantId = userId,
             trip.tripPlannerId
@@ -442,7 +443,7 @@ class TravelProposalModel(
         addNotification(
             trip.id,
             trip.title,
-            "participantRejected",
+            NotificationType.PARTICIPANT_REJECTED,
             trip.tripPlannerId,
             applicantId = userId,
             trip.tripPlannerId
@@ -521,7 +522,7 @@ class TravelProposalModel(
         addNotification(
             trip.id,
             trip.title,
-            "newApplication",
+            NotificationType.NEW_APPLICATION,
             userId,
             userId,
             tripPlannerId = trip.tripPlannerId
@@ -693,7 +694,7 @@ class TravelProposalModel(
     fun addNotification(
         tripId: String,
         title: String,
-        type: String,
+        type: NotificationType,
         notificationOwnerId: String,
         applicantId: String? = null,
         tripPlannerId: String? = null,
@@ -721,7 +722,7 @@ class TravelProposalModel(
     }
 
 
-    fun getNotifications(excludedNotificationTypes: List<String>): Flow<List<Notification>> =
+    fun getNotifications(excludedNotificationTypes: List<NotificationType>): Flow<List<Notification>> =
         callbackFlow {
             val userId = userModel.loggedUser.value.uid
             Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $userId")
@@ -734,40 +735,42 @@ class TravelProposalModel(
                     }
 
                     if (snapshot != null) {
-                        val notifications = snapshot.documents.mapNotNull { document ->
-                            try {
+                        try {
+                            val notifications = snapshot.documents.mapNotNull { document ->
                                 Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
                                 val notification = document.toObject(Notification::class.java)
                                 Log.d("CurrentUser", "User ID: $userId")
                                 notification?.copy(id = document.id)
 
-                            } catch (e: Exception) {
-                                Log.e("Notifications", "Error parsing notification: ${e.message}")
-                                null
-                            }
-                        }.filter { notification ->
-                            !excludedNotificationTypes.contains(notification.type)
-                        }.filter { notification ->
-                            // Filtra le notifiche per destinatario
-                            when (notification.type) {
-                                "newProposal" -> {
-                                    notification.notificationOwnerId != userId
-                                }
 
-                                "newApplication" -> notification.tripPlannerId == userId
-                                "participantApproved", "participantRejected" -> notification.applicantId == userId
-                                "reviewReceivedForPastTrip" -> {
-                                    notification.tripPlannerId == userId && notification.reviewedUser != userId
-                                }
+                            }.filter { notification ->
+                                !excludedNotificationTypes.contains(notification.type)
+                            }.filter { notification ->
+                                // Filtra le notifiche per destinatario
+                                when (notification.type) {
+                                    NotificationType.NEW_PROPOSAL -> {
+                                        notification.notificationOwnerId != userId
+                                    }
 
-                                "userReviewReceived" -> notification.reviewedUser == userId
-                                "lastMinute" -> notification.applicantId != userId
-                                "lastMinuteAutomatic" -> notification.applicantId == userId
-                                "checkRecommended" -> notification.applicantId == userId
-                                else -> false
+                                    NotificationType.NEW_APPLICATION -> notification.tripPlannerId == userId
+                                    NotificationType.PARTICIPANT_APPROVED, NotificationType.PARTICIPANT_REJECTED -> notification.applicantId == userId
+                                    NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
+                                        notification.tripPlannerId == userId && notification.reviewedUser != userId
+                                    }
+
+                                    NotificationType.USER_REVIEW_RECEIVED -> notification.reviewedUser == userId
+                                    NotificationType.LAST_MINUTE -> notification.applicantId != userId
+                                    NotificationType.LAST_MINUTE_AUTOMATIC -> notification.applicantId == userId
+                                    NotificationType.CHECK_RECOMMENDED -> notification.applicantId == userId
+                                    NotificationType.BADGE_UNLOCKED -> notification.notificationOwnerId == userId
+                                    else -> false
+                                }
                             }
+                            trySend(notifications)
+                        } catch (e: Exception) {
+                            Log.e("Notifications", "Error parsing notification: ${e.message}")
+                            trySend(emptyList())
                         }
-                        trySend(notifications)
                     } else {
                         trySend(emptyList())
                     }

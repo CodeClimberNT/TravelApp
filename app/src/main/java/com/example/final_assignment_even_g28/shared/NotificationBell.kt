@@ -64,7 +64,7 @@ fun NotificationBell(navActions: Navigation, tripVm : TravelProposalViewModel = 
                 Icon(
                     Icons.Filled.Notifications,
                     contentDescription = null,
-                    tint = Color(0xFF2C3E50)
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
 

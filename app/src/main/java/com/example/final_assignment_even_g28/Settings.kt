@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.notificationItems
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
@@ -34,16 +34,20 @@ fun NotificationSettingsScreen(
 ) {
     val toggleStates = remember {
         mutableStateMapOf<String, Boolean>().apply {
-            notificationItems.forEach { put(it.title, userModel.getNotificationSetting(
-                when(it.title) {
-                    "Last-minute travel proposal" -> "lastMinute"
-                    "New Applicant" -> "newApplication"
-                    "Own Trips Reviews" -> "reviewReceivedForPastTrip"
-                    "Status update on pending application" -> "statusUpdateOnPendingApplication"
-                    "Recommended trips" -> "checkRecommended"
-                    else -> ""
-                }
-            )) }
+            notificationItems.forEach {
+                put(
+                    it.title, userModel.getNotificationSetting(
+                        when (it.title) {
+                            "Last-minute travel proposal" -> NotificationPreferenceType.LAST_MINUTE
+                            "New Applicant" -> NotificationPreferenceType.NEW_APPLICATION
+                            "Own Trips Reviews" -> NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP
+                            "Status update on pending application" -> NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION
+                            "Recommended trips" -> NotificationPreferenceType.CHECK_RECOMMENDED
+                            else -> NotificationPreferenceType.NULL
+                        }
+                    )
+                )
+            }
         }
     }
 
@@ -68,13 +72,13 @@ fun NotificationSettingsScreen(
                     toggleStates[item.title] = isEnabled
 
 
-                    val key =  when(item.title) {
-                        "Last-minute travel proposal" -> "lastMinute"
-                        "New Applicant" -> "newApplication"
-                        "Own Trips Reviews" -> "reviewReceivedForPastTrip"
-                        "Status update on pending application" -> "statusUpdateOnPendingApplication"
-                        "Recommended trips" -> "checkRecommended"
-                        else -> ""
+                    val key = when (item.title) {
+                        "Last-minute travel proposal" -> NotificationPreferenceType.LAST_MINUTE
+                        "New Applicant" -> NotificationPreferenceType.NEW_APPLICATION
+                        "Own Trips Reviews" -> NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP
+                        "Status update on pending application" -> NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION
+                        "Recommended trips" -> NotificationPreferenceType.CHECK_RECOMMENDED
+                        else -> NotificationPreferenceType.NULL
                     }
 
                     key.let {

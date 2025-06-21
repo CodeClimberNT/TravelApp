@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.BadgeType
-import com.example.final_assignment_even_g28.data_class.NotificationPreference
+import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
@@ -111,19 +111,20 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 //        }
 //    }
 
-    fun updateNotificationSetting(type: String, enabled: Boolean) {
+    fun updateNotificationSetting(type: NotificationPreferenceType, enabled: Boolean) {
         viewModelScope.launch {
             val currentUserUid = loggedUser.value.uid
             val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
                 if (pref.type == type) pref.copy(enabled = enabled) else pref
             }
             model.updateNotificationSettings(currentUserUid, updatedSettings)
-            (model.loggedUser as MutableStateFlow).value = loggedUser.value.copy(notificationSettings = updatedSettings)
+            (model.loggedUser as MutableStateFlow).value =
+                loggedUser.value.copy(notificationSettings = updatedSettings)
         }
     }
 
-    fun getNotificationSetting(type: String): Boolean {
-        return loggedUser.value.notificationSettings.find { it.type == type }?.enabled ?: false
+    fun getNotificationSetting(type: NotificationPreferenceType): Boolean {
+        return loggedUser.value.notificationSettings.find { it.type == type }?.enabled == true
     }
 
     fun startEditing() {

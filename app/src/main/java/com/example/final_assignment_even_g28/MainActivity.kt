@@ -40,23 +40,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-//41f59ea7-9b5a-4636-8c64-db5caf77530d
-/*
-* id
-"4"
-(stringa)
-
-
-
-invitedGuests
-(array)
-
-
-0
-"Franco"
-(stringa)
-
-
-status
-"APPROVED"
-* */

@@ -1,23 +1,39 @@
 package com.example.final_assignment_even_g28.ui.components.sign_in
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import androidx.compose.foundation.background
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.window.Dialog
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -38,21 +54,23 @@ fun RegistrationForm(
     var isEmailError by remember { mutableStateOf(false) }
     var isPasswordError by remember { mutableStateOf(false) }
 
-    val interestsOptions = listOf("Hiking", "Fun", "Culture", "Relax", "Adventure", "Food")
-    val cityOptions = listOf("USA", "Italy", "Japan", "Thailand", "Spain", "Canada")
+//    val interestsOptions = listOf("Hiking", "Fun", "Culture", "Relax", "Adventure", "Food")
+//    val cityOptions = listOf("USA", "Italy", "Japan", "Thailand", "Spain", "Canada")
 
     var selectedInterests by remember { mutableStateOf(setOf<String>()) }
     var selectedCities by remember { mutableStateOf(setOf<String>()) }
 
-    Card (
-        modifier = Modifier
-            .height(400.dp),
-        shape = RoundedCornerShape(16.dp)
-    ){
-        Dialog(onDismissRequest = onDismissRequest) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            modifier = Modifier
+                .height(700.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(color = MaterialTheme.colorScheme.background),
+            shape = RoundedCornerShape(16.dp)
+        ) {
             Column(
                 modifier = Modifier
-                  //  .fillMaxSize()
+                    .fillMaxSize()
                     .background(color = MaterialTheme.colorScheme.background)
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.Start
@@ -77,7 +95,10 @@ fun RegistrationForm(
                     isError = isNameError,
                     supportingText = {
                         if (isNameError)
-                            Text(text = "Name Cannot be Empty", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                text = "Name Cannot be Empty",
+                                color = MaterialTheme.colorScheme.error
+                            )
                     }
                 )
                 Spacer(Modifier.height(12.dp))
@@ -90,7 +111,10 @@ fun RegistrationForm(
                     isError = isSurnameError,
                     supportingText = {
                         if (isSurnameError)
-                        Text(text = "Surname Cannot be Empty", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                text = "Surname Cannot be Empty",
+                                color = MaterialTheme.colorScheme.error
+                            )
                     }
                 )
                 Spacer(Modifier.height(12.dp))
@@ -104,7 +128,10 @@ fun RegistrationForm(
                     isError = isEmailError,
                     supportingText = {
                         if (isEmailError)
-                        Text(text = "Email Cannot be Empty and need to be Formatted as xxx@xxx.xxx", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                text = "Email Cannot be Empty and need to be Formatted as xxx@xxx.xxx",
+                                color = MaterialTheme.colorScheme.error
+                            )
                     }
                 )
 
@@ -131,7 +158,10 @@ fun RegistrationForm(
                     isError = isPasswordError,
                     supportingText = {
                         if (isPasswordError)
-                        Text(text = "Passwords cannot be empty and must be equals", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                text = "Passwords cannot be empty and must be equals",
+                                color = MaterialTheme.colorScheme.error
+                            )
                     }
                 )
 
@@ -173,10 +203,17 @@ fun RegistrationForm(
                 }
                 */
 
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(48.dp))
                 Button(
                     onClick = {
-                        if (userVM.isRegistrationDataCorrect(tempName, tempSurname, tempMail, tempPassword, tempPassword2)){
+                        if (userVM.isRegistrationDataCorrect(
+                                tempName,
+                                tempSurname,
+                                tempMail,
+                                tempPassword,
+                                tempPassword2
+                            )
+                        ) {
                             userVM.signUp(
                                 UserProfile(
                                     name = tempName,
@@ -185,11 +222,19 @@ fun RegistrationForm(
                                 ),
                                 password = tempPassword
                             )
-                        }else{
-                            if (tempName.isEmpty()) { isNameError = true }
-                            if (tempSurname.isEmpty()) { isSurnameError = true }
-                            if (tempMail.isEmpty() || tempMail.matches("^[A-Za-z0-9+_.-]+@(.+)$".toRegex())) { isEmailError = true }
-                            if (tempPassword.isEmpty() || tempPassword!=tempPassword2) { isPasswordError = true }
+                        } else {
+                            if (tempName.isEmpty()) {
+                                isNameError = true
+                            }
+                            if (tempSurname.isEmpty()) {
+                                isSurnameError = true
+                            }
+                            if (tempMail.isEmpty() || tempMail.matches("^[A-Za-z0-9+_.-]+@(.+)$".toRegex())) {
+                                isEmailError = true
+                            }
+                            if (tempPassword.isEmpty() || tempPassword != tempPassword2) {
+                                isPasswordError = true
+                            }
                         }
                     },
                     modifier = Modifier
@@ -203,7 +248,6 @@ fun RegistrationForm(
         }
     }
 }
-
 
 
 data class RegistrationData(

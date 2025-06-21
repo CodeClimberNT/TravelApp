@@ -8,11 +8,27 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+enum class NotificationType {
+    NEW_PROPOSAL,
+    NEW_APPLICATION,
+    PARTICIPANT_APPROVED,
+    PARTICIPANT_REJECTED,
+    REVIEW_RECEIVED_FOR_PAST_TRIP,
+    LAST_MINUTE,
+    CHECK_RECOMMENDED,
+    LAST_MINUTE_AUTOMATIC,
+    USER_REVIEW_RECEIVED,
+    BADGE_UNLOCKED,
+    NULL;
+}
+
 data class Notification(
     @get:Exclude var id: String = "",
     val tripId: String = "",
     val title: String = "",
-    val type: String = "",
+
+    var type: NotificationType = NotificationType.NULL,
+
     val timestamp: Timestamp = Timestamp.now(),
     val read: List<String> = emptyList(),
     val notificationOwnerId: String = "",
@@ -32,7 +48,7 @@ data class Notification(
         val debugTime = Timestamp(Date(currentTime))
         Log.d(
             "NotificationDebug",
-            "Notification ${title} Current time: ${debugTime.toDate()}, Notification time: ${timestamp.toDate()}"
+            "Notification $title Current time: ${debugTime.toDate()}, Notification time: ${timestamp.toDate()}"
         )
         return (currentTime - notificationTime) < (60 * 1000) // 1 minuto
     }

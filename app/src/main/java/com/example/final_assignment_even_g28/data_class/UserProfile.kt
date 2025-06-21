@@ -8,13 +8,26 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
+enum class NotificationPreferenceType {
+    NEW_APPLICATION,
+    STATUS_UPDATE_ON_PENDING_APPLICATION,
+    REVIEW_RECEIVED_FOR_PAST_TRIP,
+    LAST_MINUTE,
+    CHECK_RECOMMENDED,
+    NULL
+}
+
+@Serializable
 data class NotificationPreference(
-    var type: String = "",
+    var type: NotificationPreferenceType = NotificationPreferenceType.NULL,
     var enabled: Boolean = false
 ) {
-    constructor(type: String) : this(type, true)
+    constructor(type: NotificationPreferenceType) : this(type, true)
 
-    constructor(type: String, enabled: Boolean, uid: String) : this(type, enabled) {
+    constructor(type: NotificationPreferenceType, enabled: Boolean, uid: String) : this(
+        type,
+        enabled
+    ) {
         this.type = type
         this.enabled = enabled
     }
@@ -41,11 +54,14 @@ data class UserProfile(
     var rating: Float = 0.0f,
     var isProfileImage: String = "Monogram",
     var notificationSettings: List<NotificationPreference> = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
+        NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+        NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+        NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+        NotificationPreference(
+            NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+            true
+        ),
+        NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
     ),
     @get:Exclude
     var profilePicture: ProfilePictureData = ProfilePictureData.Monogram(""),
@@ -64,15 +80,18 @@ data class UserProfile(
         currentLevel = 1,
         rating = 0.0F,
         notificationSettings = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
-    ),
+            NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+            NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+            NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+            NotificationPreference(
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                true
+            ),
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        ),
         profilePicture = ProfilePictureData.Monogram(""),
 
-    )
+        )
 
     constructor(nickName: String, profilePicture: ProfilePictureData) : this(
         uid = "",
@@ -88,12 +107,15 @@ data class UserProfile(
         currentLevel = 1,
         rating = 0.0F,
         notificationSettings = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
-    ),
+            NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+            NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+            NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+            NotificationPreference(
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                true
+            ),
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        ),
         profilePicture = profilePicture
     )
 
@@ -111,12 +133,15 @@ data class UserProfile(
         currentLevel = 1,
         rating = 0.0F,
         notificationSettings = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
-    ),
+            NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+            NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+            NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+            NotificationPreference(
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                true
+            ),
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        ),
         profilePicture = profilePicture
     )
 
@@ -134,12 +159,15 @@ data class UserProfile(
         currentLevel = 1,
         rating = rating,
         notificationSettings = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
-    ),
+            NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+            NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+            NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+            NotificationPreference(
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                true
+            ),
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        ),
         profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
     )
 
@@ -158,12 +186,15 @@ data class UserProfile(
         currentLevel = 1,
         rating = rating,
         notificationSettings = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
-    ),
+            NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+            NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+            NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+            NotificationPreference(
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                true
+            ),
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        ),
         profilePicture = avatar
     )
 
@@ -181,12 +212,15 @@ data class UserProfile(
         currentLevel = 1,
         rating = 0.0F,
         notificationSettings = listOf(
-        NotificationPreference("lastMinute", true),
-        NotificationPreference("newApplication", true),
-        NotificationPreference("reviewReceivedForPastTrip", true),
-        NotificationPreference("statusUpdateOnPendingApplication", true),
-        NotificationPreference("checkRecommended", true)
-    ),
+            NotificationPreference(NotificationPreferenceType.LAST_MINUTE, true),
+            NotificationPreference(NotificationPreferenceType.NEW_APPLICATION, true),
+            NotificationPreference(NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP, true),
+            NotificationPreference(
+                NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
+                true
+            ),
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        ),
         profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
     )
 

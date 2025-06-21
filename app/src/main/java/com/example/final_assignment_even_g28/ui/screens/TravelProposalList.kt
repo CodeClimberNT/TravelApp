@@ -1,6 +1,7 @@
 package com.example.final_assignment_even_g28.ui.screens
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -97,12 +98,10 @@ fun TravelProposalList(
             Spacer(modifier = Modifier.height(16.dp))
             if (filteredTravelProposal.isNotEmpty()) {
                 TravelProposalListColumn(
-                    tripVm,
-                    filteredTravelProposal,
-                    Modifier
-                        .fillMaxHeight(),
-//                        .padding(innerPadding),
-                    navActions
+                    tripVm = tripVm,
+                    travelProposalList = filteredTravelProposal,
+                    modifier = Modifier.fillMaxHeight(),
+                    navActions = navActions
                 )
             } else {
                 Text(
@@ -148,7 +147,11 @@ fun TravelProposalBlock(
         modifier = Modifier
             .shadow(shape = RoundedCornerShape(16.dp), elevation = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .border(
+                BorderStroke((0.5).dp, MaterialTheme.colorScheme.outline),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable {
                 navActions.navigateToTripInfo(travelProposal.id, false)
             }, verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.Start
@@ -178,6 +181,7 @@ fun TravelProposalBlock(
         ) {
             Text(
                 text = travelProposal.title,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.padding(4.dp),
                 fontWeight = FontWeight.Bold
             )
@@ -189,6 +193,7 @@ fun TravelProposalBlock(
             ) {
                 Text(
                     text = "${numApprovedParticipant}/${travelProposal.maxParticipant}",
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(end = 4.dp),
                     fontWeight = FontWeight.Bold
                 )
@@ -204,6 +209,7 @@ fun TravelProposalBlock(
         Row(modifier = Modifier.padding(start = 10.dp)) {
             Text(
                 text = "${travelProposal.price.min} - ${travelProposal.price.max}€",
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.padding(
                     top = 4.dp, bottom = 4.dp, start = 6.dp, end = 6.dp
                 ),
@@ -213,7 +219,7 @@ fun TravelProposalBlock(
                 text = tripVm.showDatesInList(
                     travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
                 ),
-                color = MaterialTheme.colorScheme.secondary,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.padding(top = 4.dp, bottom = 4.dp, start = 6.dp),
             )
         }
