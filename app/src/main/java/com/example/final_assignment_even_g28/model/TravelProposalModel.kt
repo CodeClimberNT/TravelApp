@@ -524,7 +524,7 @@ class TravelProposalModel {
             "newApplication",
             userId,
             userId,
-            trip.tripPlannerId
+            tripPlannerId = trip.tripPlannerId
         )
 
         return true
@@ -721,7 +721,8 @@ class TravelProposalModel {
     }
 
 
-    fun getNotifications(userId: String): Flow<List<Notification>> = callbackFlow {
+    fun getNotifications(userId: String, excludedNotificationTypes: List<String>): Flow<List<Notification>> = callbackFlow {
+        Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes")
         val listener = Collections.notifications
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -733,12 +734,17 @@ class TravelProposalModel {
                 if (snapshot != null) {
                     val notifications = snapshot.documents.mapNotNull { document ->
                         try {
+                            Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
                             val notification = document.toObject(Notification::class.java)
+                            Log.d("CurrentUser", "User ID: $userId")
                             notification?.copy(id = document.id)
+
                         } catch (e: Exception) {
                             Log.e("Notifications", "Error parsing notification: ${e.message}")
                             null
                         }
+                    }.filter { notification ->
+                        !excludedNotificationTypes.contains(notification.type)
                     }.filter { notification ->
                         // Filtra le notifiche per destinatario
                         when (notification.type) {

@@ -13,6 +13,7 @@ import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.BadgeRepository
 import com.example.final_assignment_even_g28.data_class.BadgeType
+import com.example.final_assignment_even_g28.data_class.NotificationPreference
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
@@ -22,12 +23,15 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -70,6 +74,9 @@ class UserProfileModel() {
         }.addOnFailureListener { e ->
             Log.e("User Profile", "Error retrieving the users: $e")
         }
+         migrateNotificationSettings(Collections.auth.currentUser?.uid ?: "")
+        Log.d("UserProfileNotifications", "Current user: ${Collections.auth.currentUser?.uid ?: "No user"}")
+
     }
 
     private suspend fun loadUserWithBadges(userProfile: UserProfile) {
@@ -655,6 +662,60 @@ class UserProfileModel() {
             }
         } catch (e: Exception) {
             Log.e("User Model", "Error initializing badges for all users: ${e.message}")
+        }
+    }
+
+    fun updateNotificationSettings(userId: String, settings: List<NotificationPreference>) {
+        Collections.users.document(userId)
+            .update("notificationSettings", settings)
+            .addOnSuccessListener {
+                Log.d("UserProfileNotifications", "Notification settings updated successfully")
+            }
+            .addOnFailureListener { error ->
+                Log.e("UserProfileNotifications", "Failed to update notification settings: ${error.message}")
+            }
+    }
+
+    fun migrateNotificationSettings(userId: String) {
+        if (!userId.isEmpty()) {
+            Log.e("Migration", "User ID is empty, skipping migration")
+
+            val defaultNotificationSettings = listOf(
+                NotificationPreference("lastMinute", true),
+                NotificationPreference("newApplication", true),
+                NotificationPreference("reviewReceivedForPastTrip", true),
+                NotificationPreference("statusUpdateOnPendingApplication", true),
+                NotificationPreference("checkRecommended", true)
+            )
+
+            Collections.users.document(userId).get()
+                .addOnSuccessListener { documentSnapshot ->
+                    if (documentSnapshot.exists()) {
+                        val data = documentSnapshot.data
+                        if (data != null && !data.containsKey("notificationSettings")) {
+                            Collections.users.document(userId)
+                                .update("notificationSettings", defaultNotificationSettings)
+                                .addOnSuccessListener {
+                                    Log.d(
+                                        "Migration",
+                                        "Added notificationSettings for user $userId"
+                                    )
+                                }
+                                .addOnFailureListener { error ->
+                                    Log.e(
+                                        "Migration",
+                                        "Failed to add notificationSettings: ${error.message}"
+                                    )
+                                }
+                        }
+                    }
+                }
+                .addOnFailureListener { error ->
+                    Log.e("Migration", "Failed to retrieve user $userId: ${error.message}")
+                }
+        }
+        else {
+            Log.e("Migration", "User ID is empty, skipping migration")
         }
     }
 }

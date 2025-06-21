@@ -51,6 +51,7 @@ fun NavGraph(
     LaunchedEffect(Unit) {
         tripVm.newTravelProposalNotification.collect { notification ->
             notification?.let {
+                Log.d("SnackbarDebug", "Showing notification: ${it.type}, ${it.title}")
                 snackbarHostState.showSnackbar(
                     message = tripVm.getNotificationMessage(it.type, it.title, true),
                     actionLabel = "View",
@@ -60,7 +61,7 @@ fun NavGraph(
                         tripVm.handleNotificationNavigation(it, navActions)
                     }
                 }
-            }
+            } ?: Log.d("SnackbarDebug", "No notification to show")
         }
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,7 +34,16 @@ fun NotificationSettingsScreen(
 ) {
     val toggleStates = remember {
         mutableStateMapOf<String, Boolean>().apply {
-            notificationItems.forEach { put(it.title, true) }
+            notificationItems.forEach { put(it.title, userModel.getNotificationSetting(
+                when(it.title) {
+                    "Last-minute travel proposal" -> "lastMinute"
+                    "New Applicant" -> "newApplication"
+                    "Own Trips Reviews" -> "reviewReceivedForPastTrip"
+                    "Status update on pending application" -> "statusUpdateOnPendingApplication"
+                    "Recommended trips" -> "checkRecommended"
+                    else -> ""
+                }
+            )) }
         }
     }
 
@@ -53,7 +63,24 @@ fun NotificationSettingsScreen(
                 title = item.title,
                 description = item.description,
                 isChecked = toggleStates[item.title] == true,
-                onCheckedChange = { toggleStates[item.title] = it }
+                onCheckedChange = { isEnabled ->
+
+                    toggleStates[item.title] = isEnabled
+
+
+                    val key =  when(item.title) {
+                        "Last-minute travel proposal" -> "lastMinute"
+                        "New Applicant" -> "newApplication"
+                        "Own Trips Reviews" -> "reviewReceivedForPastTrip"
+                        "Status update on pending application" -> "statusUpdateOnPendingApplication"
+                        "Recommended trips" -> "checkRecommended"
+                        else -> ""
+                    }
+
+                    key.let {
+                        userModel.updateNotificationSetting(it, isEnabled)
+                    }
+                }
             )
         }
 
