@@ -185,34 +185,40 @@ class TravelProposalViewModel(
                 "newApplication" to listOf("newApplication"),
                 "reviewReceivedForPastTrip" to listOf("reviewReceivedForPastTrip"),
                 "checkRecommended" to listOf("checkRecommended"),
-                "statusUpdateOnPendingApplication" to listOf("participantApproved", "participantRejected")
+                "statusUpdateOnPendingApplication" to listOf(
+                    "participantApproved",
+                    "participantRejected"
+                )
             )
-
             val excludedNotificationTypes = userModel.loggedUser.value.notificationSettings
                 .filter { !it.enabled }
                 .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
             Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
-            tripModel.getNotifications(currentUser.value.uid, excludedNotificationTypes).collect { notifications ->
-                // NOTIFICATION BELL
-                _notifications.value = notifications
+            tripModel.getNotifications(excludedNotificationTypes)
+                .collect { notifications ->
+                    // NOTIFICATION BELL
+                    _notifications.value = notifications
 
-                val unreadCount = notifications.count { !it.isRead(currentUser.value.uid) }
-                _unreadCount.value = unreadCount
+                    val unreadCount = notifications.count { !it.isRead(currentUser.value.uid) }
+                    _unreadCount.value = unreadCount
 
-                //SNACKBAR
-                notifications.forEach { notification ->
-                    if (notification.isRecent() &&
-                        !notification.isRead(currentUser.value.uid) &&
-                        !existingNotificationIds.contains(notification.id)
-                    ) {
+                    //SNACKBAR
+                    notifications.forEach { notification ->
+                        if (notification.isRecent() &&
+                            !notification.isRead(currentUser.value.uid) &&
+                            !existingNotificationIds.contains(notification.id)
+                        ) {
 
-                        existingNotificationIds.add(notification.id)
-                        _newTravelProposalNotification.value = notification
-                        Log.d("New Notification", "New notification: ${notification.title}")
-                        Log.d("New Notification", "New notification: ${_newTravelProposalNotification.value}")
+                            existingNotificationIds.add(notification.id)
+                            _newTravelProposalNotification.value = notification
+                            Log.d("New Notification", "New notification: ${notification.title}")
+                            Log.d(
+                                "New Notification",
+                                "New notification: ${_newTravelProposalNotification.value}"
+                            )
+                        }
                     }
                 }
-            }
         }
     }
 
@@ -439,6 +445,7 @@ class TravelProposalViewModel(
                 )
 
                 val tripId = tempTravelProposal.id.ifEmpty { UUID.randomUUID().toString() }
+                val ownerId = currentUser.value.uid
                 val title = tempTravelProposal.title
                 val tripStartDate = tempTravelProposal.tripStartDate.toDate().time
                 val result = tripModel.addTravelProposal(
@@ -458,18 +465,18 @@ class TravelProposalViewModel(
                     val isLastMinute = (tripStartDate - now) < (24 * 60 * 60 * 1000)
                     if (isLastMinute) {
                         tripModel.addNotification(
-                            tripId,
-                            title,
-                            "lastMinute",
-                            currentUser.value.uid,
-                            applicantId = currentUser.value.uid
+                            tripId = tripId,
+                            title = title,
+                            type = "lastMinute",
+                            notificationOwnerId = ownerId,
+                            applicantId = ownerId
                         )
                     } else {
                         tripModel.addNotification(
-                            tripId,
-                            title,
-                            "newProposal",
-                            currentUser.value.uid
+                            tripId = tripId,
+                            title = title,
+                            type = "newProposal",
+                            notificationOwnerId = ownerId
                         )
                     }
                     tempTravelProposal.tempImages = listOf()
@@ -858,13 +865,17 @@ class TravelProposalViewModel(
 
         toggleFilterBar()
     }
+
     fun getFilteredNotifications(): List<Notification> {
         val toggleToNotificationTypes = mapOf(
             "lastMinute" to listOf("lastMinute"),
             "newApplication" to listOf("newApplication"),
             "reviewReceivedForPastTrip" to listOf("reviewReceivedForPastTrip"),
             "checkRecommended" to listOf("checkRecommended"),
-            "statusUpdateOnPendingApplication" to listOf("participantApproved", "participantRejected") // Mapping per statusUpdate
+            "statusUpdateOnPendingApplication" to listOf(
+                "participantApproved",
+                "participantRejected"
+            ) // Mapping per statusUpdate
         )
 
         val activeNotificationTypes = userModel.loggedUser.value.notificationSettings

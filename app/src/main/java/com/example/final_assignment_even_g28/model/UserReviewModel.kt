@@ -7,9 +7,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.tasks.await
 
-class UserReviewModel() {
-    private val userProfileModel = UserProfileModel()
-    private val travelProposalModel = TravelProposalModel()
+class UserReviewModel(
+    private val userProfileModel: UserProfileModel,
+    private val travelProposalModel: TravelProposalModel
+) {
+
 
     private val _myReviews = MutableStateFlow<List<UserReview>>(emptyList())
     val myReviews: StateFlow<List<UserReview>> get() = _myReviews

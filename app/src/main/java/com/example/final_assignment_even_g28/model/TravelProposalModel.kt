@@ -26,9 +26,11 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-class TravelProposalModel {
-    private val imageStorageModel = ImageStorageModel()
-    private val userModel = UserProfileModel()
+class TravelProposalModel(
+    private val imageStorageModel: ImageStorageModel,
+    private val userModel: UserProfileModel
+) {
+
 
     //TODO: add private member with mutableStateFlow and StateFlow
 
@@ -721,54 +723,63 @@ class TravelProposalModel {
     }
 
 
-    fun getNotifications(userId: String, excludedNotificationTypes: List<String>): Flow<List<Notification>> = callbackFlow {
-        Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes")
-        val listener = Collections.notifications
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e("Notifications", error.toString())
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    val notifications = snapshot.documents.mapNotNull { document ->
-                        try {
-                            Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
-                            val notification = document.toObject(Notification::class.java)
-                            Log.d("CurrentUser", "User ID: $userId")
-                            notification?.copy(id = document.id)
-
-                        } catch (e: Exception) {
-                            Log.e("Notifications", "Error parsing notification: ${e.message}")
-                            null
-                        }
-                    }.filter { notification ->
-                        !excludedNotificationTypes.contains(notification.type)
-                    }.filter { notification ->
-                        // Filtra le notifiche per destinatario
-                        when (notification.type) {
-                            "newProposal" -> notification.notificationOwnerId != userId
-                            "newApplication" -> notification.tripPlannerId == userId
-                            "participantApproved", "participantRejected" -> notification.applicantId == userId
-                            "reviewReceivedForPastTrip" -> {
-                                notification.tripPlannerId == userId && notification.reviewedUser != userId
-                            }
-
-                            "userReviewReceived" -> notification.reviewedUser == userId
-                            "lastMinute" -> notification.applicantId != userId
-                            "lastMinuteAutomatic" -> notification.applicantId == userId
-                            "checkRecommended" -> notification.applicantId == userId
-                            else -> false
-                        }
+    fun getNotifications(excludedNotificationTypes: List<String>): Flow<List<Notification>> =
+        callbackFlow {
+            val userId = userModel.loggedUser.value.uid
+            Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $userId")
+            val listener = Collections.notifications
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e("Notifications", error.toString())
+                        trySend(emptyList())
+                        return@addSnapshotListener
                     }
-                    trySend(notifications)
-                } else {
-                    trySend(emptyList())
+
+                    if (snapshot != null) {
+                        val notifications = snapshot.documents.mapNotNull { document ->
+                            try {
+                                Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
+                                val notification = document.toObject(Notification::class.java)
+                                Log.d("CurrentUser", "User ID: $userId")
+                                notification?.copy(id = document.id)
+
+                            } catch (e: Exception) {
+                                Log.e("Notifications", "Error parsing notification: ${e.message}")
+                                null
+                            }
+                        }.filter { notification ->
+                            !excludedNotificationTypes.contains(notification.type)
+                        }.filter { notification ->
+                            // Filtra le notifiche per destinatario
+                            when (notification.type) {
+                                "newProposal" -> {
+                                    Log.d(
+                                        "FilterNotifications",
+                                        "Filtering newProposal for user: $userId, notificationOwnerId: ${notification.notificationOwnerId}"
+                                    )
+                                    notification.notificationOwnerId != userId
+                                }
+
+                                "newApplication" -> notification.tripPlannerId == userId
+                                "participantApproved", "participantRejected" -> notification.applicantId == userId
+                                "reviewReceivedForPastTrip" -> {
+                                    notification.tripPlannerId == userId && notification.reviewedUser != userId
+                                }
+
+                                "userReviewReceived" -> notification.reviewedUser == userId
+                                "lastMinute" -> notification.applicantId != userId
+                                "lastMinuteAutomatic" -> notification.applicantId == userId
+                                "checkRecommended" -> notification.applicantId == userId
+                                else -> false
+                            }
+                        }
+                        trySend(notifications)
+                    } else {
+                        trySend(emptyList())
+                    }
                 }
-            }
-        awaitClose { listener.remove() }
-    }
+            awaitClose { listener.remove() }
+        }
 
     fun markNotificationAsRead(notificationId: String, userId: String) {
         Collections.notifications.document(notificationId)
