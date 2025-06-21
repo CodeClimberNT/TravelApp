@@ -269,7 +269,7 @@ class TravelProposalModel {
                 // Filter proposals where user is an approved participant (but not the planner)
                 val participatedProposals = allProposals.filter { proposal ->
                     proposal.participants.any { participant ->
-                        participant.id == userId && participant.status == ParticipantStatus.APPROVED
+                        (participant.id == userId) && (participant.status == ParticipantStatus.APPROVED)
                     }
                 }
 

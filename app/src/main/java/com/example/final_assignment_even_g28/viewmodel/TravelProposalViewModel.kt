@@ -11,6 +11,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data_class.ActivityTag
+import com.example.final_assignment_even_g28.data_class.BadgeType
 import com.example.final_assignment_even_g28.data_class.ExperienceComposition
 import com.example.final_assignment_even_g28.data_class.Filters
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
@@ -34,10 +35,13 @@ import com.example.final_assignment_even_g28.shared.validation.TravelProposalVal
 import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -88,12 +92,27 @@ class TravelProposalViewModel(
         get() = _allTravelProposals
 
 
-    val myTravelProposals: Flow<List<TravelProposal>> =
-        tripModel.getMyTravelProposals(currentUser.value.uid)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val myTravelProposals: Flow<List<TravelProposal>> = currentUser.flatMapLatest { user ->
+        if (user.uid.isNotEmpty()) {
+            tripModel.getMyTravelProposals(user.uid)
+        } else {
+            flowOf(emptyList())
+        }
+    }
+//        tripModel.getMyTravelProposals(currentUser.value.uid)
 
     //    private val _pastTravelProposals = MutableStateFlow<List<TravelProposal>>(emptyList())
-    val pastTravelProposals: Flow<List<TravelProposal>> =
-        tripModel.getPastTravelProposals(currentUser.value.uid)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val pastTravelProposals: Flow<List<TravelProposal>> = currentUser
+        .flatMapLatest { user ->
+            if (user.uid.isNotEmpty()) {
+                tripModel.getPastTravelProposals(user.uid)
+            } else {
+                flowOf(emptyList())
+            }
+        }
+//        tripModel.getPastTravelProposals(currentUser.value.uid)
 
 
     private val _currentReviews = MutableStateFlow<List<TravelReview>>(emptyList())
@@ -686,13 +705,16 @@ class TravelProposalViewModel(
 
         viewModelScope.launch {
             try {
+                val reviewerId = currentUser.value.uid
+
                 // Prepare review with current travel proposal ID
                 val reviewToSubmit = tempReview.copy(
-                    reviewerId = currentUser.value.uid
+                    reviewerId = reviewerId
                 )
                 val tripId = _travelProposal.value.id
                 val plannerId = _travelProposal.value.tripPlannerId
                 val imageUris = tempReview.tempImages.map { it.toUri() }
+                val numOfImages = imageUris.size
                 val tripTitle: String = _travelProposal.value.title
                 // Submit review
                 val result = tripModel.submitReview(
@@ -706,6 +728,11 @@ class TravelProposalViewModel(
 
                 if (result.isSuccess) {
                     Log.d("TravelProposalViewModel", "Review submitted successfully")
+                    userModel.triggerBadgeProgress(
+                        targetUserUID = reviewerId,
+                        badgeType = BadgeType.PHOTOGRAPHER,
+                        incrementBy = 1
+                    )
                     clearReview()
                 } else {
                     Log.e(
@@ -907,6 +934,16 @@ class TravelProposalViewModel(
 
     fun approveParticipant(user: UserProfile, trip: TravelProposal): Boolean {
         val result = tripModel.approveParticipant(userId = user.uid, trip = trip)
+
+        // badge progress for Explorer badge
+        viewModelScope.launch {
+            userModel.triggerBadgeProgress(
+                targetUserUID = user.uid,
+                badgeType = BadgeType.EXPLORER,
+                incrementBy = 1
+            )
+        }
+
         return result
     }
 
@@ -940,6 +977,7 @@ class TravelProposalViewModel(
                 "checkRecommended" -> "Recommended trip based on your preferences for trip: $tripTitle"
                 "lastMinuteAutomatic" -> "Last minute proposal for trip: $tripTitle (automatic notification)"
                 "userReviewReceived" -> "A user has left a review for you"
+                "badgeUnlocked" -> "New Badge unlocked!"
                 else -> "Notification for trip: $tripTitle"
             }
         } else {
@@ -953,6 +991,7 @@ class TravelProposalViewModel(
                 "lastMinuteAutomatic" -> "$tripTitle: Last minute proposal for this trip (automatic notification)"
                 "checkRecommended" -> "$tripTitle: Recommended trip based on your preferences"
                 "userReviewReceived" -> "A user has left a review for you"
+                "badgeUnlocked" -> "You have unlocked a New Badge!"
                 else -> "$tripTitle: Notification for trip "
             }
         }

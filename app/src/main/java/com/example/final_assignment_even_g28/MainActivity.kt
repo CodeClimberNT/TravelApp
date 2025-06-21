@@ -5,18 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.navigation.NavGraph
 import com.example.final_assignment_even_g28.ui.theme.MadTheme
-import com.example.final_assignment_even_g28.utils.AppFactory
-import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        var deleteAllTravels = false
-        var deleteAllBadges = false
+//        var deleteAllBadges = false
+//        var initializeAllBadges = false
         enableEdgeToEdge()
         setContent {
             MadTheme {
@@ -25,11 +23,16 @@ class MainActivity : ComponentActivity() {
 //                    viewModel.deleteAllProposals()
 //                    deleteAllTravels = true
 //                }
-                if (!deleteAllBadges) {
-                    val viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
-                    viewModel.deleteAllBadges()
-                    deleteAllBadges = true
-                }
+//                if (!deleteAllBadges) {
+//                    val viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
+//                    viewModel.deleteAllBadges()
+//                    deleteAllBadges = true
+//                }
+//                if (!initializeAllBadges) {
+//                    val viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
+//                    viewModel.initializeBadgesToAllUsers()
+//                    initializeAllBadges = true
+//                }
                 NavGraph(
                     context = LocalContext.current
                 )
@@ -37,3 +40,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+//41f59ea7-9b5a-4636-8c64-db5caf77530d
+/*
+* id
+"4"
+(stringa)
+
+
+
+invitedGuests
+(array)
+
+
+0
+"Franco"
+(stringa)
+
+
+status
+"APPROVED"
+* */

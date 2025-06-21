@@ -623,13 +623,16 @@ fun CombinedBottomBar(
 
 @Composable
 fun TravelActionBar(
-    tripVm: TravelProposalViewModel, proposal: TravelProposal, price: String, navActions: Navigation
+    tripVm: TravelProposalViewModel,
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
+    proposal: TravelProposal,
+    price: String,
+    navActions: Navigation
 ) {
     var showApplyDialog by remember { mutableStateOf(false) }
     val userParticipationStatus = tripVm.getUserParticipantStatus()
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
-
-    Log.d("TravelActionBar", "trip planner: $tripPlanner")
+    val numApprovedParticipant = tripVm.getNumApprovedParticipants(proposal)
 
     Surface(
         modifier = Modifier
@@ -771,6 +774,9 @@ fun TravelActionBar(
             onDismiss = { showApplyDialog = false },
             onApply = {
                 tripVm.applyToTrip(guests = it)
+                if (numApprovedParticipant >= 3) {
+                    userVm.updateBadgeTravelInPackProgress()
+                }
                 showApplyDialog = false
             })
     }

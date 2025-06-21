@@ -41,8 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.UserReview
-import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
@@ -50,7 +48,7 @@ import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.ui.components.review.DisplayReviewImages
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-
+import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 
 //account1 uid: gnAtiJ2STlaIu0i7l7DN6QpZCKq2
@@ -67,12 +65,12 @@ fun MyUserReviewsList(
 ) {
     var tabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Made to you", "Made by you")
-    val profile = userProfileViewModel.loggedUser.collectAsState()
+    val profile by userProfileViewModel.loggedUser.collectAsState()
 
-    userReviewViewModel.getReviews(profile.value.uid)
+    userReviewViewModel.getReviews(profile.uid)
 
-    var reviewsMadeToMe = userReviewViewModel.othersReview.collectAsState()
-    var reviewsMadeByMe = userReviewViewModel.myReviews.collectAsState()
+    val reviewsMadeToMe by userReviewViewModel.othersReview.collectAsState()
+    val reviewsMadeByMe by userReviewViewModel.myReviews.collectAsState()
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -116,8 +114,8 @@ fun MyUserReviewsList(
             }
 
             when (tabIndex) {
-                0 -> ReviewsList(reviewsMadeToMe.value)
-                else -> ReviewsList(reviewsMadeByMe.value, displayReviewed = true)
+                0 -> ReviewsList(reviewsMadeToMe)
+                else -> ReviewsList(reviewsMadeByMe, displayReviewed = true)
             }
         }
     }

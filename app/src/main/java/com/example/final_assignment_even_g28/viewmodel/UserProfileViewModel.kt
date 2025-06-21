@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.Badge
+import com.example.final_assignment_even_g28.data_class.BadgeType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
@@ -380,12 +381,14 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1 == password2)
     }
 
-    fun updateBadgeProgress(userUID: String, badgeId: String, incrementBy: Int = 1) {
+
+    //---- Badge Progress Utility Functions ----//
+    fun updateBadgeTravelInPackProgress() {
         viewModelScope.launch {
-            model.updateUserBadgeProgress(
-                userUID = userUID,
-                badgeId = badgeId,
-                incrementBy = incrementBy
+            model.triggerBadgeProgress(
+                targetUserUID = loggedUser.value.uid,
+                badgeType = BadgeType.TRAVEL_IN_PACK,
+                incrementBy = 1
             )
         }
     }
