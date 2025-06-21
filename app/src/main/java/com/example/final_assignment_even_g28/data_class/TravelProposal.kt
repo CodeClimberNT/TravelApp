@@ -3,6 +3,7 @@ package com.example.final_assignment_even_g28.data_class
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Serializable
+import java.sql.Time
 
 data class ExperienceComposition(
     val adventure: Int = 0,

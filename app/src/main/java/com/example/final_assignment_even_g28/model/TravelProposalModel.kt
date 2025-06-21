@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.Filters
+import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.Participant
 import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
@@ -832,6 +833,59 @@ class TravelProposalModel(
         }
 
         return true
+    }
+
+    fun addItinerary(title: String, itinerary: List<ItineraryStop>) {
+
+        val itinerariesCollection = Collections.itineraries
+
+        val itineraryData = mapOf(
+            "title" to title,
+            "stops" to itinerary.map { stop ->
+                mapOf(
+                    "date" to stop.date,
+                    "title" to stop.title,
+                    "description" to stop.description,
+                    "mandatory" to stop.mandatory
+                )
+            }
+        )
+
+        itinerariesCollection.add(itineraryData)
+            .addOnSuccessListener {
+                Log.d("addItinerary", "Itinerary added successfully with ID: ${it.id}")
+            }
+            .addOnFailureListener { error ->
+                Log.e("addItinerary", "Failed to add itinerary: ${error.message}")
+            }
+    }
+
+    fun getItinerarySuggestions(): Flow<List<ItineraryStop>> = callbackFlow {
+        Log.d("getItinerarySuggestions", "Fetched  itineraries")
+        val query = Collections.itineraries
+
+        val listener = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e(
+                    "getItinerarySuggestions",
+                    "Error fetching itinerary suggestions: ${error.message}"
+                )
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                val itineraries = snapshot.documents.mapNotNull { document ->
+                    document.toObject(ItineraryStop::class.java)
+                }
+                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} itineraries")
+                trySend(itineraries)
+            } else {
+                trySend(emptyList())
+            }
+        }
+
+        awaitClose { listener.remove() }
     }
 }
 
