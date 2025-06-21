@@ -18,6 +18,8 @@ lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.09.00"
 lifecycleViewmodelKtx = "2.9.0"
+mapsCompose = "6.6.0"
+playServicesMaps = "19.2.0"
 realtimeKt = "3.1.4"
 navigationComposeVersion = "2.8.0"
 serialization = "1.8.1"
@@ -84,6 +86,7 @@ androidx-camera-extensions = { group = "androidx.camera", name = "camera-extensi
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 ktor-ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor"  }
 ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktorUtils" }
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
@@ -95,6 +98,7 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "realtimeKt" }
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "storageKt" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }

@@ -110,6 +110,9 @@ dependencies {
     implementation(libs.supabase.postgrest.kt)
     implementation(libs.ktor.ktor.client.android)
     implementation(libs.ktor.utils)
+
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
 }
 
 

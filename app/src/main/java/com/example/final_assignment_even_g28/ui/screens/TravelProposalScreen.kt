@@ -1,7 +1,12 @@
 package com.example.final_assignment_even_g28.ui.screens
 
+import android.content.Context
 import android.content.res.Configuration
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -68,6 +73,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,6 +84,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
@@ -111,6 +118,30 @@ import com.example.final_assignment_even_g28.utils.getNameFromFullName
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
+import org.json.JSONObject
+import java.net.URL
+import java.net.URLEncoder
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.resume
 
 
 //TODO: refactor this file with common component
@@ -199,12 +230,12 @@ fun TravelProposalScreen(
                             .weight(1f)
                             .padding(start = 8.dp)
                     ) {
-                        TripMap()
+                        TripMap(travelProposal.itinerary)
                     }
                 }
             } else {
                 ItinerarySection(travelProposal.itinerary)
-                TripMap()
+                TripMap(travelProposal.itinerary)
             }
         }
     }
@@ -596,25 +627,161 @@ fun ItineraryItem(stop: ItineraryStop, isLastItem: Boolean) {
     }
 }
 
+@OptIn(FlowPreview::class)
+//@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun TripMap() {
+fun TripMap(itinerary: List<ItineraryStop>) {
+    val defaultLocation = LatLng(45.438, 10.992) // Verona, e.g.
+    val context = LocalContext.current
+    var locations by remember { mutableStateOf<List<LatLng?>>(emptyList()) }
+    val cameraPositionState = rememberCameraPositionState()
+
+    /*LaunchedEffect(itinerary) {
+        locations = itinerary.map { name ->
+            suspendCancellableCoroutine { cont ->
+                geocodeAddresses(context, name.title) { cont.resume(it) }
+            }
+        }
+        locations.firstOrNull { it != null }?.let {
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 8f), 1000)
+        }
+    }*/
+
+    LaunchedEffect(itinerary) {
+        locations = itinerary.map { stop ->
+            resolveLocation(stop.title, context, R.string.google_maps_api.toString())
+        }
+        locations.filterNotNull().let { pts ->
+            if (pts.isNotEmpty()) {
+                val bounds = LatLngBounds.builder().apply {
+                    pts.forEach(::include)
+                }.build()
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 60), 1000)
+            }
+        }
+    }
+
+    LaunchedEffect(cameraPositionState) {
+        snapshotFlow { cameraPositionState.position.target }
+            .debounce(200)
+            .collect { /* optional actions */ }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.placeholder_map),
-            contentDescription = "Map",
-            contentScale = ContentScale.Crop,
+        GoogleMap(
             modifier = Modifier
                 .height(350.dp)
+                .fillMaxWidth()
                 .shadow(8.dp, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp))
-        )
+                .clip(RoundedCornerShape(16.dp)),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(mapType = MapType.NORMAL),
+            uiSettings = MapUiSettings(zoomControlsEnabled = true),
+        ) {
+            locations.forEachIndexed { i, latLng ->
+                latLng?.let {
+                    Marker(
+                        state = rememberUpdatedMarkerState(it),
+                        title = itinerary[i].title
+                    )
+                }
+            }
+        }
     }
 }
+
+fun titleFragments(raw: String): List<String> {
+    return listOf(raw) + raw
+        .split(" by ", " to ", " at ", " of ", " near ", ",")
+        .map { it.trim() }
+        .filter { it.length >= 3 }
+}
+
+
+suspend fun resolveLocation(
+    title: String,
+    context: Context,
+    apiKey: String
+): LatLng? {
+    for (fragment in titleFragments(title)) {
+        geocodeWithSdk(context, fragment)?.let { return it }
+        fetchViaWebGeocode(fragment, apiKey)?.let { return it }
+    }
+    return null
+}
+
+suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
+    withContext(Dispatchers.IO) {
+        if (!Geocoder.isPresent()) return@withContext null
+        return@withContext try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                suspendCancellableCoroutine<LatLng?> { cont ->
+                    Geocoder(context, Locale.getDefault())
+                        .getFromLocationName(text, 1, object : Geocoder.GeocodeListener {
+                            override fun onGeocode(addresses: List<Address>) {
+                                cont.resume(addresses.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
+                            }
+                            override fun onError(errorMessage: String?) {
+                                cont.resume(null)
+                            }
+                        })
+                }
+            } else {
+                Geocoder(context, Locale.getDefault())
+                    .getFromLocationName(text, 1)
+                    ?.firstOrNull()
+                    ?.let { LatLng(it.latitude, it.longitude) }
+            }
+        } catch (e: IOException) {
+            null
+        }
+    }
+
+
+suspend fun fetchViaWebGeocode(text: String, apiKey: String): LatLng? {
+    return withContext(Dispatchers.IO) {
+        val urlText = URLEncoder.encode(text, "UTF-8")
+        val url = "https://maps.googleapis.com/maps/api/geocode/json?address=$urlText&key=$apiKey"
+        val json = URL(url).readText()
+        val results = JSONObject(json).getJSONArray("results")
+        if (results.length() > 0) {
+            val loc = results.getJSONObject(0)
+                .getJSONObject("geometry")
+                .getJSONObject("location")
+            LatLng(loc.getDouble("lat"), loc.getDouble("lng"))
+        } else null
+    }
+}
+
+
+
+fun geocodeAddresses(context: Context, name: String, onResult: (LatLng?) -> Unit) {
+    val geocoder = Geocoder(context, Locale.getDefault())
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            geocoder.getFromLocationName(name, 1, object : Geocoder.GeocodeListener {
+                override fun onGeocode(addresses: List<Address>) {
+                    onResult(addresses.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
+                }
+                override fun onError(errorMessage: String?) {
+                    onResult(null)
+                }
+            })
+        } else {
+            // Deprecated sync call
+            val addresses = geocoder.getFromLocationName(name, 1)
+            onResult(addresses?.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
+        }
+    } catch (e: IOException) {
+        onResult(null)
+    }
+}
+
 
 @Composable
 fun CombinedBottomBar(
