@@ -15,13 +15,6 @@ data class Price(
     val min: Int = 0, val max: Int = 0
 )
 
-// To avoid conflict with names in the Android framework, we used a different name
-enum class ActivityTag(val value: String) {
-    HIKING("Hiking"), NATURE("Nature"), MUSIC("Music"), PARTY("Party"), RELAX("Relax"), NIGHTLIFE("Nightlife"), TECHNO(
-        "Techno"
-    ),
-}
-
 data class ItineraryStop(
     val date: Timestamp = Timestamp.now(),
     val title: String = "",

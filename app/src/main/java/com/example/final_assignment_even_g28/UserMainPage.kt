@@ -1,6 +1,8 @@
 package com.example.final_assignment_even_g28
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +58,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Badge
@@ -93,7 +98,7 @@ fun ProfileScreen(
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-    val profile by viewModel.loggedUser.collectAsState()
+    val profile by viewModel.editingProfile.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBadgesBottomSheet by remember { mutableStateOf(false) }
@@ -126,6 +131,7 @@ fun ProfileScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+                Log.d("INIT","User inside Profile Screen: $profile")
             if (profile.uid.isEmpty()) {
                 SignInScreen(navActions)
             } else {
@@ -155,10 +161,18 @@ fun ProfileHeader(
         ) {
 
             /* --- avatar (or initials fallback) --- */
+
+            /*
 //            val avatarSize = 72.dp
-            ProfilePicture(
-                profilePicture = profile.profilePicture, isLandScape = false, isDashboard = true
+                ProfilePicture(
+                isLandScape = false,
+                isDashboard = true
             )
+
+            */
+            LevelProgressBar(250f, 1000f)
+
+
 
             Spacer(Modifier.width(16.dp))
 
@@ -417,9 +431,155 @@ fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = Ap
 }
 
 
-//@Preview(showBackground = true)
-//@Composable
-//fun ProfileScreenPreview() {
-//    val navActions = Navigation(rememberNavController())
-//    ProfileScreen(navActions = navActions, bottomBarItem = BottomBarItem.Profile)
-//}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BadgesBottomSheet(
+    sheetState: SheetState,
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
+    onDismiss: () -> Unit
+) {
+    val userBadges by userVm.userBadges.collectAsState()
+    val badges = userBadges.sorted()
+    val scrollState = rememberScrollState()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss, sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                stringResource(R.string.your_badges),
+                style = MaterialTheme.typography.headlineMedium,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Column(modifier = Modifier.verticalScroll(scrollState)) {
+                badges.forEach { badge ->
+                    RowBadge(badge)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
+    val ctx = LocalContext.current
+
+    // Limit percentage to 100%
+    val progressPercentage = badge.getProgressPercentage()
+    val isCompleted = badge.isCompleted()
+    Card(
+        elevation = CardDefaults.cardElevation(6.dp), colors = CardDefaults.cardColors(
+            MaterialTheme.colorScheme.secondaryContainer
+        ), modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(132.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.weight(1f)
+            ) {
+                Spacer(Modifier.height(16.dp))
+                BadgeIconWithInfo(
+                    badge,
+                    isMiniBadge = false
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .weight(3f)
+                    .fillMaxSize()
+            ) {
+                Text(
+                    text = badge.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Box {
+                    LinearProgressIndicator(
+                        progress = { progressPercentage },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            // background color as the trackColor to fill the gap
+                            .background(
+                                MaterialTheme.colorScheme.tertiary, RoundedCornerShape(36.dp)
+                            ),
+                        color = StarColor,
+                        trackColor = MaterialTheme.colorScheme.tertiary,
+                        strokeCap = StrokeCap.Round,
+                    )
+                    if (isCompleted) {
+                        Text(
+                            text = stringResource(R.string.completed),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.align(Alignment.Center),
+                            fontWeight = FontWeight.Bold
+                        )
+
+                    }
+                }
+
+                Button(onClick = { userVm.updateBadge(badge, ctx) }, enabled = isCompleted) {
+                    if (isCompleted) {
+                        Text(stringResource(R.string.equip_this_badge))
+                    } else {
+                        Text("${badge.progress.current}/${badge.progress.total} ${stringResource(R.string.to_unlock)}")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun LevelProgressBar(exp: Float, nextLevelExp: Float) {
+    val progress = exp / nextLevelExp
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(80.dp)
+    ) {
+        Canvas(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val size = size.minDimension
+            val strokeWidth = 8f
+
+            drawArc(
+                color = Color.Gray,
+                startAngle = 270f,
+                sweepAngle = 360f,
+                useCenter = false,
+                size = Size(size, size),
+                style = Stroke(width = strokeWidth)
+            )
+            drawArc(
+                color = Color.Blue,
+                startAngle = 270f,
+                sweepAngle = 360f * progress,
+                useCenter = false,
+                size = Size(size, size),
+                style = Stroke(width = strokeWidth)
+            )
+        }
+        ProfilePicture(
+            isLandScape = false,
+            isDashboard = true
+        )
+    }
+}

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -26,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,24 +38,26 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.shared.InfoFieldDefinition
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
+import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowUserProfileInfo(
-    viewModel: UserProfileViewModel,
+    viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
     onEditClick: () -> Unit,
     bottomBarItem: BottomBarItem,
     navActions: Navigation,
     snackBarHostState: SnackbarHostState
 ) {
+    val profile by viewModel.loggedUser.collectAsState()
     val ctx = LocalContext.current
-    val profilePicture = viewModel.getProfilePicture()
     var isLandScape by remember {
         mutableStateOf(
             ctx.resources.configuration.orientation == ORIENTATION_LANDSCAPE
@@ -64,6 +68,16 @@ fun ShowUserProfileInfo(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navActions.navigateToUserMainPage()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
                 title = {
                     Text(
                         text = "Profile Info",
@@ -110,12 +124,11 @@ fun ShowUserProfileInfo(
                 Spacer(Modifier.height(16.dp))
 
                 ProfilePicture(
-                    profilePicture = profilePicture,
                     isLandScape = isLandScape
                 )
                 Spacer(Modifier.height(16.dp))
 
-                GenerateInfoFields(viewModel.getInfoFieldDefinitionList())
+                GenerateInfoFields(viewModel.getInfoFieldDefinitionList(profile))
             }
         } else {
             Row(
@@ -126,7 +139,6 @@ fun ShowUserProfileInfo(
                     .padding(innerPadding)
             ) {
                 ProfilePicture(
-                    profilePicture = profilePicture,
                     isLandScape = isLandScape
                 )
                 Spacer(Modifier.width(16.dp))
@@ -137,7 +149,7 @@ fun ShowUserProfileInfo(
                             .verticalScroll(scrollable)
                 ) {
                     Spacer(Modifier.height(8.dp))
-                    GenerateInfoFields(viewModel.getInfoFieldDefinitionList())
+                    GenerateInfoFields(viewModel.getInfoFieldDefinitionList(profile))
                 }
             }
         }

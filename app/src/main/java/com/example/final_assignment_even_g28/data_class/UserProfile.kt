@@ -32,6 +32,7 @@ data class NotificationPreference(
         this.enabled = enabled
     }
 }
+import kotlin.math.exp
 
 @Serializable
 data class UserProfile(
@@ -63,8 +64,8 @@ data class UserProfile(
         ),
         NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
     ),
-    @get:Exclude
-    var profilePicture: ProfilePictureData = ProfilePictureData.Monogram(""),
+    var profilePicture: String = "",
+    var exp: Int = 0
 ) {
     constructor() : this(
         uid = "",
@@ -89,7 +90,8 @@ data class UserProfile(
             ),
             NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
         ),
-        profilePicture = ProfilePictureData.Monogram(""),
+        profilePicture = "",
+        exp = 0,
 
         )
 
@@ -116,7 +118,8 @@ data class UserProfile(
             ),
             NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
         ),
-        profilePicture = profilePicture
+        profilePicture = "",
+        exp = 0
     )
 
     constructor(uid: String, nickName: String, profilePicture: ProfilePictureData) : this(
@@ -142,7 +145,8 @@ data class UserProfile(
             ),
             NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
         ),
-        profilePicture = profilePicture
+        profilePicture = "",
+        exp = 0
     )
 
     constructor(fullName: String, rating: Float, description: String) : this(
@@ -168,7 +172,8 @@ data class UserProfile(
             ),
             NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
         ),
-        profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
+        profilePicture = "",
+        exp = 0
     )
 
     constructor(name: String, rating: Float, avatar: ProfilePictureData, contact: String) : this(
@@ -195,7 +200,8 @@ data class UserProfile(
             ),
             NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
         ),
-        profilePicture = avatar
+        profilePicture = "",
+        exp = 0
     )
 
     constructor(uid: String, name: String, email: String) : this(
@@ -221,7 +227,8 @@ data class UserProfile(
             ),
             NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
         ),
-        profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
+        profilePicture = "",
+        exp = 0
     )
 
 

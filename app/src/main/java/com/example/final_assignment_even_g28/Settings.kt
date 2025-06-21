@@ -1,5 +1,6 @@
 package com.example.final_assignment_even_g28
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,20 +9,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.notificationItems
@@ -50,7 +58,7 @@ fun NotificationSettingsScreen(
             }
         }
     }
-
+    var showDeleteCompletition by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -97,12 +105,63 @@ fun NotificationSettingsScreen(
         )
 
         Button(
-            onClick = { },
-            enabled = false,
+            onClick = {
+                showDeleteCompletition = true
+            },
+            enabled = true,
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
             Text("Delete Account", color = Color.White)
+        }
+    }
+
+    if(showDeleteCompletition) {
+        Dialog(
+            onDismissRequest = { showDeleteCompletition = false }
+        ) {
+            Card(
+                modifier = Modifier
+                    .height(350.dp)
+                    .background(color = MaterialTheme.colorScheme.background),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Are you sure you want to delete your account?",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Button(
+                        onClick = {
+                            showDeleteCompletition = false
+                            userModel.deleteAccount()
+                        },
+                        enabled = true,
+                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
+                        modifier = Modifier.fillMaxWidth().height(80.dp).padding(12.dp)
+                    ) {
+                        Text("Delete Account")
+                    }
+                    Button(
+                        onClick = {
+                            showDeleteCompletition = false
+                        },
+                        enabled = true,
+                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
+                        modifier = Modifier.fillMaxWidth().height(80.dp).padding(12.dp)
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            }
         }
     }
 }

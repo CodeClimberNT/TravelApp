@@ -16,7 +16,7 @@ fun Timestamp?.toDateFormat(): String {
 val UNKNOWN_USER = UserProfile(
     uid = "0",
     name = "Unknown User",
-    profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
+    profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE).toString()
 )
 
 // https://www.epochconverter.com/

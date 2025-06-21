@@ -15,28 +15,11 @@ data class UserToSave(
     var phoneNumber: String,
     val email: String,
     @Contextual var dateOfBirth: Timestamp,
-    var pastExperiences: List<String>,
     var bio: String,
     var badge: Badge?,
     var currentLevel: Int,
     var rating: Float,
-    var image: ProfilePictureData
-){/*
-    constructor(id: Int, uid: String, name: String, surname: String, typeOfExperiences: List<String>,
-                mostDesiredDestination: String, phoneNumber: String, email: String, dateOfBirth: Timestamp, pastExperiences: List<String>,
-                bio: String, badge: String, currentLevel: Int, rating: Float) : this(
-        id = id,
-        uid = uid,
-        name = name,
-        surname = surname,
-        typeOfExperiences = typeOfExperiences,
-        mostDesiredDestination = mostDesiredDestination,
-        email = email,
-        dateOfBirth = dateOfBirth,
-        phoneNumber = phoneNumber,
-        pastExperiences = pastExperiences,
-        bio = bio,
-        badge = badge,
-        currentLevel = currentLevel,
-        rating = rating)*/
-}
+    var isProfileImage: String,
+    var profilePicture: String,
+    var exp: Int
+)
