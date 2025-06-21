@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,16 +47,14 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserReview
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.utils.AppFactory
-import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.google.firebase.Timestamp
 
 
 @Composable
 fun UserReviewDialog(
-    userReviewVm: UserReviewViewModel,
     participants: List<ParticipantDetailed>,
-    travelProposalViewModel: TravelProposalViewModel = viewModel(factory = AppFactory),
     onDismiss: () -> Unit
 ) {
 
@@ -97,7 +96,6 @@ fun UserReviewDialog(
                     for (participant in participants) {
                         ProfileRow(
                             participant.user,
-                            userReviewVm
                         )
                     }
 
@@ -124,7 +122,7 @@ fun UserReviewDialog(
 
 
 @Composable
-fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
+fun ProfileRow(user: UserProfile) {
     var showReview by remember { mutableStateOf(false) }
 
     Row(
@@ -190,19 +188,21 @@ fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
     HorizontalDivider(Modifier.padding(horizontal = 16.dp))
 
     if (showReview) {
-        SingleUserReviewCard(user, userReviewVm) { newState -> showReview = newState }
+        SingleUserReviewCard(user) { newState -> showReview = newState }
     }
 }
 
 @Composable
 fun SingleUserReviewCard(
     user: UserProfile,
-    userReviewVm: UserReviewViewModel,
+    userReviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     onDismiss: (Boolean) -> Unit
 ) {
     val textState = remember { mutableStateOf("") }
     val textTitle = remember { mutableStateOf("") }
     var reviewValue by remember { mutableFloatStateOf(0.0f) }
+    val loggedUser by userVm.loggedUser.collectAsState()
 
     Dialog(onDismissRequest = { onDismiss(false) }) {
         Card(
@@ -285,14 +285,15 @@ fun SingleUserReviewCard(
                     Button(
                         modifier = Modifier.padding(start = 16.dp),
                         onClick = {
-                            /*todo() change reviewer ID*/
                             userReviewVm.writeReview(
                                 review = UserReview(
                                     reviewedUserUID = user.uid,
-                                    reviewerUID = "JkXtaeEEmsb0m459W2f2rTRZBpB2",
+                                    reviewerUID = loggedUser.uid,
                                     title = textTitle.value,
                                     rating = reviewValue,
                                     description = textState.value,
+                                    reviewedName = user.name,
+                                    reviewerName = loggedUser.name,
                                     timestamp = Timestamp.now(),
                                 )
                             )
