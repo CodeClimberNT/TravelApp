@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.jetbrains.kotlinx.serialization.json)
     implementation(libs.guava)
+    implementation(libs.androidx.animation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -79,9 +80,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
-    implementation(libs.accompanist.permissions)
-    implementation(libs.jetbrains.kotlinx.serialization.json)
     // Import the BoM for the Firebase platform
     implementation(platform(libs.firebase.bom))
 

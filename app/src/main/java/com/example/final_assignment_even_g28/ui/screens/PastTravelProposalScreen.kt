@@ -199,7 +199,7 @@ fun PastTravelProposalScreen(
         }
 
         if (showUserReviewDialog) {
-            UserReviewDialog(userReviewVm, participants) { showUserReviewDialog = false }
+            UserReviewDialog(participants) { showUserReviewDialog = false }
         }
     }
 }

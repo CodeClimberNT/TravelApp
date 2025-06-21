@@ -1,6 +1,10 @@
 package com.example.final_assignment_even_g28.ui.screens
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,6 +34,8 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -55,6 +61,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -73,12 +81,15 @@ import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.toMillis
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TravelProposalList(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope,
 ) {
     val filteredTravelProposal by tripVm.allTravelProposals.collectAsState()
     Log.d("TravelProposalList", "Filtered proposals: ${filteredTravelProposal.map { it.id }}")
@@ -89,7 +100,7 @@ fun TravelProposalList(
         topBar = { },
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+//            .background(MaterialTheme.colorScheme.background),
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -102,7 +113,9 @@ fun TravelProposalList(
                     tripVm = tripVm,
                     travelProposalList = filteredTravelProposal,
                     modifier = Modifier.fillMaxHeight(),
-                    navActions = navActions
+                    navActions = navActions,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
                 )
             } else {
                 Text(
@@ -119,12 +132,15 @@ fun TravelProposalList(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TravelProposalListColumn(
     tripVm: TravelProposalViewModel,
     travelProposalList: List<TravelProposal>,
     modifier: Modifier = Modifier,
-    navActions: Navigation
+    navActions: Navigation,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope,
 ) {
     Column(
         modifier = modifier
@@ -135,101 +151,121 @@ fun TravelProposalListColumn(
         Spacer(modifier = Modifier.height(16.dp))
 
         travelProposalList.forEach { travel ->
-            TravelProposalBlock(tripVm, travel, navActions)
+            TravelProposalBlock(
+                tripVm, travel, navActions,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TravelProposalBlock(
-    tripVm: TravelProposalViewModel, travelProposal: TravelProposal, navActions: Navigation
+    tripVm: TravelProposalViewModel,
+    travelProposal: TravelProposal,
+    navActions: Navigation,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope,
 ) {
     val numApprovedParticipant = tripVm.getNumApprovedParticipants(travelProposal)
     val image = travelProposal.images.firstOrNull()
-    Column(
-        modifier = Modifier
-            .shadow(shape = RoundedCornerShape(16.dp), elevation = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-            .border(
-                BorderStroke((0.5).dp, MaterialTheme.colorScheme.outline),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable {
-                navActions.navigateToTripInfo(travelProposal.id, false)
-            }, verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.Start
-    ) {
-        Row {
-            Image(
-                painter =
-                    rememberAsyncImagePainter(
-                        model = image,
-                        error = painterResource(id = R.drawable.error_image)
-                    ),
-                contentDescription = null,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .size(
-                            height = 180.dp,
-                            width = 0.dp
-                        ),
-                contentScale = ContentScale.Crop
-            )
-        }
+    val backgroundColor = MaterialTheme.colorScheme.tertiaryContainer
+    val textColor = MaterialTheme.colorScheme.onTertiaryContainer
 
-        Row(
-            modifier = Modifier.padding(start = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+    with(sharedTransitionScope) {
+        Card(
+            modifier = Modifier
+                .sharedElement(
+                    rememberSharedContentState(key = "card_${travelProposal.id}"),
+                    animatedVisibilityScope = animatedContentScope
+                )
+                .fillMaxWidth()
+                .clickable {
+                    navActions.navigateToTripInfo(travelProposal.id, false)
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = backgroundColor
+            ),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke((0.5).dp, MaterialTheme.colorScheme.outline),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Text(
-                text = travelProposal.title,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.padding(4.dp),
-                fontWeight = FontWeight.Bold
-            )
+
+            Row {
+                Image(
+                    painter =
+                        rememberAsyncImagePainter(
+                            model = image,
+                            error = painterResource(id = R.drawable.error_image)
+                        ),
+                    contentDescription = null,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .size(
+                                height = 180.dp,
+                                width = 0.dp
+                            ),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.padding(start = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${numApprovedParticipant}/${travelProposal.maxParticipant}",
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(end = 4.dp),
+                    text = travelProposal.title,
+                    color = textColor,
+                    modifier = Modifier.padding(4.dp),
                     fontWeight = FontWeight.Bold
                 )
-                Icon(
-                    imageVector = Icons.Default.Groups,
-                    contentDescription = "",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 10.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${numApprovedParticipant}/${travelProposal.maxParticipant}",
+                        color = textColor,
+                        modifier = Modifier.padding(end = 4.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Groups,
+                        contentDescription = "",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 10.dp)
+                    )
+                }
+            }
+
+            Row(modifier = Modifier.padding(start = 10.dp)) {
+                Text(
+                    text = "${travelProposal.price.min} - ${travelProposal.price.max}€",
+                    color = textColor,
+                    modifier = Modifier.padding(
+                        top = 4.dp, bottom = 4.dp, start = 6.dp, end = 6.dp
+                    ),
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = tripVm.showDatesInList(
+                        travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
+                    ),
+                    color = textColor,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp, start = 6.dp),
                 )
             }
+            Row(modifier = Modifier.padding(start = 10.dp)) { Tag(travelProposal.activities) }
         }
-
-        Row(modifier = Modifier.padding(start = 10.dp)) {
-            Text(
-                text = "${travelProposal.price.min} - ${travelProposal.price.max}€",
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.padding(
-                    top = 4.dp, bottom = 4.dp, start = 6.dp, end = 6.dp
-                ),
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = tripVm.showDatesInList(
-                    travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
-                ),
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.padding(top = 4.dp, bottom = 4.dp, start = 6.dp),
-            )
-        }
-        Row(modifier = Modifier.padding(start = 10.dp)) { Tag(travelProposal.activities) }
     }
+
 }
 
 @Composable
@@ -252,256 +288,87 @@ fun Tag(tagsList: List<ActivityTag>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterForm(tripVm: TravelProposalViewModel) {
-    val isFilterBarExtended by tripVm.isFilterBarExtended
+    var isFilterBarExtended by remember { mutableStateOf(false) }
     val filters = tripVm.filters
-    var expanded by remember { mutableStateOf(false) }
+    var isGroupSizeExtended by remember { mutableStateOf(false) }
     val filterErrors = tripVm.filterErrors
     var showStartDate by remember { mutableStateOf(false) }
     var showEndDate by remember { mutableStateOf(false) }
     val formBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
     val formTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(shape = RoundedCornerShape(16.dp), elevation = 4.dp)
-            .background(formBackgroundColor)
-            .clip(RoundedCornerShape(16.dp))
             .padding(16.dp)
-            .clickable { tripVm.toggleFilterBar() },
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .animateContentSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .shadow(8.dp, RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        if (!isFilterBarExtended) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${filters.title} | ${tripVm.showFromValue(filters.startDate)} - ${
-                        tripVm.showToValue(
-                            filters.endDate
-                        )
-                    } | ${
-                        if (filters.activities.isEmpty()) "Activities"
-                        else filters.activities.joinToString(", ")
-                    }",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.width(300.dp),
-                    color = formTextColor
-                )
-                Icon(
-                    imageVector = Icons.Outlined.FilterAlt, contentDescription = "Filter"
-                )
-            }
-        } else { //isFilterBarExtended == true
-            Row {
-                TextField(
-                    label = { Text("FROM", color = formTextColor) },
-                    value = tripVm.showFromValue(
-                        filters.startDate
-                    ),
-                    singleLine = true,
-                    onValueChange = {},
-                    isError = filterErrors.fromDate.isNotBlank(),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 16.dp,
-                                topEnd = 0.dp,
-                                bottomEnd = 0.dp,
-                                bottomStart = 0.dp
-                            )
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(
-                                topStart = 16.dp,
-                                topEnd = 0.dp,
-                                bottomEnd = 0.dp,
-                                bottomStart = 0.dp
-                            )
-                        ),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = formBackgroundColor,
-                        focusedContainerColor = formBackgroundColor
-                    ),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                showStartDate = true
-                            }) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = "Date Picker",
-                            )
-                        }
-                    },
-                )
-                if (showStartDate) {
-                    DatePickerModal(
-                        initialDate = filters.startDate?.toMillis(),
-                        onDateSelected = {
-                            tripVm.updateFrom(it)
-                        }, onDismiss = {
-                            showStartDate = false
-                        }
-                    )
-                }
-                TextField(
-                    label = { Text("TO", color = formTextColor) },
-                    value = tripVm.showToValue(filters.endDate),
-                    singleLine = true,
-                    onValueChange = {},
-                    isError = filterErrors.toDate.isNotBlank(),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 16.dp,
-                                bottomEnd = 0.dp,
-                                bottomStart = 0.dp
-                            )
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 16.dp,
-                                bottomEnd = 0.dp,
-                                bottomStart = 0.dp
-                            )
-                        ),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = formBackgroundColor,
-                        focusedContainerColor = formBackgroundColor
-                    ),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                showEndDate = true
-                            }) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = "Date Picker",
-                            )
-                        }
-                    },
-                )
-            }
-            if (showEndDate) {
-                DatePickerModal(
-                    initialDate = filters.endDate?.toMillis(),
-                    onDateSelected = { tripVm.updateTo(it) },
-                    onDismiss = {
-                        showEndDate = false
-                    },
-                )
-            }
-            Row(modifier = Modifier.fillMaxWidth()) {
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 0.dp,
-                                bottomEnd = 16.dp,
-                                bottomStart = 16.dp
-                            )
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 0.dp,
-                                bottomEnd = 16.dp,
-                                bottomStart = 16.dp
-                            )
-                        )
-                        .onFocusChanged {
-                            tripVm.resetWhere()
-                        },
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = formBackgroundColor,
-                        focusedContainerColor = formBackgroundColor
-                    ),
-                    label = { Text("WHERE", color = formTextColor) },
-                    value = filters.title,
-                    singleLine = true,
-                    onValueChange = {
-                        tripVm.updateWhere(it)
-                    },
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(
-                        start = 16.dp, top = 8.dp, end = 4.dp, bottom = 4.dp
-                    )
-            ) {
-                Text(
-                    text = "ACTIVITIES/PREFERENCES",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
-                    color = formTextColor
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(shape = RoundedCornerShape(16.dp), elevation = 4.dp)
+                .background(formBackgroundColor)
+                .clip(RoundedCornerShape(16.dp))
+                .padding(16.dp)
+                .clickable { isFilterBarExtended = !isFilterBarExtended },
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (!isFilterBarExtended) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    tripVm.getAllActivityTags().forEach { activity ->
-                        FilterChip(
-                            selected = tripVm.filters.activities.contains(activity.first) == true,
-                            onClick = {
-                                tripVm.toggleActivity(
-                                    activity
-                                )
-                            },
-                            label = { Text(activity.first.value, color = formTextColor) })
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row {
-                ExposedDropdownMenuBox(
-                    expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                    TextField(
-                        readOnly = true,
-                        value = filters.groupSize?.toString() ?: "Any",
-                        onValueChange = {},
-                        label = { Text("GROUP SIZE", color = formTextColor) },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = expanded
+                    Text(
+                        text = "${filters.title} | ${tripVm.showFromValue(filters.startDate)} - ${
+                            tripVm.showToValue(
+                                filters.endDate
                             )
-                        },
+                        } | ${
+                            if (filters.activities.isEmpty()) "Activities"
+                            else filters.activities.joinToString(", ")
+                        }",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        modifier = Modifier.width(300.dp),
+                        color = formTextColor
+                    )
+                    Icon(
+                        imageVector = Icons.Outlined.FilterAlt, contentDescription = "Filter"
+                    )
+                }
+            } else { //isFilterBarExtended == true
+                Row {
+                    TextField(
+                        label = { Text("FROM", color = formTextColor) },
+                        value = tripVm.showFromValue(
+                            filters.startDate
+                        ),
+                        singleLine = true,
+                        onValueChange = {},
+                        isError = filterErrors.fromDate.isNotBlank(),
                         modifier = Modifier
-                            .menuAnchor()
-                            .width(140.dp)
+                            .weight(1f)
                             .clip(
                                 RoundedCornerShape(
                                     topStart = 16.dp,
                                     topEnd = 0.dp,
                                     bottomEnd = 0.dp,
-                                    bottomStart = 16.dp
+                                    bottomStart = 0.dp
                                 )
                             )
                             .border(
@@ -511,7 +378,262 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                                     topStart = 16.dp,
                                     topEnd = 0.dp,
                                     bottomEnd = 0.dp,
+                                    bottomStart = 0.dp
+                                )
+                            ),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = formBackgroundColor,
+                            focusedContainerColor = formBackgroundColor
+                        ),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    showStartDate = true
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription = "Date Picker",
+                                )
+                            }
+                        },
+                    )
+                    if (showStartDate) {
+                        DatePickerModal(
+                            initialDate = filters.startDate?.toMillis(),
+                            onDateSelected = {
+                                tripVm.updateFrom(it)
+                            }, onDismiss = {
+                                showStartDate = false
+                            }
+                        )
+                    }
+                    TextField(
+                        label = { Text("TO", color = formTextColor) },
+                        value = tripVm.showToValue(filters.endDate),
+                        singleLine = true,
+                        onValueChange = {},
+                        isError = filterErrors.toDate.isNotBlank(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 16.dp,
+                                    bottomEnd = 0.dp,
+                                    bottomStart = 0.dp
+                                )
+                            )
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                shape = RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 16.dp,
+                                    bottomEnd = 0.dp,
+                                    bottomStart = 0.dp
+                                )
+                            ),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = formBackgroundColor,
+                            focusedContainerColor = formBackgroundColor
+                        ),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    showEndDate = true
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription = "Date Picker",
+                                )
+                            }
+                        },
+                    )
+                }
+                if (showEndDate) {
+                    DatePickerModal(
+                        initialDate = filters.endDate?.toMillis(),
+                        onDateSelected = { tripVm.updateTo(it) },
+                        onDismiss = {
+                            showEndDate = false
+                        },
+                    )
+                }
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    TextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 0.dp,
+                                    bottomEnd = 16.dp,
                                     bottomStart = 16.dp
+                                )
+                            )
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                shape = RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 0.dp,
+                                    bottomEnd = 16.dp,
+                                    bottomStart = 16.dp
+                                )
+                            )
+                            .onFocusChanged {
+                                tripVm.resetWhere()
+                            },
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = formBackgroundColor,
+                            focusedContainerColor = formBackgroundColor
+                        ),
+                        label = { Text("WHERE", color = formTextColor) },
+                        value = filters.title,
+                        singleLine = true,
+                        onValueChange = {
+                            tripVm.updateWhere(it)
+                        },
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(
+                            start = 16.dp, top = 8.dp, end = 4.dp, bottom = 4.dp
+                        )
+                ) {
+                    Text(
+                        text = "ACTIVITIES/PREFERENCES",
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        color = formTextColor
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                    ) {
+                        tripVm.getAllActivityTags().forEach { activity ->
+                            FilterChip(
+                                selected = tripVm.filters.activities.contains(activity.first) == true,
+                                onClick = {
+                                    tripVm.toggleActivity(
+                                        activity
+                                    )
+                                },
+                                label = { Text(activity.first.value, color = formTextColor) })
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row {
+                    ExposedDropdownMenuBox(
+                        expanded = isGroupSizeExtended,
+                        onExpandedChange = { isGroupSizeExtended = !isGroupSizeExtended }) {
+                        TextField(
+                            readOnly = true,
+                            value = filters.groupSize?.toString() ?: "Any",
+                            onValueChange = {},
+                            label = { Text("GROUP SIZE", color = formTextColor) },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = isGroupSizeExtended
+                                )
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .width(140.dp)
+                                .clip(
+                                    RoundedCornerShape(
+                                        topStart = 16.dp,
+                                        topEnd = 0.dp,
+                                        bottomEnd = 0.dp,
+                                        bottomStart = 16.dp
+                                    )
+                                )
+                                .border(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                    shape = RoundedCornerShape(
+                                        topStart = 16.dp,
+                                        topEnd = 0.dp,
+                                        bottomEnd = 0.dp,
+                                        bottomStart = 16.dp
+                                    )
+                                ),
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = formBackgroundColor,
+                                focusedContainerColor = formBackgroundColor
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = isGroupSizeExtended,
+                            onDismissRequest = { isGroupSizeExtended = false }) {
+                            val dropDownList =
+                                listOf("Any") + tripVm.groupSizeOptions.map { it.toString() }
+                            dropDownList.forEach { size ->
+                                DropdownMenuItem(
+                                    text = { Text(size, color = formTextColor) },
+                                    onClick = {
+                                        tripVm.updateFilterGroupSize(groupSize = if (size.contains("Any")) null else size.toInt())
+                                        isGroupSizeExtended = false
+                                    })
+                            }
+                        }
+                    }
+                    TextField(
+                        label = { Text("MIN PRICE", color = formTextColor) },
+                        value = filters.minPrice.toString(),
+                        singleLine = true,
+                        onValueChange = {
+                            tripVm.updateMinPrice(it.toInt())
+                        },
+                        isError = filterErrors.minPrice.isNotBlank(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(
+                                1.dp, MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = formBackgroundColor,
+                            focusedContainerColor = formBackgroundColor
+                        )
+                    )
+                    TextField(
+                        label = { Text("MAX PRICE", color = formTextColor) },
+                        value = filters.maxPrice.toString(),
+                        singleLine = true,
+                        onValueChange = {
+                            tripVm.updateMaxPrice(it.toInt())
+                        },
+                        isError = filterErrors.maxPrice.isNotBlank(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 16.dp,
+                                    bottomEnd = 16.dp,
+                                    bottomStart = 0.dp
+                                )
+                            )
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                shape = RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 16.dp,
+                                    bottomEnd = 16.dp,
+                                    bottomStart = 0.dp
                                 )
                             ),
                         colors = TextFieldDefaults.colors(
@@ -519,82 +641,21 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                             focusedContainerColor = formBackgroundColor
                         )
                     )
-                    ExposedDropdownMenu(
-                        expanded = expanded, onDismissRequest = { expanded = false }) {
-                        val dropDownList =
-                            listOf("Any") + tripVm.groupSizeOptions.map { it.toString() }
-                        dropDownList.forEach { size ->
-                            DropdownMenuItem(
-                                text = { Text(size, color = formTextColor) },
-                                onClick = {
-                                    tripVm.updateFilterGroupSize(groupSize = if (size.contains("Any")) null else size.toInt())
-                                    expanded = false
-                                })
-                        }
-                    }
                 }
-                TextField(
-                    label = { Text("MIN PRICE", color = formTextColor) },
-                    value = filters.minPrice.toString(),
-                    singleLine = true,
-                    onValueChange = {
-                        tripVm.updateMinPrice(it.toInt())
-                    },
-                    isError = filterErrors.minPrice.isNotBlank(),
-                    modifier = Modifier
-                        .weight(1f)
-                        .border(
-                            1.dp, MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = formBackgroundColor,
-                        focusedContainerColor = formBackgroundColor
-                    )
-                )
-                TextField(
-                    label = { Text("MAX PRICE", color = formTextColor) },
-                    value = filters.maxPrice.toString(),
-                    singleLine = true,
-                    onValueChange = {
-                        tripVm.updateMaxPrice(it.toInt())
-                    },
-                    isError = filterErrors.maxPrice.isNotBlank(),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 16.dp,
-                                bottomEnd = 16.dp,
-                                bottomStart = 0.dp
-                            )
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 16.dp,
-                                bottomEnd = 16.dp,
-                                bottomStart = 0.dp
-                            )
-                        ),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = formBackgroundColor,
-                        focusedContainerColor = formBackgroundColor
-                    )
-                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                FormButton(tripVm, onApplyFilters = {
+                    tripVm.applyFilters()
+                    isFilterBarExtended = false
+                })
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            FormButton(tripVm)
         }
     }
 }
 
 @Composable
-fun FormButton(tripVm: TravelProposalViewModel) {
+fun FormButton(tripVm: TravelProposalViewModel, onApplyFilters: () -> Unit) {
     val filterError = tripVm.filterErrors
     val errorToShow = filterError.toList.firstOrNull { it.isNotBlank() }
 
@@ -609,7 +670,7 @@ fun FormButton(tripVm: TravelProposalViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 15.dp, end = 15.dp),
-        onClick = { tripVm.applyFilters() },
+        onClick = onApplyFilters,
         shape = RoundedCornerShape(10.dp),
         enabled = !filterError.hasError
     ) {
@@ -622,3 +683,4 @@ fun FormButton(tripVm: TravelProposalViewModel) {
         )
     }
 }
+

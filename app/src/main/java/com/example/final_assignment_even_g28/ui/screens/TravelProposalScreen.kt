@@ -2,6 +2,9 @@ package com.example.final_assignment_even_g28.ui.screens
 
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -113,7 +116,7 @@ import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 
 //TODO: refactor this file with common component
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun TravelProposalScreen(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
@@ -121,7 +124,9 @@ fun TravelProposalScreen(
     bottomBarItem: BottomBarItem,
     tripId: String,
     snackBarHostState: SnackbarHostState,
-    showParticipantsDialog: Boolean = false
+    showParticipantsDialog: Boolean = false,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope
 ) {
     tripVm.clickTripInfo(tripId)
     val travelProposal by tripVm.travelProposal.collectAsState()
@@ -134,10 +139,10 @@ fun TravelProposalScreen(
 
     LaunchedEffect(showParticipantsDialog) {
         if (showParticipantsDialog) {
-
             openCandidatesDialog.value = true
         }
     }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
@@ -150,60 +155,76 @@ fun TravelProposalScreen(
             )
         }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            ImageCarousel(travelProposal.images)
-            Spacer(modifier = Modifier.height(16.dp))
-            HeroSection(
-                title = travelProposal.title,
-                duration = tripVm.showDatesInTripInfo(
-                    travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
-                ),
-                tags = travelProposal.activities.map { it.value },
-                travelProposalVM = tripVm,
-                navActions = navActions,
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            TripOverview(
-                tripVm = tripVm,
-                proposal = travelProposal,
-                tripPlanner = tripPlanner,
-                navActions = navActions,
-                bottomBarItem = bottomBarItem,
-                openCandidatesDialog
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
-            TripDescription(travelProposal.description)
-            if (isLandscape) {
-                Row(
+        Box(Modifier.fillMaxSize()) {
+            with(sharedTransitionScope) {
+                Card(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.secondary)
-                        .padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically
+                        .sharedElement(
+                            rememberSharedContentState(key = "card_$tripId"),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                        .fillMaxSize()
+                        .clickable { /* popBackStack() */ }
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        ItinerarySection(travelProposal.itinerary)
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp)
-                    ) {
-                        TripMap()
+                        ImageCarousel(travelProposal.images)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HeroSection(
+                            title = travelProposal.title,
+                            duration = tripVm.showDatesInTripInfo(
+                                travelProposal.tripStartDate.toDate(),
+                                travelProposal.tripEndDate.toDate()
+                            ),
+                            tags = travelProposal.activities.map { it.value },
+                            travelProposalVM = tripVm,
+                            navActions = navActions,
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        TripOverview(
+                            tripVm = tripVm,
+                            proposal = travelProposal,
+                            tripPlanner = tripPlanner,
+                            navActions = navActions,
+                            bottomBarItem = bottomBarItem,
+                            openCandidatesDialog
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
+                        TripDescription(travelProposal.description)
+                        if (isLandscape) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp)
+                                ) {
+                                    ItinerarySection(travelProposal.itinerary)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 8.dp)
+                                ) {
+                                    TripMap()
+                                }
+                            }
+                        } else {
+                            ItinerarySection(travelProposal.itinerary)
+                            TripMap()
+                        }
                     }
                 }
-            } else {
-                ItinerarySection(travelProposal.itinerary)
-                TripMap()
             }
         }
     }
