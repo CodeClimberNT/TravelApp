@@ -26,6 +26,7 @@ object Collections {
     private const val C_TRAVEL_REVIEW = "travel_reviews"
     private const val C_USERS = "users"
     private const val C_USER_REVIEW = "user_review"
+    private const val C_USER_BADGE = "user_badges"
 
     private const val C_NOTIFICATIONS = "notifications"
 
@@ -78,6 +79,11 @@ object Collections {
     fun getReviewCollection(tripId: String): CollectionReference {
         Log.d("Collections", "Getting review collection for tripId: $tripId")
         return travelProposals.document(tripId).collection(C_TRAVEL_REVIEW)
+    }
+
+    fun getBadgeCollection(userUID: String): CollectionReference {
+        Log.d("Collections", "Getting badge collection for userUID: $userUID")
+        return users.document(userUID).collection(C_USER_BADGE)
     }
 }
 

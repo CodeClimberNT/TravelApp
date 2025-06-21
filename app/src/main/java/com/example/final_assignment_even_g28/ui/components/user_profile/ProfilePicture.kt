@@ -39,8 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
-import com.example.final_assignment_even_g28.data_class.toImageVector
-import com.example.final_assignment_even_g28.ui.theme.StarColor
+import com.example.final_assignment_even_g28.ui.components.badge.BadgeIconWithInfo
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import kotlinx.serialization.Serializable
@@ -69,10 +68,11 @@ fun ProfilePicture(
     showCameraButton: Boolean = false,
     userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory),
     isDashboard: Boolean = false,
+    isCandidate: Boolean = false,
     onCameraClick: (() -> Unit)? = null,
     onRemoveClick: () -> Unit = {},
 ) {
-    val avatarSize = if (isDashboard) 72.dp else 150.dp
+    val avatarSize = if (isCandidate) 56.dp else if (isDashboard) 72.dp else 150.dp
     val isEditing by remember { mutableStateOf(showCameraButton && onCameraClick != null) }
     val user by userProfileViewModel.loggedUser.collectAsState()
     val badge = user.badge
@@ -154,38 +154,17 @@ fun ProfilePicture(
                 Box(
                     modifier = Modifier.matchParentSize()
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier =
-                            Modifier
-                                .size(36.dp)
-                                .align(Alignment.BottomEnd)
-                                .background(
-                                    MaterialTheme.colorScheme
-                                        .tertiaryContainer,
-                                    shape = CircleShape
-                                )
-                                .border(
-                                    2.dp,
-                                    StarColor,
-                                    shape = CircleShape
-                                )
-                    ) {
-                        Icon(
-                            imageVector = badge.toImageVector(),
-                            contentDescription = "Profile Badge",
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                    BadgeIconWithInfo(
+                        badge = badge, modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .matchParentSize(), isMiniBadge = true
+                    )
                 }
             }
 
         } else {
             // Editing Profile Picture
-
             when (profilePicture) {
-
                 is ProfilePictureData.Monogram, is ProfilePictureData.Icon -> {
                     IconCarousel(userProfileViewModel, isLandScape = isLandScape)
                 }

@@ -17,7 +17,7 @@ data class UserToSave(
     @Contextual var dateOfBirth: Timestamp,
     var pastExperiences: List<String>,
     var bio: String,
-    var badge: BadgeIconType?,
+    var badge: Badge?,
     var currentLevel: Int,
     var rating: Float,
     var image: ProfilePictureData

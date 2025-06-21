@@ -1106,9 +1106,11 @@ class TravelProposalViewModel(
                     showReviewsTab = true
                 )
             }
+
             "userReviewReceived" -> {
                 navActions.navigateToUserReview()
             }
+
             else -> {
                 navActions.navigateToTripInfo(notification.tripId, false)
             }

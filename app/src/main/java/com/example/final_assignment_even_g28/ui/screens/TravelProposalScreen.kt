@@ -31,7 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccountBalance
@@ -100,6 +99,7 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.theme.AdventureColor
 import com.example.final_assignment_even_g28.ui.theme.CultureColor
 import com.example.final_assignment_even_g28.ui.theme.DimColor
@@ -280,7 +280,7 @@ fun HeroSection(
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     navActions: Navigation
 ) {
-    val currentUser by userVm.selectedUserProfile.collectAsState()
+    val currentUser by userVm.loggedUser.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -294,7 +294,7 @@ fun HeroSection(
             Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             if (!travelProposalVM.isMyTrip()) {
                 TextButton(onClick = {
-                    travelProposalVM.clickCloneTrip(currentUser?.uid ?: "0")
+                    travelProposalVM.clickCloneTrip(currentUser.uid)
                     navActions.navigateToCreateNewTravelProposal()
                 }) {
                     Text(
@@ -333,7 +333,8 @@ fun TripOverview(
 
 ) {
     //var openCandidatesDialog = remember { mutableStateOf(false) }
-
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             "Trip Planner",
@@ -344,21 +345,7 @@ fun TripOverview(
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
-            // FIXME: updated to use tripPlanner.avatar
-            // waiting user to be finished
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(MaterialTheme.colorScheme.primary, shape = CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
+            ProfilePicture(tripPlanner.profilePicture, isLandscape, isDashboard = true)
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -809,7 +796,8 @@ fun ParticipantList(
             ParticipantStatus.REJECTED -> -1
         }
     }
-    Log.d("ParticipantList", "participants $sortedParticipant")
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
@@ -833,7 +821,6 @@ fun ParticipantList(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Icon(
                             imageVector = Icons.Default.People, contentDescription = "People count"
                         )
@@ -864,6 +851,7 @@ fun ParticipantList(
                                 },
                                 tripVm = tripVm,
                                 travelProposal = travelProposal,
+                                isLandscape = isLandscape,
                                 navActions = navActions,
                                 bottomBarItem = bottomBarItem,
                             )
@@ -906,14 +894,13 @@ fun CandidateProfile(
     isChecked: Boolean?,
     tripVm: TravelProposalViewModel,
     travelProposal: TravelProposal,
+    isLandscape: Boolean,
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
 ) {
-
     var showNullDialog by remember { mutableStateOf(false) }
     var acceptedDialog by remember { mutableStateOf(false) }
     var rejectedDialog by remember { mutableStateOf(false) }
-
     var showMiniProfile by remember { mutableStateOf(false) }
 
     Row(
@@ -924,20 +911,7 @@ fun CandidateProfile(
             .fillMaxWidth()
     ) {
         Column {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary, shape = CircleShape
-                    ), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
+            ProfilePicture(candidate.profilePicture, isLandScape = isLandscape, isCandidate = true)
         }
 
         Column {
@@ -1257,19 +1231,17 @@ fun MiniProfileDialog(
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    //modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.account_image),
-                            contentDescription = "",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .width(100.dp)
-                                .height(100.dp)
-                                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                        ProfilePicture(
+                            candidate.profilePicture,
+                            isLandScape = false,
+                            isDashboard = true
                         )
                         Text(
                             text = "Lvl. 3",
@@ -1279,7 +1251,7 @@ fun MiniProfileDialog(
                     }
                     Column {
                         Text(
-                            text = getNameFromFullName(candidate.fullName),
+                            text = candidate.name,
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                             fontWeight = FontWeight.Bold

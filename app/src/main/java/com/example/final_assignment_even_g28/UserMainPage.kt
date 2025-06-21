@@ -2,8 +2,8 @@ package com.example.final_assignment_even_g28
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -16,12 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -44,7 +42,6 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -55,20 +52,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.UserProfile
-import com.example.final_assignment_even_g28.data_class.toImageVector
+import com.example.final_assignment_even_g28.data_class.getProgressPercentage
+import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.shared.NotificationBell
+import com.example.final_assignment_even_g28.ui.components.badge.BadgeIconWithInfo
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.screens.SignInScreen
 import com.example.final_assignment_even_g28.ui.theme.StarColor
@@ -134,9 +132,7 @@ fun ProfileScreen(
                 ProfileHeader(profile, navActions = navActions)
                 Spacer(modifier = Modifier.height(40.dp))
                 ProfileButtonList(
-                    navActions = navActions,
-                    { showBadges() },
-                    viewModel
+                    navActions = navActions, { showBadges() }, viewModel
                 )
             }
         }
@@ -148,25 +144,20 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileHeader(
-    profile: UserProfile,
-    navActions: Navigation
+    profile: UserProfile, navActions: Navigation
 ) {
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 12.dp)
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)
         ) {
 
             /* --- avatar (or initials fallback) --- */
 //            val avatarSize = 72.dp
             ProfilePicture(
-                profilePicture = profile.profilePicture,
-                isLandScape = false,
-                isDashboard = true
+                profilePicture = profile.profilePicture, isLandScape = false, isDashboard = true
             )
 
             Spacer(Modifier.width(16.dp))
@@ -199,8 +190,7 @@ fun ProfileHeader(
         }
 
         LevelAndChips(
-            level = profile.currentLevel,
-            interests = profile.typeOfExperiences
+            level = profile.currentLevel, interests = profile.typeOfExperiences
         )
     }
 }
@@ -209,9 +199,7 @@ fun ProfileHeader(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileButtonList(
-    navActions: Navigation,
-    showBadges: () -> Unit,
-    viewModel: UserProfileViewModel
+    navActions: Navigation, showBadges: () -> Unit, viewModel: UserProfileViewModel
 ) {
     val actions = listOf(
         Triple("Personal Info", Icons.Outlined.Info, ProfileEvent.ProfileInfo),
@@ -268,13 +256,10 @@ fun ProfileButtonList(
             onClick = {
                 viewModel.logOut()
                 navActions.navigateToTravelList()
-            },
-            shape = commonShape,
-            colors = ButtonDefaults.filledTonalButtonColors(
+            }, shape = commonShape, colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.error,
                 contentColor = MaterialTheme.colorScheme.onError
-            ),
-            modifier = Modifier
+            ), modifier = Modifier
                 .fillMaxWidth()
                 .height(75.dp)
         ) {
@@ -289,8 +274,7 @@ fun ProfileButtonList(
 @Composable
 private fun LevelAndChips(level: Int, interests: List<String>) {
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.Center
     ) {
         /* plain level text */
         Text(
@@ -300,8 +284,7 @@ private fun LevelAndChips(level: Int, interests: List<String>) {
                 .align(Alignment.CenterVertically)
                 .padding(start = 16.dp)
         )
-        Spacer(Modifier.width(16.dp))
-        /* interest chips */
+        Spacer(Modifier.width(16.dp))/* interest chips */
         interests.forEach { tag ->
             AssistChip(
                 label = { Text(tag) },
@@ -325,12 +308,11 @@ fun BadgesBottomSheet(
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     onDismiss: () -> Unit
 ) {
-    val user by userVm.loggedUser.collectAsState()
-    val badges = user.badges
+    val userBadges by userVm.userBadges.collectAsState()
+    val badges = userBadges.sorted()
     val scrollState = rememberScrollState()
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState
+        onDismissRequest = onDismiss, sheetState = sheetState
     ) {
         Column(
             modifier = Modifier
@@ -356,24 +338,20 @@ fun BadgesBottomSheet(
 @Composable
 fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
     val ctx = LocalContext.current
+
     // Limit percentage to 100%
-    val progressPercentage =
-        (badge.progress.current.toFloat() / badge.progress.total.toFloat()).coerceIn(
-            0f,
-            1f
-        )
-    val isCompleted = badge.progress.current == badge.progress.total
+    val progressPercentage = badge.getProgressPercentage()
+    val isCompleted = badge.isCompleted()
     Card(
         elevation = CardDefaults.cardElevation(6.dp), colors = CardDefaults.cardColors(
             MaterialTheme.colorScheme.secondaryContainer
-        ),
-        modifier = Modifier.fillMaxWidth()
+        ), modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(128.dp),
+                .height(132.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -381,32 +359,11 @@ fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = Ap
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.weight(1f)
             ) {
-                Spacer(Modifier.height(8.dp))
-                Icon(
-                    imageVector = badge.icon.toImageVector(),
-                    contentDescription = badge.title,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .border(
-                            BorderStroke(2.dp, MaterialTheme.colorScheme.onSecondaryContainer),
-                            shape = CircleShape
-                        )
-                        .padding(8.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                Spacer(Modifier.height(16.dp))
+                BadgeIconWithInfo(
+                    badge,
+                    isMiniBadge = false
                 )
-                TextButton(onClick = {}, modifier = Modifier.weight(1f)) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = badge.title,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                    Text(
-                        "Info",
-                        textDecoration = TextDecoration.Underline,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
             }
             Spacer(Modifier.width(8.dp))
             Column(
@@ -421,25 +378,35 @@ fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = Ap
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
-
-                LinearProgressIndicator(
-                    progress = { progressPercentage },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        // background color as the trackColor to fill the gap
-                        .background(
-                            MaterialTheme.colorScheme.tertiary,
-                            RoundedCornerShape(36.dp)
-                        ),
-                    color = StarColor,
-                    trackColor = MaterialTheme.colorScheme.tertiary,
-                    strokeCap = StrokeCap.Round,
-                )
-
-                Button(onClick = { userVm.updateBadge(badge.icon, ctx) }, enabled = isCompleted) {
+                Box {
+                    LinearProgressIndicator(
+                        progress = { progressPercentage },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            // background color as the trackColor to fill the gap
+                            .background(
+                                MaterialTheme.colorScheme.tertiary, RoundedCornerShape(36.dp)
+                            ),
+                        color = StarColor,
+                        trackColor = MaterialTheme.colorScheme.tertiary,
+                        strokeCap = StrokeCap.Round,
+                    )
                     if (isCompleted) {
-                        Text(stringResource(R.string.select_this_badge))
+                        Text(
+                            text = stringResource(R.string.completed),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.align(Alignment.Center),
+                            fontWeight = FontWeight.Bold
+                        )
+
+                    }
+                }
+
+                Button(onClick = { userVm.updateBadge(badge, ctx) }, enabled = isCompleted) {
+                    if (isCompleted) {
+                        Text(stringResource(R.string.equip_this_badge))
                     } else {
                         Text("${badge.progress.current}/${badge.progress.total} ${stringResource(R.string.to_unlock)}")
                     }

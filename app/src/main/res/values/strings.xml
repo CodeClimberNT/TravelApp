@@ -1,11 +1,13 @@
 <resources>
     <string name="app_name">lab5-even-g28</string>
-    <string name="default_web_client_id" translatable="false">
+    <string name="default_web_client_id">
     1081929835859-5v1b2gj70emstdlsn86igtsrafpbt3o2.apps.googleusercontent.com
     </string>
     <string name="participants">participants</string>
     <string name="login_prompt">Please login to continue</string>
     <string name="your_badges">Your Badges</string>
-    <string name="select_this_badge">Select this Badge</string>
+    <string name="equip_this_badge">Equip this Badge</string>
     <string name="to_unlock">to unlock</string>
+    <string name="completed">Completed!</string>
+    <string name="close">Close</string>
 </resources>

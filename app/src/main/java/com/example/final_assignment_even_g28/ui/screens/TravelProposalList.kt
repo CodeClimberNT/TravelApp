@@ -84,11 +84,15 @@ fun TravelProposalList(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = { CustomBottomBar(navActions, selectedItem = bottomBarItem) },
         topBar = { },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
     ) { innerPadding ->
-        Column(modifier = Modifier
-            .padding(innerPadding)
-            .padding(start = 15.dp, end = 15.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(start = 15.dp, end = 15.dp)
+        ) {
             FilterForm(tripVm)
             Spacer(modifier = Modifier.height(16.dp))
             if (filteredTravelProposal.isNotEmpty()) {

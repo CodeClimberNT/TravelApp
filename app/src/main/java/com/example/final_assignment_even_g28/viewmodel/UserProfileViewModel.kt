@@ -10,7 +10,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
-import com.example.final_assignment_even_g28.data_class.BadgeIconType
+import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
@@ -39,9 +39,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val isLoading: StateFlow<Boolean> = model.isSigningIn
 
-    val selectedUserProfile: StateFlow<UserProfile?> = model.selectedUserProfile
-
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
+
+    val userBadges: StateFlow<List<Badge>> = model.userBadges
 
     fun getUserByUID(uid: String) = model.getUserByUid(uid)
     fun getNicknameByUID(userUID: String): String? = model.getNicknameByUID(userUID)
@@ -167,7 +167,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-
     private fun getInitials(): String {
         return loggedUser.value.name[0].toString() + {
             if (loggedUser.value.surname[0].toString()
@@ -223,7 +222,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             editingProfile.value.copy(pastExperiences = listOf(newPastExperiences))
     }
 
-    fun updateBadge(newBadge: BadgeIconType, context: Context) {
+    fun updateBadge(newBadge: Badge, context: Context) {
         viewModelScope.launch {
             model.updateUserProfileBadge(loggedUser.value.uid, newBadge, context)
         }
@@ -381,5 +380,28 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1 == password2)
     }
 
+    fun updateBadgeProgress(userUID: String, badgeId: String, incrementBy: Int = 1) {
+        viewModelScope.launch {
+            model.updateUserBadgeProgress(
+                userUID = userUID,
+                badgeId = badgeId,
+                incrementBy = incrementBy
+            )
+        }
+    }
 
+
+    //-------------🚨EMERGENCY ONLY🚨-------------//
+    fun deleteAllBadges() {
+        viewModelScope.launch {
+            model.deleteAllBadges()
+        }
+    }
+
+    fun initializeBadgesToAllUsers() {
+        viewModelScope.launch {
+            model.initializeBadgesToAllUsers()
+        }
+    }
+    //-------------🚨EMERGENCY ONLY🚨-------------//
 }
