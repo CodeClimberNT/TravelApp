@@ -14,6 +14,7 @@ import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.BadgeType
 import com.example.final_assignment_even_g28.data_class.ExperienceComposition
 import com.example.final_assignment_even_g28.data_class.Filters
+import com.example.final_assignment_even_g28.data_class.Itinerary
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
@@ -92,6 +93,9 @@ class TravelProposalViewModel(
     val allTravelProposals: StateFlow<List<TravelProposal>>
         get() = _allTravelProposals
 
+    private val _listOfItinerarySuggestions = MutableStateFlow<List<Itinerary>>(emptyList())
+    val listOfItinerarySuggestions: StateFlow<List<Itinerary>>
+        get() = _listOfItinerarySuggestions
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val myTravelProposals: Flow<List<TravelProposal>> = currentUser.flatMapLatest { user ->
@@ -145,7 +149,6 @@ class TravelProposalViewModel(
 
 
     init {
-        itinerarySuggestions()
         loadAllTravelProposals()
         getNotification()
         pollingNotifications()
@@ -1160,17 +1163,16 @@ class TravelProposalViewModel(
         }
     }
 
-    fun itinerarySuggestions() {
-        viewModelScope.launch {
-            tripModel.getItinerarySuggestions().collect { suggestions ->
-                if (suggestions.isNotEmpty()) {
-                    Log.d("TravelProposalViewModel", "Itinerary suggestions received: $suggestions")
-                } else {
-                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
-                }
-            }
-        }
-    }
+    fun itinerarySuggestions(): Flow <List<Itinerary>> = tripModel.getItinerarySuggestions(tempTravelProposal.title)
+//            tripModel.getItinerarySuggestions(""/*tempTravelProposal.title*/).collect { suggestions ->
+//                if (suggestions.isNotEmpty()) {
+//                    _listOfItinerarySuggestions.value = suggestions
+//                    Log.d("Itinerary", "Itinerary suggestions received: $suggestions")
+//                    Log.d("Itinerary", "List: ${_listOfItinerarySuggestions.value}")
+//                } else {
+//                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
+//                }
+//            }
 
     //-------------🚨EMERGENCY ONLY🚨-------------//
     fun deleteAllProposals() {

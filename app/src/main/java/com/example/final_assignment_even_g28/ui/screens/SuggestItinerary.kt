@@ -1,5 +1,6 @@
 package com.example.final_assignment_even_g28.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.final_assignment_even_g28.data_class.Itinerary
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
@@ -52,158 +55,169 @@ fun ItineraryDialog(
     onDismiss: () -> Unit,
     onAccept: () -> Unit
 ) {
-    var selectedItinerary by remember { mutableStateOf<String?>(null) }
+    var selectedItinerary by remember { mutableStateOf<Itinerary?>(null) }
 
-//    val suggestions = viewModel.itinerarySuggestions
-//    val steps = viewModel.itinerarySteps
-//
-//    Dialog(onDismissRequest = { onDismiss() }) {
-//        Card(
-//            shape = RoundedCornerShape(16.dp),
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp)
-//        ) {
-//            Column(modifier = Modifier.padding(16.dp)) {
-//
-//                if (selectedItinerary == null) {
-//
-//                    Text("Itinerary suggestion", style = MaterialTheme.typography.titleMedium)
-//                    Text(
-//                        "Choose one of the suggested itineraries:",
-//                        style = MaterialTheme.typography.bodySmall,
-//                        modifier = Modifier.padding(bottom = 12.dp)
-//                    )
-//
-//                    suggestions.forEach { suggestion ->
-//                        Card(
-//                            shape = RoundedCornerShape(12.dp),
-//                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(vertical = 4.dp)
-//                                .clickable {
-//                                    selectedItinerary = suggestion
-//                                    viewModel.loadItinerarySteps(suggestion)
-//                                }
-//                        ) {
-//                            Row(
-//                                verticalAlignment = Alignment.CenterVertically,
-//                                modifier = Modifier.padding(16.dp)
-//                            ) {
-//                                Icon(
-//                                    imageVector = Icons.Default.Lightbulb,
-//                                    contentDescription = null,
-//                                    tint = MaterialTheme.colorScheme.primary,
-//                                    modifier = Modifier.size(24.dp)
-//                                )
-//                                Spacer(modifier = Modifier.width(12.dp))
-//                                Text(suggestion, style = MaterialTheme.typography.bodyLarge)
-//                            }
-//                        }
-//                    }
-//
-//                    Spacer(modifier = Modifier.height(16.dp))
-//
-//                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-//                        TextButton(onClick = onDismiss) {
-//                            Text("Close")
-//                        }
-//                    }
-//
-//                } else {
-//
-//                    Text("Itinerary suggestion", style = MaterialTheme.typography.titleMedium)
-//                    Text("A suggested itinerary for your trip", style = MaterialTheme.typography.bodySmall)
-//
-//                    Spacer(modifier = Modifier.height(16.dp))
-//
-//                    val itemHeight = 92.dp
-//                    val circleSize = 12.dp
-//                    val scrollState = rememberScrollState()
-//
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .heightIn(max = itemHeight * 5)
-//                            .verticalScroll(scrollState)
-//                    ) {
-//                        Column {
-//                            steps.forEachIndexed { index, step ->
-//                                Row(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .height(itemHeight)
-//                                ) {
-//                                    Box(
-//                                        modifier = Modifier
-//                                            .width(24.dp)
-//                                            .fillMaxHeight()
-//                                    ) {
-//                                        Canvas(modifier = Modifier.fillMaxSize()) {
-//                                            val centerX = size.width / 2
-//                                            val centerY = size.height / 2
-//                                            val circleRadius = circleSize.toPx() / 2
-//
-//                                            if (index != steps.lastIndex) {
-//                                                drawLine(
-//                                                    color = Color.Gray,
-//                                                    start = Offset(centerX, centerY + circleRadius),
-//                                                    end = Offset(centerX, size.height),
-//                                                    strokeWidth = 2.dp.toPx()
-//                                                )
-//                                            }
-//
-//                                            if (index != 0) {
-//                                                drawLine(
-//                                                    color = Color.Gray,
-//                                                    start = Offset(centerX, 0f),
-//                                                    end = Offset(centerX, centerY - circleRadius),
-//                                                    strokeWidth = 2.dp.toPx()
-//                                                )
-//                                            }
-//                                        }
-//
-//                                        Box(
-//                                            modifier = Modifier
-//                                                .size(circleSize)
-//                                                .align(Alignment.Center)
-//                                                .clip(CircleShape)
-//                                                .background(Color.Black)
-//                                        )
-//                                    }
-//
-//                                    Spacer(modifier = Modifier.width(16.dp))
-//
-//                                    Column(
-//                                        modifier = Modifier
-//                                            .fillMaxHeight(),
-//                                        verticalArrangement = Arrangement.Center
-//                                    ) {
-//                                        Text(text = step.date, style = MaterialTheme.typography.labelSmall)
-//                                        Text(text = step.title, style = MaterialTheme.typography.bodyMedium)
-//                                        Text(
-//                                            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-//                                            style = MaterialTheme.typography.bodySmall
-//                                        )
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    Spacer(modifier = Modifier.height(16.dp))
-//
-//                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-//                        TextButton(onClick = { selectedItinerary = null }) {
-//                            Text("Cancel")
-//                        }
-//                        Button(onClick = onAccept) {
-//                            Text("Accept")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
+    val suggestions by viewModel.itinerarySuggestions().collectAsState(initial = emptyList())
+
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Log.d("Itinerary", "Received suggestions: ${suggestions.size}")
+                if (selectedItinerary == null) {
+
+                    Text("Itinerary suggestion", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Choose one of the suggested itineraries:",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    if (suggestions.isEmpty()) {
+                        Text("No suggestions available", color = Color.Red)
+                    } else {
+                        suggestions.forEach { suggestion ->
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable {
+                                        selectedItinerary = suggestion
+                                    }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Lightbulb,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        suggestion.title,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Close")
+                        }
+                    }
+
+                } else {
+
+                    Text("Itinerary suggestion", style = MaterialTheme.typography.titleMedium)
+                    Text("A suggested itinerary for your trip", style = MaterialTheme.typography.bodySmall)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val itemHeight = 92.dp
+                    val circleSize = 12.dp
+                    val scrollState = rememberScrollState()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = itemHeight * 5)
+                            .verticalScroll(scrollState)
+                    ) {
+                        Column {
+                            selectedItinerary?.stops?.forEachIndexed { index, step ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(itemHeight)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(24.dp)
+                                            .fillMaxHeight()
+                                    ) {
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val centerX = size.width / 2
+                                            val centerY = size.height / 2
+                                            val circleRadius = circleSize.toPx() / 2
+
+                                            if (index != selectedItinerary!!.stops.lastIndex) {
+                                                drawLine(
+                                                    color = Color.Gray,
+                                                    start = Offset(centerX, centerY + circleRadius),
+                                                    end = Offset(centerX, size.height),
+                                                    strokeWidth = 2.dp.toPx()
+                                                )
+                                            }
+
+                                            if (index != 0) {
+                                                drawLine(
+                                                    color = Color.Gray,
+                                                    start = Offset(centerX, 0f),
+                                                    end = Offset(centerX, centerY - circleRadius),
+                                                    strokeWidth = 2.dp.toPx()
+                                                )
+                                            }
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .size(circleSize)
+                                                .align(Alignment.Center)
+                                                .clip(CircleShape)
+                                                .background(Color.Black)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxHeight(),
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = step.date.toDate().toString(),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                        Text(
+                                            text = step.title,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            text = step.description,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = { selectedItinerary = null }) {
+                            Text("Cancel")
+                        }
+                        Button(onClick = onAccept) {
+                            Text("Accept")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.Filters
+import com.example.final_assignment_even_g28.data_class.Itinerary
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationType
@@ -19,9 +20,11 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
@@ -780,9 +783,12 @@ class TravelProposalModel(
             }
     }
 
-    fun getItinerarySuggestions(): Flow<List<ItineraryStop>> = callbackFlow {
+    fun getItinerarySuggestions(travelName: String = "Test New Travel Proposal"): Flow<List<Itinerary>> = callbackFlow {
+        Log.d("getItinerarySuggestions", "Fetching itinerary suggestions for: $travelName")
         Log.d("getItinerarySuggestions", "Fetched  itineraries")
-        val query = Collections.itineraries
+        val query: Query
+
+             query = Collections.itineraries.whereEqualTo("title", "Test New Travel Proposal")
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -796,7 +802,7 @@ class TravelProposalModel(
 
             if (snapshot != null) {
                 val itineraries = snapshot.documents.mapNotNull { document ->
-                    document.toObject(ItineraryStop::class.java)
+                    document.toObject(Itinerary::class.java)
                 }
                 Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} itineraries")
                 trySend(itineraries)

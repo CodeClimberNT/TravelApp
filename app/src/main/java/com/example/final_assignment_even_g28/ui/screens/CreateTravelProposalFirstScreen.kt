@@ -503,7 +503,10 @@ fun CreateTravelProposalFirstScreen(
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                         modifier = Modifier
                             .size(32.dp)
-                            .clickable { showItineraryCard.value = true },
+                            .clickable {
+                                //tripVm.itinerarySuggestions()
+                                showItineraryCard.value = true
+                                },
                         tonalElevation = 0.dp,
                         shadowElevation = 0.dp
                     ) {
