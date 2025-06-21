@@ -46,7 +46,6 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserReview
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.utils.AppFactory
-import com.example.final_assignment_even_g28.utils.getNameFromFullName
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.google.firebase.Timestamp
@@ -153,7 +152,7 @@ fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
 
         Column {
             Text(
-                text = getNameFromFullName(user.name),
+                text = user.name,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
                     .padding(start = 8.dp)
@@ -256,7 +255,7 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, o
                         modifier = Modifier.size(40.dp)
                     )
                     Text(
-                        text = getNameFromFullName(user.fullName),
+                        text = user.name,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

@@ -1,9 +1,11 @@
 package com.example.final_assignment_even_g28.data_class
 
 
+import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 data class Notification(
@@ -26,6 +28,12 @@ data class Notification(
     fun isRecent(): Boolean {
         val currentTime = System.currentTimeMillis()
         val notificationTime = timestamp.toDate().time
+
+        val debugTime = Timestamp(Date(currentTime))
+        Log.d(
+            "NotificationDebug",
+            "Notification ${title} Current time: ${debugTime.toDate()}, Notification time: ${timestamp.toDate()}"
+        )
         return (currentTime - notificationTime) < (60 * 1000) // 1 minuto
     }
 

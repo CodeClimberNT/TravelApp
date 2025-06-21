@@ -30,8 +30,6 @@ class TravelProposalModel(
     private val imageStorageModel: ImageStorageModel,
     private val userModel: UserProfileModel
 ) {
-
-
     //TODO: add private member with mutableStateFlow and StateFlow
 
     fun getFilteredTravelProposals(
@@ -753,10 +751,6 @@ class TravelProposalModel(
                             // Filtra le notifiche per destinatario
                             when (notification.type) {
                                 "newProposal" -> {
-                                    Log.d(
-                                        "FilterNotifications",
-                                        "Filtering newProposal for user: $userId, notificationOwnerId: ${notification.notificationOwnerId}"
-                                    )
                                     notification.notificationOwnerId != userId
                                 }
 

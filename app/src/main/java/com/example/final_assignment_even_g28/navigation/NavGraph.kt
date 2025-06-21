@@ -7,6 +7,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,9 +48,10 @@ fun NavGraph(
 ) {
     val bottomBarItemSelected = remember { mutableStateOf(BottomBarItem.Explore) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val profile by userVm.loggedUser.collectAsState()
 
     //used for notification
-    LaunchedEffect(Unit) {
+    LaunchedEffect(profile) {
         tripVm.newTravelProposalNotification.collect { notification ->
             notification?.let {
                 Log.d("SnackbarDebug", "Showing notification: ${it.type}, ${it.title}")

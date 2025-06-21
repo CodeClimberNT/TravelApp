@@ -107,7 +107,6 @@ import com.example.final_assignment_even_g28.ui.theme.PartyColor
 import com.example.final_assignment_even_g28.ui.theme.RelaxColor
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
-import com.example.final_assignment_even_g28.utils.getNameFromFullName
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
@@ -922,7 +921,7 @@ fun CandidateProfile(
 
         Column {
             Text(
-                text = getNameFromFullName(candidate.fullName) + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
+                text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
                     .padding(start = 8.dp)
@@ -1021,7 +1020,7 @@ fun NullDialog(
             Column(Modifier.fillMaxSize()) {
 
                 Text(
-                    text = "Accept ${getNameFromFullName(candidate.fullName)} ?",
+                    text = "Accept ${candidate.name} ?",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                     fontWeight = FontWeight.Bold
@@ -1104,7 +1103,7 @@ fun AcceptedDialog(
             Column(Modifier.fillMaxSize()) {
 
                 Text(
-                    text = "Reject ${getNameFromFullName(candidate.fullName)} ?",
+                    text = "Reject ${candidate.name} ?",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                     fontWeight = FontWeight.Bold
@@ -1172,7 +1171,7 @@ fun RejectedDialog(
             Column(Modifier.fillMaxSize()) {
 
                 Text(
-                    text = "Accept ${getNameFromFullName(candidate.fullName)} ?",
+                    text = "Accept ${candidate.name} ?",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                     fontWeight = FontWeight.Bold
@@ -1306,7 +1305,7 @@ fun MiniProfileDialog(
                         modifier = Modifier.padding(8.dp), onClick = {
                             onShow(false)
                             navActions.navigateToOtherProfile(
-                                getNameFromFullName(candidate.fullName),
+                                candidate.name,
                                 bottomBarItem == BottomBarItem.MyTrips
                             )
                         }, colors = ButtonDefaults.buttonColors(

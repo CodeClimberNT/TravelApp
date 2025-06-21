@@ -161,21 +161,6 @@ class TravelProposalViewModel(
                 _allTravelProposals.value = proposals
             }
         }
-
-
-//        viewModelScope.launch {
-//            tripModel.getMyTravelProposals(currentUser.value.uid).collect { myProposals ->
-//                Log.d("TravelProposalViewModel", "Owned Proposals: ${myProposals.map { it.id }}")
-//                _myTravelProposals.value = myProposals
-//            }
-//        }
-
-//        viewModelScope.launch {
-//            tripModel.getPastTravelProposals(currentUser.value.uid).collect { pastProposals ->
-//                Log.d("TravelProposalViewModel", "Past Proposals: ${pastProposals.map { it.id }}")
-//                _pastTravelProposals.value = pastProposals
-//            }
-//        }
     }
 
     private fun getNotification() {
@@ -204,6 +189,23 @@ class TravelProposalViewModel(
 
                     //SNACKBAR
                     notifications.forEach { notification ->
+                        Log.d("forEachNotification", "Title: ${notification.title}")
+                        Log.d(
+                            "forEachNotification",
+                            "notification.isRecent(): ${notification.isRecent()}"
+                        )
+                        Log.d(
+                            "forEachNotification",
+                            "!notification.isRead(currentUser.value.uid): ${
+                                !notification.isRead(currentUser.value.uid)
+                            }"
+                        )
+                        Log.d(
+                            "forEachNotification",
+                            "!existingNotificationIds.contains(notification.id): ${
+                                !existingNotificationIds.contains(notification.id)
+                            }"
+                        )
                         if (notification.isRecent() &&
                             !notification.isRead(currentUser.value.uid) &&
                             !existingNotificationIds.contains(notification.id)
@@ -211,6 +213,7 @@ class TravelProposalViewModel(
 
                             existingNotificationIds.add(notification.id)
                             _newTravelProposalNotification.value = notification
+
                             Log.d("New Notification", "New notification: ${notification.title}")
                             Log.d(
                                 "New Notification",
