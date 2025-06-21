@@ -344,7 +344,7 @@ fun TripOverview(
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
-            ProfilePicture(tripPlanner.profilePicture, isLandscape, isDashboard = true)
+            ProfilePicture(tripPlanner, isLandscape, isDashboard = true)
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -916,7 +916,7 @@ fun CandidateProfile(
             .fillMaxWidth()
     ) {
         Column {
-            ProfilePicture(candidate.profilePicture, isLandScape = isLandscape, isCandidate = true)
+            ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
 
         Column {
@@ -1244,7 +1244,7 @@ fun MiniProfileDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         ProfilePicture(
-                            candidate.profilePicture,
+                            candidate,
                             isLandScape = false,
                             isDashboard = true
                         )

@@ -68,7 +68,9 @@ import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.modal.DatePickerModal
 import com.example.final_assignment_even_g28.utils.AppFactory
+import com.example.final_assignment_even_g28.utils.toMillis
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
 @Composable
@@ -251,11 +253,16 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
     val filters = tripVm.filters
     var expanded by remember { mutableStateOf(false) }
     val filterErrors = tripVm.filterErrors
+    var showStartDate by remember { mutableStateOf(false) }
+    var showEndDate by remember { mutableStateOf(false) }
+    val formBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val formTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(shape = RoundedCornerShape(16.dp), elevation = 4.dp)
-            .background(MaterialTheme.colorScheme.surface)
+            .background(formBackgroundColor)
             .clip(RoundedCornerShape(16.dp))
             .padding(16.dp)
             .clickable { tripVm.toggleFilterBar() },
@@ -279,7 +286,8 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                     }",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
-                    modifier = Modifier.width(300.dp)
+                    modifier = Modifier.width(300.dp),
+                    color = formTextColor
                 )
                 Icon(
                     imageVector = Icons.Outlined.FilterAlt, contentDescription = "Filter"
@@ -288,7 +296,7 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
         } else { //isFilterBarExtended == true
             Row {
                 TextField(
-                    label = { Text("FROM") },
+                    label = { Text("FROM", color = formTextColor) },
                     value = tripVm.showFromValue(
                         filters.startDate
                     ),
@@ -316,13 +324,13 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                             )
                         ),
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedContainerColor = formBackgroundColor,
+                        focusedContainerColor = formBackgroundColor
                     ),
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                tripVm.toggleStartDate()
+                                showStartDate = true
                             }) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
@@ -331,17 +339,18 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                         }
                     },
                 )
-                if (tripVm.showStartDate) {
+                if (showStartDate) {
                     DatePickerModal(
+                        initialDate = filters.startDate?.toMillis(),
                         onDateSelected = {
                             tripVm.updateFrom(it)
                         }, onDismiss = {
-                            tripVm.showStartDate = false
-                        }, vm = tripVm, typeOfDate = "start"
+                            showStartDate = false
+                        }
                     )
                 }
                 TextField(
-                    label = { Text("TO") },
+                    label = { Text("TO", color = formTextColor) },
                     value = tripVm.showToValue(filters.endDate),
                     singleLine = true,
                     onValueChange = {},
@@ -367,13 +376,13 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                             )
                         ),
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedContainerColor = formBackgroundColor,
+                        focusedContainerColor = formBackgroundColor
                     ),
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                tripVm.toggleEndDate()
+                                showEndDate = true
                             }) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
@@ -383,11 +392,13 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                     },
                 )
             }
-            if (tripVm.showEndDate) {
+            if (showEndDate) {
                 DatePickerModal(
-                    onDateSelected = { tripVm.updateTo(it) }, onDismiss = {
-                        tripVm.showEndDate = false
-                    }, vm = tripVm, typeOfDate = "end"
+                    initialDate = filters.endDate?.toMillis(),
+                    onDateSelected = { tripVm.updateTo(it) },
+                    onDismiss = {
+                        showEndDate = false
+                    },
                 )
             }
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -417,10 +428,10 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                             tripVm.resetWhere()
                         },
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedContainerColor = formBackgroundColor,
+                        focusedContainerColor = formBackgroundColor
                     ),
-                    label = { Text("WHERE") },
+                    label = { Text("WHERE", color = formTextColor) },
                     value = filters.title,
                     singleLine = true,
                     onValueChange = {
@@ -444,7 +455,8 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                 Text(
                     text = "ACTIVITIES/PREFERENCES",
                     fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    color = formTextColor
                 )
                 Row(
                     modifier = Modifier
@@ -459,7 +471,7 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                                     activity
                                 )
                             },
-                            label = { Text(activity.first.value) })
+                            label = { Text(activity.first.value, color = formTextColor) })
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
@@ -472,7 +484,7 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                         readOnly = true,
                         value = filters.groupSize?.toString() ?: "Any",
                         onValueChange = {},
-                        label = { Text("GROUP SIZE") },
+                        label = { Text("GROUP SIZE", color = formTextColor) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(
                                 expanded = expanded
@@ -500,8 +512,8 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                                 )
                             ),
                         colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                            unfocusedContainerColor = formBackgroundColor,
+                            focusedContainerColor = formBackgroundColor
                         )
                     )
                     ExposedDropdownMenu(
@@ -509,15 +521,17 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                         val dropDownList =
                             listOf("Any") + tripVm.groupSizeOptions.map { it.toString() }
                         dropDownList.forEach { size ->
-                            DropdownMenuItem(text = { Text(size) }, onClick = {
-                                tripVm.updateFilterGroupSize(groupSize = if (size.contains("Any")) null else size.toInt())
-                                expanded = false
-                            })
+                            DropdownMenuItem(
+                                text = { Text(size, color = formTextColor) },
+                                onClick = {
+                                    tripVm.updateFilterGroupSize(groupSize = if (size.contains("Any")) null else size.toInt())
+                                    expanded = false
+                                })
                         }
                     }
                 }
                 TextField(
-                    label = { Text("MIN PRICE") },
+                    label = { Text("MIN PRICE", color = formTextColor) },
                     value = filters.minPrice.toString(),
                     singleLine = true,
                     onValueChange = {
@@ -530,12 +544,12 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                             1.dp, MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedContainerColor = formBackgroundColor,
+                        focusedContainerColor = formBackgroundColor
                     )
                 )
                 TextField(
-                    label = { Text("MAX PRICE") },
+                    label = { Text("MAX PRICE", color = formTextColor) },
                     value = filters.maxPrice.toString(),
                     singleLine = true,
                     onValueChange = {
@@ -563,8 +577,8 @@ fun FilterForm(tripVm: TravelProposalViewModel) {
                             )
                         ),
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedContainerColor = formBackgroundColor,
+                        focusedContainerColor = formBackgroundColor
                     )
                 )
             }

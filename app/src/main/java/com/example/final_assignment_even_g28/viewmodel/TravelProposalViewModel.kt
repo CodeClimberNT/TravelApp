@@ -85,6 +85,7 @@ class TravelProposalViewModel(
 
     var isFilterBarExtended = mutableStateOf(false)
         private set
+
     var filters by mutableStateOf(Filters())
 
 
@@ -101,9 +102,7 @@ class TravelProposalViewModel(
             flowOf(emptyList())
         }
     }
-//        tripModel.getMyTravelProposals(currentUser.value.uid)
 
-    //    private val _pastTravelProposals = MutableStateFlow<List<TravelProposal>>(emptyList())
     @OptIn(ExperimentalCoroutinesApi::class)
     val pastTravelProposals: Flow<List<TravelProposal>> = currentUser
         .flatMapLatest { user ->
@@ -113,7 +112,6 @@ class TravelProposalViewModel(
                 flowOf(emptyList())
             }
         }
-//        tripModel.getPastTravelProposals(currentUser.value.uid)
 
 
     private val _currentReviews = MutableStateFlow<List<TravelReview>>(emptyList())
@@ -229,11 +227,10 @@ class TravelProposalViewModel(
     private fun pollingNotifications() {
         viewModelScope.launch {
             while (true) {
-
                 delay(30 * 60 * 1000)
                 //delay(20 * 1000)
 
-                Log.d("prova ", "Checking for last minute proposals")
+                Log.d("Notification Polling ", "Checking for last minute proposals")
                 checkForLastMinuteProposals()
                 checkForRecommendedProposals()
             }
@@ -397,9 +394,7 @@ class TravelProposalViewModel(
             tripPlannerId = userId,
             // Start with at least one stop already present
             itinerary = listOf(
-                ItineraryStop(
-                    date = Timestamp(Date(0L)), title = "", description = "", mandatory = false
-                )
+                ItineraryStop()
             )
         )
     }
@@ -581,31 +576,13 @@ class TravelProposalViewModel(
     var minValue by mutableIntStateOf(0)
     var maxValue by mutableIntStateOf(0)
 
-    var selectedStartDate by mutableStateOf<Long?>(null)
-    var selectedEndDate by mutableStateOf<Long?>(null)
-    var selectedStopDate by mutableStateOf<Long?>(null)
-    var showStartDate by mutableStateOf(false)
-    var showEndDate by mutableStateOf(false)
-    var showStopDate by mutableStateOf(false)
 
     fun startDateSelected(date: Long?) {
-        selectedStartDate = date ?: 0L
         tempTravelProposal = tempTravelProposal.copy(tripStartDate = Timestamp(Date(date ?: 0L)))
-        showStartDate = false
     }
 
     fun endDateSelected(date: Long?) {
-        selectedEndDate = date ?: 0L
         tempTravelProposal = tempTravelProposal.copy(tripEndDate = Timestamp(Date(date ?: 0L)))
-        showEndDate = false
-    }
-
-    fun toggleStartDate() {
-        showStartDate = !showStartDate
-    }
-
-    fun toggleEndDate() {
-        showEndDate = !showEndDate
     }
 
     fun updatePriceRange(
@@ -650,10 +627,6 @@ class TravelProposalViewModel(
             })
     }
 
-    fun toggleStopDate() {
-        showStopDate = !showStopDate
-    }
-
     fun updateStopMandatory(index: Int, isMandatory: Boolean) {
         tempTravelProposal = tempTravelProposal.copy(
             itinerary = tempTravelProposal.itinerary.mapIndexed { i, stop ->
@@ -678,15 +651,15 @@ class TravelProposalViewModel(
 
     fun addStop() {
         tempTravelProposal = tempTravelProposal.copy(
-            itinerary = tempTravelProposal.itinerary + ItineraryStop(
-                date = Timestamp(Date(0L)), title = "", description = "", mandatory = false
-            )
+            itinerary = tempTravelProposal.itinerary + ItineraryStop()
         )
     }
 
     fun deleteStop(index: Int) {
-        tempTravelProposal = tempTravelProposal.copy(
-            itinerary = tempTravelProposal.itinerary.filterIndexed { i, _ -> i != index })
+        if (tempTravelProposal.itinerary.size > 1) {
+            tempTravelProposal = tempTravelProposal.copy(
+                itinerary = tempTravelProposal.itinerary.filterIndexed { i, _ -> i != index })
+        }
     }
 
     fun clearReview() {

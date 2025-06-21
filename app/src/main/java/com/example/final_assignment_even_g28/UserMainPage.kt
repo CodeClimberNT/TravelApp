@@ -54,13 +54,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Badge
@@ -131,7 +131,7 @@ fun ProfileScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-                Log.d("INIT","User inside Profile Screen: $profile")
+            Log.d("INIT", "User inside Profile Screen: $profile")
             if (profile.uid.isEmpty()) {
                 SignInScreen(navActions)
             } else {
@@ -431,124 +431,13 @@ fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = Ap
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BadgesBottomSheet(
-    sheetState: SheetState,
-    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
-    onDismiss: () -> Unit
+fun LevelProgressBar(
+    exp: Float,
+    nextLevelExp: Float,
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
-    val userBadges by userVm.userBadges.collectAsState()
-    val badges = userBadges.sorted()
-    val scrollState = rememberScrollState()
-    ModalBottomSheet(
-        onDismissRequest = onDismiss, sheetState = sheetState
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
-            Text(
-                stringResource(R.string.your_badges),
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            Column(modifier = Modifier.verticalScroll(scrollState)) {
-                badges.forEach { badge ->
-                    RowBadge(badge)
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
-    val ctx = LocalContext.current
-
-    // Limit percentage to 100%
-    val progressPercentage = badge.getProgressPercentage()
-    val isCompleted = badge.isCompleted()
-    Card(
-        elevation = CardDefaults.cardElevation(6.dp), colors = CardDefaults.cardColors(
-            MaterialTheme.colorScheme.secondaryContainer
-        ), modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(132.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.weight(1f)
-            ) {
-                Spacer(Modifier.height(16.dp))
-                BadgeIconWithInfo(
-                    badge,
-                    isMiniBadge = false
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .weight(3f)
-                    .fillMaxSize()
-            ) {
-                Text(
-                    text = badge.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Box {
-                    LinearProgressIndicator(
-                        progress = { progressPercentage },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            // background color as the trackColor to fill the gap
-                            .background(
-                                MaterialTheme.colorScheme.tertiary, RoundedCornerShape(36.dp)
-                            ),
-                        color = StarColor,
-                        trackColor = MaterialTheme.colorScheme.tertiary,
-                        strokeCap = StrokeCap.Round,
-                    )
-                    if (isCompleted) {
-                        Text(
-                            text = stringResource(R.string.completed),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.align(Alignment.Center),
-                            fontWeight = FontWeight.Bold
-                        )
-
-                    }
-                }
-
-                Button(onClick = { userVm.updateBadge(badge, ctx) }, enabled = isCompleted) {
-                    if (isCompleted) {
-                        Text(stringResource(R.string.equip_this_badge))
-                    } else {
-                        Text("${badge.progress.current}/${badge.progress.total} ${stringResource(R.string.to_unlock)}")
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun LevelProgressBar(exp: Float, nextLevelExp: Float) {
+    val userProfile by userVm.loggedUser.collectAsState()
     val progress = exp / nextLevelExp
     Box(
         contentAlignment = Alignment.Center,
@@ -578,6 +467,7 @@ fun LevelProgressBar(exp: Float, nextLevelExp: Float) {
             )
         }
         ProfilePicture(
+            userProfile = userProfile,
             isLandScape = false,
             isDashboard = true
         )

@@ -124,6 +124,7 @@ fun ShowUserProfileInfo(
                 Spacer(Modifier.height(16.dp))
 
                 ProfilePicture(
+                    userProfile = profile,
                     isLandScape = isLandScape
                 )
                 Spacer(Modifier.height(16.dp))
@@ -139,6 +140,7 @@ fun ShowUserProfileInfo(
                     .padding(innerPadding)
             ) {
                 ProfilePicture(
+                    userProfile = profile,
                     isLandScape = isLandScape
                 )
                 Spacer(Modifier.width(16.dp))

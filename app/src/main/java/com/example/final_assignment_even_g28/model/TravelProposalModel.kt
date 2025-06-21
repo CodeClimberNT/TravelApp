@@ -14,7 +14,7 @@ import com.example.final_assignment_even_g28.data_class.ParticipantStatus
 import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.data_class.TravelReview
 import com.example.final_assignment_even_g28.data_class.UserProfile
-import com.example.final_assignment_even_g28.utils.MAX_TIMESTAMP
+import com.example.final_assignment_even_g28.utils.MAX
 import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
@@ -40,7 +40,7 @@ class TravelProposalModel(
 
         var query: Query = Collections.travelProposals.whereGreaterThanOrEqualTo(
             "tripStartDate", filters.startDate ?: Timestamp.now()
-        ).whereLessThanOrEqualTo("tripEndDate", filters.endDate ?: MAX_TIMESTAMP)
+        ).whereLessThanOrEqualTo("tripEndDate", filters.endDate ?: Timestamp.MAX())
             .whereArrayContainsAny("activities", filters.activities.ifEmpty { allActivities })
             .whereGreaterThanOrEqualTo("price.min", filters.minPrice)
             .whereLessThanOrEqualTo("price.max", filters.maxPrice)

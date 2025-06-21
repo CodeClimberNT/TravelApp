@@ -1,5 +1,6 @@
 package com.example.final_assignment_even_g28.data_class
 
+import com.example.final_assignment_even_g28.utils.tomorrow
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Serializable
@@ -16,11 +17,12 @@ data class Price(
 )
 
 data class ItineraryStop(
-    val date: Timestamp = Timestamp.now(),
+    val date: Timestamp = Timestamp.tomorrow(),
     val title: String = "",
     val description: String = "",
     val mandatory: Boolean = false,
 )
+
 
 @Serializable
 enum class ParticipantStatus(val value: String) {
@@ -61,8 +63,8 @@ data class TravelProposal(
     @get:Exclude var tempImages: List<String> = listOf(),
     val price: Price = Price(0, 0),
     val description: String = "",
-    val tripStartDate: Timestamp = Timestamp.now(),
-    val tripEndDate: Timestamp = Timestamp.now(),
+    val tripStartDate: Timestamp = Timestamp.tomorrow(),
+    val tripEndDate: Timestamp = Timestamp.tomorrow(),
     val tripPlannerId: String = "",
     val activities: List<ActivityTag> = emptyList(),
     val experienceComposition: ExperienceComposition = ExperienceComposition(0, 0, 0, 0),

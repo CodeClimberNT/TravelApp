@@ -21,11 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,7 +59,7 @@ fun NotificationSettingsScreen(
             }
         }
     }
-    var showDeleteCompletition by remember { mutableStateOf(false) }
+    var showDeleteCompletion by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -106,19 +107,21 @@ fun NotificationSettingsScreen(
 
         Button(
             onClick = {
-                showDeleteCompletition = true
+                showDeleteCompletion = true
             },
             enabled = true,
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
-            modifier = Modifier.fillMaxWidth().height(50.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
         ) {
             Text("Delete Account", color = Color.White)
         }
     }
 
-    if(showDeleteCompletition) {
+    if (showDeleteCompletion) {
         Dialog(
-            onDismissRequest = { showDeleteCompletition = false }
+            onDismissRequest = { showDeleteCompletion = false }
         ) {
             Card(
                 modifier = Modifier
@@ -141,22 +144,28 @@ fun NotificationSettingsScreen(
                     Spacer(modifier = Modifier.size(16.dp))
                     Button(
                         onClick = {
-                            showDeleteCompletition = false
+                            showDeleteCompletion = false
                             userModel.deleteAccount()
                         },
                         enabled = true,
                         colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
-                        modifier = Modifier.fillMaxWidth().height(80.dp).padding(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .padding(12.dp)
                     ) {
                         Text("Delete Account")
                     }
                     Button(
                         onClick = {
-                            showDeleteCompletition = false
+                            showDeleteCompletion = false
                         },
                         enabled = true,
                         colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
-                        modifier = Modifier.fillMaxWidth().height(80.dp).padding(12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .padding(12.dp)
                     ) {
                         Text("Cancel")
                     }

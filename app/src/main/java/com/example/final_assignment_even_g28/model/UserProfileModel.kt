@@ -19,26 +19,28 @@ import com.example.final_assignment_even_g28.data_class.NotificationPreference
 import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.data_class.UserProfile
+import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 
 
 class UserProfileModel() {
-//    private var _allUsers = MutableStateFlow<List<UserProfile>>(emptyList())
-//    val allUsers: StateFlow<List<UserProfile>> get() = _allUsers
-
     private var _loggedUser = MutableStateFlow<UserProfile>(UserProfile())
     val loggedUser: StateFlow<UserProfile> get() = _loggedUser
 
@@ -187,6 +189,7 @@ class UserProfileModel() {
         _loggedUser.value = UserProfile()
         _userBadges.value = emptyList()
     }
+
     suspend fun signUpWithGoogle(context: Context) {
         val activity = context as? Activity ?: return
         val auth = Collections.auth
@@ -333,7 +336,7 @@ class UserProfileModel() {
     }
 
     suspend fun editProfile(userToSave: UserProfile, context: Context) {
-    try {
+        try {
             val snapshot = Collections.users.document(userToSave.uid).set(
                 UserToSave(
                     name = userToSave.name,
@@ -352,16 +355,19 @@ class UserProfileModel() {
                     rating = userToSave.rating,
                     exp = userToSave.exp
                 ),
-        ).await()
+            ).await()
             Log.d("Edit User", "User with uid ${userToSave.uid} correctly edited")
             Log.d("Edit User", "changed saved")
 
             _loggedUser.value = userToSave
             uploadUserProfileImage(loggedUser.value.uid, userToSave.profilePicture, context)
-            Log.d("Edit User", "Try to save uid: ${loggedUser.value.uid}, uri: ${userToSave.profilePicture}")
+            Log.d(
+                "Edit User",
+                "Try to save uid: ${loggedUser.value.uid}, uri: ${userToSave.profilePicture}"
+            )
 
-        }catch (e: Exception){
-            Log.e("Edit Profile","Error editing Profile: $e")
+        } catch (e: Exception) {
+            Log.e("Edit Profile", "Error editing Profile: $e")
         }
     }
 
@@ -447,7 +453,7 @@ class UserProfileModel() {
             _userProfiles.value.map { if (it.uid == updatedProfile.uid) updatedProfile else it }
     }
 
-    fun fromStringToUri(uriString: String): Uri{
+    fun fromStringToUri(uriString: String): Uri {
         return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
     }
 
@@ -468,9 +474,9 @@ class UserProfileModel() {
             inputStream.close()
 
             // Upload to Supabase
-            if(Collections.userImagesBucket.exists(filePath)){
+            if (Collections.userImagesBucket.exists(filePath)) {
                 Collections.userImagesBucket.update(filePath, bytes)
-            }else{
+            } else {
                 Collections.userImagesBucket.upload(filePath, bytes)
             }
 
@@ -487,7 +493,8 @@ class UserProfileModel() {
     fun getImageUrlFromSupabase(userUID: String): String {
         val storage = Collections.storage
 
-        val publicUrl = storage.from(Collections.userImagesBucket.toString()).publicUrl("$userUID/ProfileImage.jpg")
+        val publicUrl = storage.from(Collections.userImagesBucket.toString())
+            .publicUrl("$userUID/ProfileImage.jpg")
 
         return publicUrl
     }
@@ -512,7 +519,7 @@ class UserProfileModel() {
         return url.substringAfter(Collections.USER_IMAGES_BUCKET_PREFIX)
     }
 
-    suspend fun gainExp(expValue: Int, context: Context){
+    suspend fun gainExp(expValue: Int, context: Context) {
         val newExp = loggedUser.value.exp + expValue
         _loggedUser.value = _loggedUser.value.copy(exp = newExp)
         editProfile(loggedUser.value, context)

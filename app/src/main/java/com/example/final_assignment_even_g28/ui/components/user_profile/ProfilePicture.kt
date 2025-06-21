@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
@@ -25,8 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,19 +33,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.ui.components.badge.BadgeIconWithInfo
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import kotlinx.serialization.Serializable
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.final_assignment_even_g28.utils.AppFactory
 import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
 
 @Serializable
 @Polymorphic
@@ -71,6 +66,7 @@ sealed class ProfilePictureData {
 
 @Composable
 fun ProfilePicture(
+    userProfile: UserProfile,
     isLandScape: Boolean,
     showCameraButton: Boolean = false,
     userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory),
@@ -81,12 +77,12 @@ fun ProfilePicture(
 ) {
     val avatarSize = if (isCandidate) 56.dp else if (isDashboard) 72.dp else 150.dp
     val isEditing by remember { mutableStateOf(showCameraButton && onCameraClick != null) }
-    val user by userProfileViewModel.loggedUser.collectAsState()
-    val badge = user.badge
+    val badge = userProfile.badge
+    val profilePicture = userProfile.profilePicture
 
     // For some reason the type must be explicitly declared
     val boxModifier: MutableState<Modifier> = remember {
-        if (profile.isProfileImage == "Uri" || !isEditing) {
+        if (userProfile.isProfileImage == "Uri" || !isEditing) {
             mutableStateOf(Modifier)
         } else {
             when (isLandScape) {
@@ -96,9 +92,9 @@ fun ProfilePicture(
         }
     }
 
-    LaunchedEffect(profile.profilePicture) {
+    LaunchedEffect(userProfile.profilePicture) {
         boxModifier.value =
-            if (profile.isProfileImage == "Uri" || !isEditing) {
+            if (userProfile.isProfileImage == "Uri" || !isEditing) {
                 Modifier
             } else {
                 when (isLandScape) {
@@ -115,10 +111,10 @@ fun ProfilePicture(
             .size(avatarSize)
     ) {
         if (!(showCameraButton && onCameraClick != null)) {
-            when (profile.isProfileImage) {
-                 "Monogram" -> {
+            when (userProfile.isProfileImage) {
+                "Monogram" -> {
                     MakeMonogramFromInitials(
-                        userProfileViewModel.getInitialsFromUser(profile),
+                        userProfileViewModel.getInitialsFromUser(userProfile),
                         isPrimary = true,
                         isDashboard = isDashboard,
                         modifier = if (!isLandScape) Modifier else Modifier.size(100.dp)
@@ -140,10 +136,11 @@ fun ProfilePicture(
                             .size(100.dp)
                     )
                 }
+
                 "Uri" -> {
                     Image(
                         painter =
-                            rememberAsyncImagePainter(userProfileViewModel.getUriImage(profile.profilePicture)),
+                            rememberAsyncImagePainter(userProfileViewModel.getUriImage(userProfile.profilePicture)),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = if (!isLandScape) Modifier
@@ -170,14 +167,15 @@ fun ProfilePicture(
 
         } else {
             // Editing Profile Picture
-            when (profile.isProfileImage) {
+            when (userProfile.isProfileImage) {
                 "Icon", "Monogram" -> {
                     userProfileViewModel.let { IconCarousel(it, isLandScape = isLandScape) }
                 }
+
                 "Uri" -> {
                     Image(
                         painter =
-                            rememberAsyncImagePainter(userProfileViewModel.getUriImage(profile.profilePicture)),
+                            rememberAsyncImagePainter(userProfileViewModel.getUriImage(userProfile.profilePicture)),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = if (!isLandScape) Modifier
@@ -223,7 +221,7 @@ fun ProfilePicture(
 
                 }
 
-                if (profile.isProfileImage == "Uri") {
+                if (userProfile.isProfileImage == "Uri") {
                     Box(
                         modifier =
                             Modifier
