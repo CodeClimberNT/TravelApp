@@ -29,6 +29,7 @@ object Collections {
     private const val C_USER_BADGE = "user_badges"
 
     private const val C_NOTIFICATIONS = "notifications"
+    private const val C_ITINERARIES = "itineraries"
 
     private const val TRAVEL_IMAGES_BUCKET = "travel-images"
     private const val USER_IMAGES_BUCKET = "user-images"
@@ -72,6 +73,7 @@ object Collections {
     val userImagesBucket = storage.from(USER_IMAGES_BUCKET)
 
     val notifications = db.collection(C_NOTIFICATIONS)
+    val itineraries = db.collection(C_ITINERARIES)
 
     val users = db.collection(C_USERS)
     val userReview = db.collection(C_USER_REVIEW)

@@ -145,6 +145,7 @@ class TravelProposalViewModel(
 
 
     init {
+        itinerarySuggestions()
         loadAllTravelProposals()
         getNotification()
         pollingNotifications()
@@ -456,6 +457,14 @@ class TravelProposalViewModel(
                 val ownerId = currentUser.value.uid
                 val title = tempTravelProposal.title
                 val tripStartDate = tempTravelProposal.tripStartDate.toDate().time
+                val itinerary = tempTravelProposal.itinerary.map {
+                    it.copy(
+                        date = it.date,
+                        title = it.title,
+                        description = it.description,
+                        mandatory = it.mandatory
+                    )
+                }
                 val result = tripModel.addTravelProposal(
                     travelProposal = tempTravelProposal.copy(
                         id = tripId
@@ -465,6 +474,8 @@ class TravelProposalViewModel(
                 )
 
                 if (result.isSuccess) {
+
+                    tripModel.addItinerary(title, itinerary)
                     Log.d(
                         "TravelProposalViewModel",
                         "Travel proposal saved successfully with ID: ${result.getOrThrow()}"
@@ -1145,6 +1156,18 @@ class TravelProposalViewModel(
                 Log.d("TravelProposalViewModel", "Notification deleted successfully")
             } catch (e: Exception) {
                 Log.e("TravelProposalViewModel", "Error deleting notification: ${e.message}")
+            }
+        }
+    }
+
+    fun itinerarySuggestions() {
+        viewModelScope.launch {
+            tripModel.getItinerarySuggestions().collect { suggestions ->
+                if (suggestions.isNotEmpty()) {
+                    Log.d("TravelProposalViewModel", "Itinerary suggestions received: $suggestions")
+                } else {
+                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
+                }
             }
         }
     }

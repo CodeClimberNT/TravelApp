@@ -8,6 +8,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -85,6 +87,8 @@ fun CreateTravelProposalFirstScreen(
     var showStartDate by remember { mutableStateOf(false) }
     var showEndDate by remember { mutableStateOf(false) }
 
+
+    val showItineraryCard = remember { mutableStateOf(false) }
     val scrollable = rememberScrollState()
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -482,13 +486,44 @@ fun CreateTravelProposalFirstScreen(
                     top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp
                 )
             ) {
-                Text(
-                    "ITINERARY",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(
-                        top = 8.dp, start = 16.dp, end = 16.dp, bottom = 0.dp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "ITINERARY",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
-                )
+
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { showItineraryCard.value = true },
+                        tonalElevation = 0.dp,
+                        shadowElevation = 0.dp
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = "Help",
+                            modifier = Modifier.padding(4.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                if (showItineraryCard.value) {
+                    ItineraryDialog(
+                        onDismiss = { showItineraryCard.value = false },
+                        onAccept = {
+                            showItineraryCard.value = false
+                        }
+                    )
+                }
 
                 ItineraryWithStops(tripVm = tripVm)
                 Button(
