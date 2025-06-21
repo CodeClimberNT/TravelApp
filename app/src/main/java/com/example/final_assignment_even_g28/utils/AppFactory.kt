@@ -13,13 +13,10 @@ object AppFactory : ViewModelProvider.Factory {
     val userProfileModel = UserProfileModel()
 
     val travelProposalModel = TravelProposalModel()
-    val reviewModel = UserReviewModel(
-        userProfileModel = userProfileModel,
-        travelProposalModel = travelProposalModel
-    )
+    val reviewModel = UserReviewModel()
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-
         return when {
             modelClass.isAssignableFrom(UserProfileViewModel::class.java) ->
                 UserProfileViewModel(userProfileModel) as T
@@ -28,8 +25,7 @@ object AppFactory : ViewModelProvider.Factory {
                 TravelProposalViewModel(travelProposalModel, userProfileModel) as T
 
             modelClass.isAssignableFrom(UserReviewViewModel::class.java) ->
-                UserReviewViewModel(reviewModel, userProfileModel) as T
-
+                UserReviewViewModel(reviewModel, userProfileModel, travelProposalModel) as T
 
             else -> throw IllegalArgumentException("Unknown ViewModel class")
         }

@@ -82,8 +82,7 @@ class TravelProposalViewModel(
 
     var reviewErrors by mutableStateOf(ReviewError())
 
-    var isFilterBarExtended = mutableStateOf(false)
-        private set
+
 
     var filters by mutableStateOf(Filters())
 
@@ -765,10 +764,6 @@ class TravelProposalViewModel(
         return true
     }
 
-    fun toggleFilterBar() {
-        isFilterBarExtended.value = !isFilterBarExtended.value
-    }
-
 
     fun showFromValue(from: Timestamp?): String {
         if (from != null) return from.toDateFormat()
@@ -859,8 +854,6 @@ class TravelProposalViewModel(
                 _allTravelProposals.value = proposals
             }
         }
-
-        toggleFilterBar()
     }
 
     fun clickTripInfo(travelId: String, isPast: Boolean = false) {
@@ -906,8 +899,11 @@ class TravelProposalViewModel(
                             "No user found for participant ID: ${participant.id}"
                         )
                     }
-
                 }
+                Log.d(
+                    "TravelProposalViewModel",
+                    "Participants loaded: ${participantsDetailed.size}"
+                )
                 _currentParticipants.value = participantsDetailed
 
             }

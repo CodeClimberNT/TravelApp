@@ -65,11 +65,8 @@ fun MyUserReviewsList(
 ) {
     var tabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Made to you", "Made by you")
-    val profile by userProfileViewModel.loggedUser.collectAsState()
 
-    userReviewViewModel.getReviews(profile.uid)
-
-    val reviewsMadeToMe by userReviewViewModel.othersReview.collectAsState()
+    val reviewsMadeToMe by userReviewViewModel.othersReviews.collectAsState()
     val reviewsMadeByMe by userReviewViewModel.myReviews.collectAsState()
 
     Scaffold(
@@ -124,51 +121,50 @@ fun MyUserReviewsList(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ReviewsList(reviews: List<UserReview>, displayReviewed: Boolean = false) {
-if (reviews.isNotEmpty()){
-    FlowColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        if (reviews.isNotEmpty()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Average Rating: ", style = MaterialTheme.typography.headlineSmall)
-                Spacer(modifier = Modifier.weight(1f))
-                RatingStar(
-                    reviews.map { it.rating }.average().toFloat(),
-                    maxRating = 5,
-                    onStarClick = {},
-                    isIndicator = false
-                )
-                Text(
-                    text = "${" % .2f".format(reviews.map({ it.rating }).average())} / 5",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+    if (reviews.isNotEmpty()) {
+        FlowColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            if (reviews.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Average Rating: ", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.weight(1f))
+                    RatingStar(
+                        reviews.map { it.rating }.average().toFloat(),
+                        maxRating = 5,
+                        onStarClick = {},
+                        isIndicator = false
+                    )
+                    Text(
+                        text = "${" % .2f".format(reviews.map({ it.rating }).average())} / 5",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
 
+            }
+            reviews.forEach { review ->
+                UserReviewCard(review, displayReviewed)
+            }
         }
-        reviews.forEach { review ->
-            UserReviewCard(review, displayReviewed)
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "There are no Reviews to see",
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
-    }
-    }
-    else{
-    Row(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "There are no Reviews to see",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
     }
 }
 
