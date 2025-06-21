@@ -83,17 +83,15 @@ import kotlinx.coroutines.launch
 sealed interface ProfileEvent {
     object ProfileInfo : ProfileEvent
     object BadgesClicked : ProfileEvent
-    object PastTripsClicked : ProfileEvent
-    object ExperiencesClicked : ProfileEvent
     object ReviewsClicked : ProfileEvent
     object SettingsClicked : ProfileEvent
-    object LogoutClicked : ProfileEvent
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
+    isOpeningBadge: Boolean = false,
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
@@ -101,7 +99,7 @@ fun ProfileScreen(
     val profile by viewModel.editingProfile.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    var showBadgesBottomSheet by remember { mutableStateOf(false) }
+    var showBadgesBottomSheet by remember { mutableStateOf(isOpeningBadge) }
 
     fun showBadges() {
         showBadgesBottomSheet = true
@@ -248,8 +246,7 @@ fun ProfileButtonList(
                             ProfileEvent.ReviewsClicked -> navActions.navigateToUserReview()
                             ProfileEvent.SettingsClicked -> {
                                 navActions.navigateToSettings()
-                            } //navActions.navigateToSettingsScreen()
-                            else -> {} // Handle other events as needed
+                            }
                         }
                     },
                     shape = commonShape,

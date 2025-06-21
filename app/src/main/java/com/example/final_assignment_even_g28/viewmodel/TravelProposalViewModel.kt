@@ -26,7 +26,6 @@ import com.example.final_assignment_even_g28.data_class.TravelReview
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.TravelProposalModel
 import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.shared.validation.FilterError
 import com.example.final_assignment_even_g28.shared.validation.FilterValidator
 import com.example.final_assignment_even_g28.shared.validation.ReviewError
@@ -1146,34 +1145,6 @@ class TravelProposalViewModel(
                 Log.d("TravelProposalViewModel", "Notification deleted successfully")
             } catch (e: Exception) {
                 Log.e("TravelProposalViewModel", "Error deleting notification: ${e.message}")
-            }
-        }
-    }
-
-    fun handleNotificationNavigation(notification: Notification, navActions: Navigation) {
-        when (notification.type) {
-            NotificationType.NEW_APPLICATION -> {
-                navActions.navigateToTripInfo(
-                    tripId = notification.tripId,
-                    fromMyTripTab = true,
-                    showParticipants = true
-                )
-            }
-
-            NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
-                navActions.navigateToPastTravelProposalInfo(
-                    tripId = notification.tripId,
-                    fromMyTripTab = true,
-                    showReviewsTab = true
-                )
-            }
-
-            NotificationType.USER_REVIEW_RECEIVED -> {
-                navActions.navigateToUserReview()
-            }
-
-            else -> {
-                navActions.navigateToTripInfo(notification.tripId, false)
             }
         }
     }

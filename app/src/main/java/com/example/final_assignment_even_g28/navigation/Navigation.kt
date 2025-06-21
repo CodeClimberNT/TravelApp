@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.navigation.NavHostController
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.EXPLORE_TAB
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.MY_TRIP_TAB
+import com.example.final_assignment_even_g28.navigation.DestinationsArgs.SHOW_BADGE
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.SHOW_PARTICIPANTS
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.SHOW_REVIEWS_TAB
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.TRIP_ID_ARG
@@ -43,9 +44,6 @@ object DestinationsArgs {
     //const val USER_MESSAGE_ARG = "userMessage"
     const val TRIP_ID_ARG = "taskId"
 
-    //TODO: maybe a better name?
-    //OWN_TRAVEL: travel clicked from the explore tab
-    //NOT_OWN: travel clicked from the my trips tab
     const val MY_TRIP_TAB = "myTripTab"
     const val EXPLORE_TAB = "exploreTab"
 
@@ -53,6 +51,7 @@ object DestinationsArgs {
 
     const val SHOW_PARTICIPANTS = "showParticipants"
     const val SHOW_REVIEWS_TAB = "showReviewsTab"
+    const val SHOW_BADGE = "showBadge"
 
 }
 
@@ -67,12 +66,14 @@ object Destinations {
     const val CREATE_NEW_TRAVEL_PROPOSAL_ROUTE = CREATE_NEW_TRAVEL_PROPOSAL
     //const val TRIP_INFO_ROUTE = Screens.TRIP_INFO
 
-    const val TRIP_INFO_ROUTE = "$TRIP_INFO/{$MY_TRIP_TAB}/{$TRIP_ID_ARG}?$SHOW_PARTICIPANTS={$SHOW_PARTICIPANTS}"
-    const val PAST_TRIP_INFO_ROUTE = "$PAST_TRIP_INFO/{$MY_TRIP_TAB}/{$TRIP_ID_ARG}?$SHOW_REVIEWS_TAB={$SHOW_REVIEWS_TAB}"
+    const val TRIP_INFO_ROUTE =
+        "$TRIP_INFO/{$MY_TRIP_TAB}/{$TRIP_ID_ARG}?$SHOW_PARTICIPANTS={$SHOW_PARTICIPANTS}"
+    const val PAST_TRIP_INFO_ROUTE =
+        "$PAST_TRIP_INFO/{$MY_TRIP_TAB}/{$TRIP_ID_ARG}?$SHOW_REVIEWS_TAB={$SHOW_REVIEWS_TAB}"
 
     const val OTHER_PROFILE_ROUTE = "${Screens.OTHER_PROFILE}/{$MY_TRIP_TAB}/{$USER_UID}"
 
-    const val USER_MAIN_PAGE_ROUTE = Screens.USER_MAIN_PAGE
+    const val USER_MAIN_PAGE_ROUTE = "${Screens.USER_MAIN_PAGE}/{$SHOW_BADGE}"
     const val USER_REVIEW_PAGE_ROUTE = Screens.USER_REVIEW_PAGE
 
     const val SIGN_IN_ROUTE = Screens.SIGN_IN
@@ -126,8 +127,13 @@ class Navigation(
         }
     }
 
-    fun navigateToUserMainPage() {
-        navController.navigate(Destinations.USER_MAIN_PAGE_ROUTE) {
+    fun navigateToUserMainPage(showBadge: Boolean = false) {
+        navController.navigate(
+            Destinations.USER_MAIN_PAGE_ROUTE.replace(
+                "{$SHOW_BADGE}",
+                showBadge.toString()
+            )
+        ) {
             launchSingleTop = true
         }
     }
@@ -150,7 +156,11 @@ class Navigation(
         }
     }
 
-    fun navigateToTripInfo(tripId: String, fromMyTripTab: Boolean, showParticipants: Boolean = false) {
+    fun navigateToTripInfo(
+        tripId: String,
+        fromMyTripTab: Boolean,
+        showParticipants: Boolean = false
+    ) {
         Log.d(
             "Navigation",
             "Navigating to trip info with tripId: $tripId, fromMyTripTab: $fromMyTripTab, showParticipants: $showParticipants"
@@ -176,7 +186,11 @@ class Navigation(
         }
     }
 
-    fun navigateToPastTravelProposalInfo(tripId: String, fromMyTripTab: Boolean, showReviewsTab: Boolean = false) {
+    fun navigateToPastTravelProposalInfo(
+        tripId: String,
+        fromMyTripTab: Boolean,
+        showReviewsTab: Boolean = false
+    ) {
         navController.navigate(
             Destinations.PAST_TRIP_INFO_ROUTE
                 .replace("{$MY_TRIP_TAB}", if (fromMyTripTab) MY_TRIP_TAB else EXPLORE_TAB)

@@ -44,6 +44,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.navigation.handleNotificationNavigation
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
@@ -186,7 +187,7 @@ fun NotificationItem(
                 if (!isReadFromDB) {
                     tripVm.markNotificationAsRead(notification.id)
                 }
-                tripVm.handleNotificationNavigation(notification, navActions)
+                handleNotificationNavigation(notification, navActions)
             })
             .background(color = backgroundColor, shape = MaterialTheme.shapes.small)
             .border(1.dp, borderColor, MaterialTheme.shapes.small)

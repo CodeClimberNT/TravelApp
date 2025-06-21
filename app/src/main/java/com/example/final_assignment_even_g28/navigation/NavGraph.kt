@@ -21,6 +21,8 @@ import androidx.navigation.navArgument
 import com.example.final_assignment_even_g28.NotificationSettingsScreen
 import com.example.final_assignment_even_g28.OtherProfileScreen
 import com.example.final_assignment_even_g28.ProfileScreen
+import com.example.final_assignment_even_g28.data_class.Notification
+import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.ui.screens.CreateTravelProposalFirstScreen
 import com.example.final_assignment_even_g28.ui.screens.CreateTravelProposalSecondScreen
 import com.example.final_assignment_even_g28.ui.screens.EditUserProfileInfo
@@ -62,7 +64,7 @@ fun NavGraph(
                     duration = SnackbarDuration.Short
                 ).let { result ->
                     if (result == SnackbarResult.ActionPerformed) {
-                        tripVm.handleNotificationNavigation(it, navActions)
+                        handleNotificationNavigation(it, navActions)
                     }
                 }
             } ?: Log.d("SnackbarDebug", "No notification to show")
@@ -106,9 +108,21 @@ fun NavGraph(
             )
         }
 
-        composable(Destinations.USER_MAIN_PAGE_ROUTE) {
+        composable(
+            route = Destinations.USER_MAIN_PAGE_ROUTE,
+            arguments = listOf(navArgument(DestinationsArgs.SHOW_BADGE) {
+                type = NavType.BoolType
+                defaultValue = false
+            }),
+        ) { backStackEntry ->
+            //TODO: when badge merge is done, verify this navigation works,
+            // manually true already opens the badge
+            val showReviewsTab =
+                backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_BADGE) == true
+
             ProfileScreen(
                 viewModel = userVm,
+                isOpeningBadge = showReviewsTab,
                 navActions = navActions,
                 bottomBarItem = BottomBarItem.Profile,
                 snackBarHostState = snackbarHostState
@@ -255,3 +269,34 @@ fun NavGraph(
     }
 }
 
+fun handleNotificationNavigation(notification: Notification, navActions: Navigation) {
+    when (notification.type) {
+        NotificationType.NEW_APPLICATION -> {
+            navActions.navigateToTripInfo(
+                tripId = notification.tripId,
+                fromMyTripTab = true,
+                showParticipants = true
+            )
+        }
+
+        NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
+            navActions.navigateToPastTravelProposalInfo(
+                tripId = notification.tripId,
+                fromMyTripTab = true,
+                showReviewsTab = true
+            )
+        }
+
+        NotificationType.USER_REVIEW_RECEIVED -> {
+            navActions.navigateToUserReview()
+        }
+
+        NotificationType.BADGE_UNLOCKED -> {
+            navActions.navigateToUserMainPage(showBadge = true)
+        }
+
+        else -> {
+            navActions.navigateToTripInfo(notification.tripId, false)
+        }
+    }
+}
