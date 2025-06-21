@@ -4,17 +4,16 @@ import android.util.Log
 import androidx.navigation.NavHostController
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.EXPLORE_TAB
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.MY_TRIP_TAB
-import com.example.final_assignment_even_g28.navigation.DestinationsArgs.NAME
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.SHOW_PARTICIPANTS
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.SHOW_REVIEWS_TAB
 import com.example.final_assignment_even_g28.navigation.DestinationsArgs.TRIP_ID_ARG
+import com.example.final_assignment_even_g28.navigation.DestinationsArgs.USER_UID
 import com.example.final_assignment_even_g28.navigation.Screens.CREATE_NEW_TRAVEL_PROPOSAL
 import com.example.final_assignment_even_g28.navigation.Screens.MY_TRAVEL_PROPOSAL_LIST
 import com.example.final_assignment_even_g28.navigation.Screens.PAST_TRIP_INFO
 import com.example.final_assignment_even_g28.navigation.Screens.SECOND_SCREEN
 import com.example.final_assignment_even_g28.navigation.Screens.TRAVEL_LIST
 import com.example.final_assignment_even_g28.navigation.Screens.TRIP_INFO
-import com.example.final_assignment_even_g28.navigation.Screens.SETTINGS
 
 
 private object Screens {
@@ -50,7 +49,7 @@ object DestinationsArgs {
     const val MY_TRIP_TAB = "myTripTab"
     const val EXPLORE_TAB = "exploreTab"
 
-    const val NAME = "name"
+    const val USER_UID = "name"
 
     const val SHOW_PARTICIPANTS = "showParticipants"
     const val SHOW_REVIEWS_TAB = "showReviewsTab"
@@ -71,7 +70,7 @@ object Destinations {
     const val TRIP_INFO_ROUTE = "$TRIP_INFO/{$MY_TRIP_TAB}/{$TRIP_ID_ARG}?$SHOW_PARTICIPANTS={$SHOW_PARTICIPANTS}"
     const val PAST_TRIP_INFO_ROUTE = "$PAST_TRIP_INFO/{$MY_TRIP_TAB}/{$TRIP_ID_ARG}?$SHOW_REVIEWS_TAB={$SHOW_REVIEWS_TAB}"
 
-    const val OTHER_PROFILE_ROUTE = "${Screens.OTHER_PROFILE}/{$MY_TRIP_TAB}/{$NAME}"
+    const val OTHER_PROFILE_ROUTE = "${Screens.OTHER_PROFILE}/{$MY_TRIP_TAB}/{$USER_UID}"
 
     const val USER_MAIN_PAGE_ROUTE = Screens.USER_MAIN_PAGE
     const val USER_REVIEW_PAGE_ROUTE = Screens.USER_REVIEW_PAGE
@@ -167,11 +166,11 @@ class Navigation(
         }
     }
 
-    fun navigateToOtherProfile(name: String, fromMyTripTab: Boolean) {
+    fun navigateToOtherProfile(userUID: String, fromMyTripTab: Boolean) {
         var temporary = Destinations.OTHER_PROFILE_ROUTE.replace(
             "{$MY_TRIP_TAB}",
             if (fromMyTripTab) MY_TRIP_TAB else EXPLORE_TAB
-        ).replace("{$NAME}", name)
+        ).replace("{$USER_UID}", userUID)
         navController.navigate(temporary) {
             launchSingleTop = true
         }

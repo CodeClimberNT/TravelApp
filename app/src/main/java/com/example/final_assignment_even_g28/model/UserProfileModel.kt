@@ -440,12 +440,8 @@ class UserProfileModel() {
         return _userProfiles.value.firstOrNull { it.uid == uid }
     }
 
-    fun getNicknameByUID(userId: String): String? {
-        return _userProfiles.value.firstOrNull { it.uid == userId }?.nickName
-    }
-
     fun getNameByUID(userUID: String): String {
-        return _userProfiles.value.firstOrNull() { it.uid == userUID }?.name ?: "Unknow"
+        return _userProfiles.value.firstOrNull() { it.uid == userUID }?.name ?: "Unknown"
     }
 
     fun updateUserProfile(updatedProfile: UserProfile) {

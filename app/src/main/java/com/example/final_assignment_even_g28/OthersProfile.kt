@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.TravelProposal
@@ -41,17 +42,20 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.screens.Tag
 import com.example.final_assignment_even_g28.ui.theme.StarColor
+import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Composable
 fun OtherProfileScreen(
-    tripVm: TravelProposalViewModel,
-    userName: String,
+    userUID: String,
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
+    tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState,
@@ -63,13 +67,8 @@ fun OtherProfileScreen(
     val travelProposals by tripVm.allTravelProposals.collectAsState(emptyList())
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
     val travelProposal = travelProposals.firstOrNull() ?: TravelProposal()
-    //    val user: UserProfile = travelProposal.getUser(userName)!!
-    val user = UserProfile(
-        name = "John Doe",
-        rating = 4.5f,
-        avatar = ProfilePictureData.DEFAULT,
-        contact = ""
-    )
+    val otherUser = userVm.getOtherUserProfile(userUID)
+
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -82,7 +81,7 @@ fun OtherProfileScreen(
                     .padding(16.dp)
                     .padding(innerPadding)
             ) {
-                ProfileColumn(user)
+                ProfileColumn(otherUser)
                 PastExperiencesHorizontal(travelProposals, tripPlanner)
             }
         } else {
@@ -91,7 +90,7 @@ fun OtherProfileScreen(
                     .padding(16.dp)
                     .padding(innerPadding)
             ) {
-                ProfileRow(user)
+                ProfileRow(otherUser)
                 PastExperiencesColumn(travelProposal, tripPlanner)
             }
         }
@@ -108,10 +107,10 @@ fun ProfileColumn(user: UserProfile) {
         horizontalAlignment = Alignment.Start,
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            Image(
-                painter = painterResource(id = R.drawable.account_image),
-                contentDescription = null,
-                modifier = Modifier.size(170.dp)
+            ProfilePicture(
+                userProfile = user,
+                isLandScape = false,
+                isDashboard = true,
             )
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -187,7 +186,7 @@ fun NameColumn(user: UserProfile) {
     Column(verticalArrangement = Arrangement.Top) {
         Row {
             Text(
-                text = user.fullName,
+                text = "${user.name} ${user.surname}",
                 modifier = Modifier.padding(10.dp),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 18.sp
@@ -286,7 +285,7 @@ fun PastExperienceBlock(tripTaken: TravelProposal, tripPlanner: UserProfile) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = tripPlanner.fullName,
+                    text = "${tripPlanner.name} ${tripPlanner.surname}",
                     modifier = Modifier.padding(start = 26.dp),
                     fontWeight = FontWeight.Bold
                 )

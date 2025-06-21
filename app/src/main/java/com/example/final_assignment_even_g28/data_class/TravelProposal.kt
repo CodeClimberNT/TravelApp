@@ -70,6 +70,6 @@ data class TravelProposal(
     val experienceComposition: ExperienceComposition = ExperienceComposition(0, 0, 0, 0),
     val itinerary: List<ItineraryStop> = emptyList(),
     val maxParticipant: Int = 0,
-    var participants: MutableList<Participant> = mutableListOf(),
+    val participants: MutableList<Participant> = mutableListOf(),
 )
 

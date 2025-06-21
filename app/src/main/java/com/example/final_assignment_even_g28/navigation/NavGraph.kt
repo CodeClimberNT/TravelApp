@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.final_assignment_even_g28.NotificationSettingsScreen
+import com.example.final_assignment_even_g28.OtherProfileScreen
 import com.example.final_assignment_even_g28.ProfileScreen
 import com.example.final_assignment_even_g28.ui.screens.CreateTravelProposalFirstScreen
 import com.example.final_assignment_even_g28.ui.screens.CreateTravelProposalSecondScreen
@@ -198,8 +199,7 @@ fun NavGraph(
                     defaultValue = false
                 }
             ),
-
-            ) { backStackEntry ->
+        ) { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString(DestinationsArgs.TRIP_ID_ARG)
             val fromMyTripTab = backStackEntry.arguments?.getString(DestinationsArgs.MY_TRIP_TAB)
 
@@ -224,7 +224,34 @@ fun NavGraph(
                 initialTabIndex = if (showReviewsTab) 1 else 0
             )
         }
+        composable(
+            route = Destinations.OTHER_PROFILE_ROUTE,
+            arguments = listOf(
+                navArgument(DestinationsArgs.MY_TRIP_TAB) {
+                    type = NavType.StringType
+                    defaultValue = DestinationsArgs.MY_TRIP_TAB
+                },
+                navArgument(DestinationsArgs.USER_UID) { type = NavType.StringType },
+            ),
+        ) { backStackEntry ->
+            val userUID = backStackEntry.arguments?.getString(DestinationsArgs.USER_UID)
 
+            val fromMyTripTab = backStackEntry.arguments?.getString(DestinationsArgs.MY_TRIP_TAB)
+
+            val selectedItem = if (fromMyTripTab?.contains(DestinationsArgs.MY_TRIP_TAB) == true) {
+                BottomBarItem.MyTrips
+            } else {
+                BottomBarItem.Explore
+            }
+
+            bottomBarItemSelected.value = BottomBarItem.Profile
+            OtherProfileScreen(
+                userUID = userUID ?: "",
+                navActions = navActions,
+                bottomBarItem = selectedItem,
+                snackBarHostState = snackbarHostState,
+            )
+        }
     }
 }
 

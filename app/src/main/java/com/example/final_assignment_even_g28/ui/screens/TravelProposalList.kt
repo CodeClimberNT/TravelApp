@@ -97,7 +97,6 @@ fun TravelProposalList(
                 .padding(start = 15.dp, end = 15.dp)
         ) {
             FilterForm(tripVm)
-            Spacer(modifier = Modifier.height(16.dp))
             if (filteredTravelProposal.isNotEmpty()) {
                 TravelProposalListColumn(
                     tripVm = tripVm,
@@ -133,9 +132,13 @@ fun TravelProposalListColumn(
             .padding(start = 15.dp, end = 15.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         travelProposalList.forEach { travel ->
             TravelProposalBlock(tripVm, travel, navActions)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

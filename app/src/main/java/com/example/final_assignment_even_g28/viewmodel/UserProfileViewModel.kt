@@ -30,6 +30,7 @@ import com.example.final_assignment_even_g28.shared.validation.UserProfileValida
 import com.example.final_assignment_even_g28.shared.validation.asList
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
+import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,11 +47,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val userBadges: StateFlow<List<Badge>> = model.userBadges
 
-    fun getUserByUID(uid: String) = model.getUserByUid(uid)
-    fun getNicknameByUID(userUID: String): String? = model.getNicknameByUID(userUID)
-
-    fun updateUserProfile(updatedProfile: UserProfile) = model.updateUserProfile(updatedProfile)
-
     private var _editingProfile = MutableStateFlow<UserProfile>(UserProfile())
     val editingProfile: StateFlow<UserProfile> get() = _editingProfile
 
@@ -61,8 +57,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     init {
         val currentUser = Collections.auth.currentUser
-        if (currentUser != null){
-               model.loadUserByUID(currentUser.uid)
+        if (currentUser != null) {
+            model.loadUserByUID(currentUser.uid)
             Log.d("INIT", "User charged: $")
         }
         viewModelScope.launch {
@@ -76,7 +72,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     fun login(email: String, password: String) {
         model.login(email, password)
         _editingProfile.value = model.loggedUser.value
-        Log.d("INIT","logged User: ${loggedUser.value}, editUser: ${editingProfile.value}")
+        Log.d("INIT", "logged User: ${loggedUser.value}, editUser: ${editingProfile.value}")
 
     }
 
@@ -152,12 +148,16 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
 
-     fun saveAndExitEditing(context: Context) {
-         viewModelScope.launch {
-             isEditing = false
-             model.editProfile(editingProfile.value, context)
-             Log.d("Edit User","Saving Profile: ${editingProfile.value}")
-         }
+    fun saveAndExitEditing(context: Context) {
+        viewModelScope.launch {
+            isEditing = false
+            model.editProfile(editingProfile.value, context)
+            Log.d("Edit User", "Saving Profile: ${editingProfile.value}")
+        }
+    }
+
+    fun getOtherUserProfile(userUID: String): UserProfile {
+        return model.getUserByUid(userUID) ?: UNKNOWN_USER
     }
 
     fun handleBackNavigation(context: Context) {
@@ -168,26 +168,32 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getIcon(iconName: String): ImageVector{
-        when (iconName){
+    fun getIcon(iconName: String): ImageVector {
+        when (iconName) {
             "Icon(icon=DIRECTIONS_WALK)" -> {
                 return Icons.AutoMirrored.Default.DirectionsWalk
             }
+
             "Icon(icon=HOUSE)" -> {
                 return Icons.Default.House
             }
+
             "Icon(icon=ACCOUNT_CIRCLE)" -> {
                 return Icons.Default.AccountCircle
             }
+
             "Icon(icon=TRAIN)" -> {
                 return Icons.Default.Train
             }
+
             "Icon(icon=TRAM)" -> {
                 return Icons.Default.Tram
             }
+
             "Icon(icon=AIRPLANE)" -> {
                 return Icons.Default.AirplanemodeActive
             }
+
             else -> {
                 return Icons.Default.AccountCircle
             }
@@ -220,31 +226,31 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             "Icon" -> {
                 iconsList.toMutableList().apply {
                     val target = getIconNameFromString(_userProfile.profilePicture)
-                    if(target?.isNotEmpty() == true){
+                    if (target?.isNotEmpty() == true) {
                         remove(target)
                         add(0, target)
                     }
                 }
             }
+
             "Uri" -> {
                 iconsList
             }
+
             else -> {
                 emptyList()
             }
         }
     }
 
-     fun getInitials(): String {
-         if (editingProfile.value.surname.isEmpty())
-            return (editingProfile.value.name[0]).toString()
-         return (editingProfile.value.name[0].toString() + editingProfile.value.surname[0].toString())
-     }
+    fun getInitials(): String {
+        return getInitialsFromUser(editingProfile.value)
+    }
 
-    fun getInitialsFromUser(user: UserProfile): String{
+    fun getInitialsFromUser(user: UserProfile): String {
         if (user.surname.isEmpty())
-            return (user.name[0]).toString()
-        return (user.name[0].toString() + user.surname[0].toString())
+            return (user.name[0]).toString().uppercase()
+        return (user.name[0].toString().uppercase() + user.surname[0].toString().uppercase())
     }
 
     fun updateName(name: String) {
@@ -312,22 +318,22 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     }
 
-    fun getImageProfile(userUID: String): String{
-       return model.getImageUrlFromSupabase(userUID)
+    fun getImageProfile(userUID: String): String {
+        return model.getImageUrlFromSupabase(userUID)
     }
 
-    fun getUriImage(imageUri: String): Uri{
-       return model.fromStringToUri(imageUri)
+    fun getUriImage(imageUri: String): Uri {
+        return model.fromStringToUri(imageUri)
     }
 
-    fun updateAddTypeOfExperiences(experience: String){
+    fun updateAddTypeOfExperiences(experience: String) {
         var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
         experienceList.add(experience)
 
         _editingProfile.value = _editingProfile.value.copy(typeOfExperiences = experienceList)
     }
 
-    fun updateDeleteTypeOfExperiences(experience: String){
+    fun updateDeleteTypeOfExperiences(experience: String) {
         var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
         experienceList.remove(experience)
 
@@ -356,8 +362,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 label = "Name",
                 value = profile.name,
                 errorMessage = validationErrors.name,
-                onValueChange = { updateName(it)
-                    Log.d("edit name","name changed to $it")
+                onValueChange = {
+                    updateName(it)
+                    Log.d("edit name", "name changed to $it")
                 }
             ),
             EditableFieldDefinition(
@@ -443,11 +450,12 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1 == password2)
     }
 
-    fun gainExp(value: Int, context: Context){
+    fun gainExp(value: Int, context: Context) {
         viewModelScope.launch {
             model.gainExp(value, context)
         }
     }
+
     //---- Badge Progress Utility Functions ----//
     fun updateBadgeTravelInPackProgress() {
         viewModelScope.launch {

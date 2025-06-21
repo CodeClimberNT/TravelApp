@@ -2,7 +2,6 @@ package com.example.final_assignment_even_g28.utils
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.final_assignment_even_g28.model.ImageStorageModel
 import com.example.final_assignment_even_g28.model.TravelProposalModel
 import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.model.UserReviewModel
@@ -11,11 +10,9 @@ import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 object AppFactory : ViewModelProvider.Factory {
-    val imageStorageModel = ImageStorageModel()
     val userProfileModel = UserProfileModel()
 
-    val travelProposalModel =
-        TravelProposalModel(userModel = userProfileModel, imageStorageModel = imageStorageModel)
+    val travelProposalModel = TravelProposalModel()
     val reviewModel = UserReviewModel(
         userProfileModel = userProfileModel,
         travelProposalModel = travelProposalModel

@@ -178,7 +178,9 @@ class TravelProposalViewModel(
                 .filter { !it.enabled }
                 .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
             Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
-            tripModel.getNotifications(excludedNotificationTypes)
+
+            val userId = currentUser.value.uid
+            tripModel.getNotifications(userId, excludedNotificationTypes)
                 .collect { notifications ->
                     // NOTIFICATION BELL
                     _notifications.value = notifications
@@ -385,6 +387,11 @@ class TravelProposalViewModel(
         return isValid
     }
 
+    private fun resetTravelProposalScreenErrors() {
+        firstScreenValidationError = TravelProposalFirstScreenError()
+        secondScreenValidationError = TravelProposalSecondScreenError()
+    }
+
     fun clickPlanNewOwnTrip(userId: String) {
         Log.d(
             "TravelProposalViewModel",
@@ -400,15 +407,18 @@ class TravelProposalViewModel(
     }
 
     fun clickEditOwnTrip() {
+        resetTravelProposalScreenErrors()
         tempTravelProposal = _travelProposal.value.copy()
         isEditing = true
     }
+
 
     fun clickCloneTrip(userId: String) {
         Log.d(
             "TravelProposalViewModel",
             "cloning trip with ID: ${userId}"
         )
+        resetTravelProposalScreenErrors()
         val originalTrip = _travelProposal.value
         tempTravelProposal = originalTrip.copy(
             tripPlannerId = userId,
@@ -852,30 +862,46 @@ class TravelProposalViewModel(
                     return@collect
                 }
                 _travelProposal.value = trip
-                val tripUser = userModel.getUserByUid(trip.tripPlannerId)
+                val tripPlanner = userModel.getUserByUid(trip.tripPlannerId)
                 Log.d(
                     "TravelProposalViewModel",
-                    "Trip planner ID: ${tripUser}"
+                    "Trip planner ID: ${tripPlanner}"
                 )
-                if (tripUser == null) {
+                if (tripPlanner == null) {
                     Log.w(
                         "TravelProposalViewModel",
                         "No user found for trip planner ID: ${trip.tripPlannerId}"
                     )
                     _currentTripPlanner.value = UNKNOWN_USER
                 } else {
-                    _currentTripPlanner.value = tripUser
-                    Log.d("TravelProposalViewModel", "Trip planner found: ${tripUser.name}")
+                    _currentTripPlanner.value = tripPlanner
+                    Log.d("TravelProposalViewModel", "Trip planner found: ${tripPlanner.name}")
                 }
+                val participants = trip.participants
+
+                val participantsDetailed = mutableListOf<ParticipantDetailed>()
+                participants.forEach { participant ->
+                    val user = userModel.getUserByUid(participant.id)
+                    if (user != null) {
+                        participantsDetailed.add(
+                            ParticipantDetailed(
+                                user = user,
+                                invitedGuests = participant.invitedGuests,
+                                status = participant.status
+                            )
+                        )
+                    } else {
+                        Log.w(
+                            "TravelProposalViewModel",
+                            "No user found for participant ID: ${participant.id}"
+                        )
+                    }
+
+                }
+                _currentParticipants.value = participantsDetailed
+
             }
         }
-
-        viewModelScope.launch {
-            tripModel.getParticipantWithDetails(travelId).collect { participants ->
-                _currentParticipants.value = participants
-            }
-        }
-
 
         if (isPast) {
             viewModelScope.launch {
@@ -884,6 +910,13 @@ class TravelProposalViewModel(
                         "TravelProposalViewModel",
                         "Loaded ${reviews.size} reviews for trip ID: $travelId"
                     )
+                    reviews.map { review ->
+                        val userName =
+                            userModel.getNameByUID(review.reviewerId)
+                        Log.d("TravelProposalModel", "Reviewer name: $userName")
+                        review.reviewerName = userName
+                    }
+
                     _currentReviews.value = reviews
                 }
             }

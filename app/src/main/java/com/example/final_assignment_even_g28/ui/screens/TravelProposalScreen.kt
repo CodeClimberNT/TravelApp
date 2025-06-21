@@ -1305,7 +1305,7 @@ fun MiniProfileDialog(
                         modifier = Modifier.padding(8.dp), onClick = {
                             onShow(false)
                             navActions.navigateToOtherProfile(
-                                candidate.name,
+                                candidate.uid,
                                 bottomBarItem == BottomBarItem.MyTrips
                             )
                         }, colors = ButtonDefaults.buttonColors(
@@ -1442,7 +1442,12 @@ fun PreviewMiniProfile() {
     val navActions = Navigation(navController)
 
     MiniProfileDialog(
-        UserProfile("Giovanna Azzurri", 4.0f, "This is my description"),
+        UserProfile(
+            name = "Giovanna",
+            surname = "Azzurri",
+            rating = 4.0f,
+            bio = "This is my description"
+        ),
         navActions,
         BottomBarItem.MyTrips
     ) { }

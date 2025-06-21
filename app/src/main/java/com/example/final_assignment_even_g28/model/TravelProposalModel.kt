@@ -9,13 +9,10 @@ import com.example.final_assignment_even_g28.data_class.Filters
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.data_class.Participant
-import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
 import com.example.final_assignment_even_g28.data_class.ParticipantStatus
 import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.data_class.TravelReview
-import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.utils.MAX
-import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -28,10 +25,8 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class TravelProposalModel(
-    private val imageStorageModel: ImageStorageModel,
-    private val userModel: UserProfileModel
+//    private val userModel: UserProfileModel
 ) {
-    //TODO: add private member with mutableStateFlow and StateFlow
 
     fun getFilteredTravelProposals(
         filters: Filters
@@ -85,26 +80,6 @@ class TravelProposalModel(
             }
         awaitClose { listener.remove() }
     }
-
-
-//    fun getMyTravelProposals(userId: String): Flow<List<TravelProposal>> = callbackFlow {
-//        val query = Collections.travelProposals.whereEqualTo("tripPlannerId", userId)
-//            .whereGreaterThan("tripEndDate", Timestamp.now())
-//            .orderBy("tripEndDate", Query.Direction.DESCENDING)
-//
-//        val listener = query.addSnapshotListener { snapshot, error ->
-//            if (error != null) {
-//                Log.e("TravelProposalModel", error.toString())
-//                trySend(emptyList())
-//                return@addSnapshotListener
-//            }
-//
-//            if (snapshot != null) {
-//                trySend(snapshot.toTravelProposalsWithIds())
-//            }
-//        }
-//        awaitClose { listener.remove() }
-//    }
 
     fun getMyTravelProposals(userId: String): Flow<List<TravelProposal>> = callbackFlow {
         val currentTime = Timestamp.now()
@@ -178,7 +153,7 @@ class TravelProposalModel(
                 val participatingProposals = allProposals.filter { proposal ->
                     proposal.participants.any { participant ->
                         //TODO: decide if the user should see proposals
-                        // where they are rejected in my trips
+                        // when they are rejected in my trips
                         participant.id == userId //&& participant.status != ParticipantStatus.REJECTED
                     }
                 }
@@ -305,11 +280,11 @@ class TravelProposalModel(
                 val reviews = snapshot.documents.mapNotNull { document ->
                     document.toObject(TravelReview::class.java)?.apply {
                         Log.d("TravelProposalModel", "Review found: $this")
-                        val userName =
-                            userModel.getUserByUid(reviewerId)?.name ?: "Unknown User"
-                        Log.d("TravelProposalModel", "Reviewer name: $userName")
+//                        val userName =
+//                            userModel.getUserByUid(reviewerId)?.name ?: "Unknown User"
+//                        Log.d("TravelProposalModel", "Reviewer name: $userName")
                         id = document.id
-                        reviewerName = userName
+//                        reviewerName = userName
                     }
                 }
                 trySend(reviews)
@@ -332,13 +307,13 @@ class TravelProposalModel(
         return try {
             val reviewId = UUID.randomUUID().toString()
 
-            if (!imageStorageModel.validateReviewFolderStructure(plannerId, tripId, reviewId)) {
+            if (!validateReviewFolderStructure(plannerId, tripId, reviewId)) {
                 return Result.failure(Exception("Invalid folder structure for userId: $plannerId, tripId: $tripId, reviewId: $reviewId"))
             }
 
             // Upload review images if any
             val imageUrls = if (imageUris.isNotEmpty()) {
-                val uploadResult = imageStorageModel.uploadMultipleReviewImages(
+                val uploadResult = uploadMultipleReviewImages(
                     plannerId = plannerId,
                     tripId = tripId,
                     reviewId = reviewId,
@@ -381,16 +356,6 @@ class TravelProposalModel(
             Result.failure(e)
         }
     }
-
-//    fun submitReview(travelProposalId: String, review: TravelReview) {
-//        Collections.travelProposals.document(travelProposalId)
-//            .update("reviews", FieldValue.arrayUnion(review))
-//    }
-
-    fun getTripPlanner(travelProposalId: String): UserProfile? {
-        return UserProfile()
-    }
-
 
     fun approveParticipant(userId: String, trip: TravelProposal): Boolean {
         val approvedCount = getApprovedParticipantsCount(trip)
@@ -450,56 +415,6 @@ class TravelProposalModel(
         )
     }
 
-//    fun getUsersProfiles(userIds: List<String>): Flow<List<UserProfile>> = callbackFlow {
-//        val query = Collections.users.whereIn(FieldPath.documentId(), userIds)
-//        val listener = query.addSnapshotListener { snapshot, error ->
-//            if (error != null) {
-//                Log.e("getUsersProfiles", error.toString())
-//                trySend(emptyList())
-//                return@addSnapshotListener
-//            }
-//
-//            if (snapshot != null) {
-//                val userProfiles =
-//                    snapshot.documents.mapNotNull { it.toObject(UserProfile::class.java) }
-//                trySend(userProfiles)
-//            }
-//        }
-//        awaitClose { listener.remove() }
-//    }
-
-    fun getParticipantWithDetails(tripId: String): Flow<List<ParticipantDetailed>> =
-        callbackFlow {
-            val query = Collections.travelProposals.document(tripId)
-            val listener = query.addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e("getParticipantWithDetails", error.toString())
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null && snapshot.exists()) {
-                    val trip = snapshot.toTravelProposalWithId()
-
-                    val participants = trip.participants.map { participant ->
-                        ParticipantDetailed(
-                            user = userModel.getUserByUid(participant.id) ?: UNKNOWN_USER,
-                            invitedGuests = participant.invitedGuests,
-                            status = participant.status
-                        )
-
-                    }
-
-                    Log.d("getParticipant", "participants: $participants")
-                    trySend(participants)
-
-                } else {
-                    trySend(emptyList())
-                }
-            }
-            awaitClose { listener }
-        }
-
     fun applyForTrip(userId: String, trip: TravelProposal, guests: List<String>): Boolean {
         val existingParticipant = trip.participants.find { it.id == userId }
 
@@ -540,7 +455,7 @@ class TravelProposalModel(
             val userId = travelProposal.tripPlannerId
 
             // Validate folder structure
-            if (!imageStorageModel.validateTripFolderStructure(userId, tripId)) {
+            if (!validateTripFolderStructure(userId, tripId)) {
                 return Result.failure(Exception("Invalid folder structure for userId: $userId, tripId: $tripId"))
             }
 
@@ -551,7 +466,7 @@ class TravelProposalModel(
 
             // Upload images to Supabase with folder structure: userId/tripId/
             val imageUrls = if (imageUris.isNotEmpty()) {
-                val uploadResult = imageStorageModel.uploadMultipleTripImages(
+                val uploadResult = uploadMultipleTripImages(
                     userId = userId, tripId = tripId, imageUris = imageUris, context = context
                 )
 
@@ -600,7 +515,7 @@ class TravelProposalModel(
             if (imagesToDelete.isNotEmpty()) {
                 Log.d("TravelProposalModel", "Deleting ${imagesToDelete.size} old images")
                 imagesToDelete.forEach { imageUrl ->
-                    val deleteResult = imageStorageModel.deleteTripImage(imageUrl)
+                    val deleteResult = deleteTripImage(imageUrl)
                     if (deleteResult.isFailure) {
                         throw deleteResult.exceptionOrNull()
                             ?: Exception("Failed to delete image: $imageUrl")
@@ -611,7 +526,7 @@ class TravelProposalModel(
             // Handle image updates
             val finalImageUrls = if (newImageUris.isNotEmpty()) {
                 // if there are new images, upload them
-                val uploadResult = imageStorageModel.uploadMultipleTripImages(
+                val uploadResult = uploadMultipleTripImages(
                     userId = userId, tripId = tripId, imageUris = newImageUris, context = context
                 )
                 if (uploadResult.isSuccess) {
@@ -655,7 +570,7 @@ class TravelProposalModel(
                 val reviewId = document.id
 
                 document.toObject(TravelReview::class.java)?.let {
-                    imageStorageModel.deleteReviewImages(
+                    deleteReviewImages(
                         userId, travelProposalId, reviewId
                     )
                 }
@@ -664,7 +579,7 @@ class TravelProposalModel(
             }
 
             // Delete images from Supabase storage first
-            imageStorageModel.deleteTripImages(userId, travelProposalId)
+            deleteTripImages(userId, travelProposalId)
 
             // Delete from Firestore
             Collections.travelProposals.document(travelProposalId).delete()
@@ -722,9 +637,11 @@ class TravelProposalModel(
     }
 
 
-    fun getNotifications(excludedNotificationTypes: List<NotificationType>): Flow<List<Notification>> =
+    fun getNotifications(
+        userId: String,
+        excludedNotificationTypes: List<NotificationType>
+    ): Flow<List<Notification>> =
         callbackFlow {
-            val userId = userModel.loggedUser.value.uid
             Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $userId")
             val listener = Collections.notifications
                 .addSnapshotListener { snapshot, error ->
@@ -835,6 +752,199 @@ class TravelProposalModel(
         }
 
         return true
+    }
+
+    // ----- Helper functions for image storage ----- //
+    private suspend fun uploadTripImage(
+        userId: String,
+        tripId: String,
+        imageUri: Uri,
+        context: Context
+    ): Result<String> {
+        return try {
+            val fileName =
+                "${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(8)}.jpg"
+            val filePath = "$userId/$tripId/$fileName"
+
+            Log.d("ImageStorageModel", "Uploading image to path: $filePath")
+
+            val inputStream = context.contentResolver.openInputStream(imageUri)
+            val bytes = inputStream?.readBytes() ?: throw Exception("Failed to read image")
+            inputStream.close()
+
+            // Upload to Supabase
+            Collections.travelImagesBucket.upload(filePath, bytes)
+
+            val publicUrl = Collections.travelImagesBucket.publicUrl(filePath)
+
+            Log.d("ImageStorageModel", "Image uploaded successfully to \"$publicUrl\"")
+            Result.success(publicUrl)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Upload failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun uploadMultipleTripImages(
+        userId: String,
+        tripId: String,
+        imageUris: List<Uri>,
+        context: Context
+    ): Result<List<String>> {
+        return try {
+            val uploadResults = mutableListOf<String>()
+
+            imageUris.forEach { uri ->
+                val result = uploadTripImage(userId, tripId, uri, context)
+                if (result.isSuccess) {
+                    uploadResults.add(result.getOrThrow())
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Upload failed")
+                }
+            }
+
+            Result.success(uploadResults)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Multiple upload failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun uploadReviewImage(
+        plannerId: String,
+        tripId: String,
+        reviewId: String,
+        imageUri: Uri,
+        context: Context
+    ): Result<String> {
+        return try {
+            val fileName =
+                "${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(8)}.jpg"
+            val filePath = "$plannerId/$tripId/reviews/$reviewId/$fileName"
+
+            Log.d("ImageStorageModel", "Uploading review image to path: $filePath")
+
+            val inputStream = context.contentResolver.openInputStream(imageUri)
+            val bytes = inputStream?.readBytes() ?: throw Exception("Failed to read image")
+            inputStream.close()
+
+            // Upload to Supabase
+            Collections.travelImagesBucket.upload(filePath, bytes)
+
+            val publicUrl = Collections.travelImagesBucket.publicUrl(filePath)
+
+            Log.d("ImageStorageModel", "Review Image uploaded successfully to \"$publicUrl\"")
+            Result.success(publicUrl)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Upload review image failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun uploadMultipleReviewImages(
+        plannerId: String,
+        tripId: String,
+        reviewId: String,
+        imageUris: List<Uri>,
+        context: Context
+    ): Result<List<String>> {
+        return try {
+            val uploadResults = mutableListOf<String>()
+
+            imageUris.forEach { uri ->
+                val result = uploadReviewImage(plannerId, tripId, reviewId, uri, context)
+                if (result.isSuccess) {
+                    uploadResults.add(result.getOrThrow())
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Upload failed")
+                }
+            }
+            Log.d("ImageStorageModel", "Multiple review images uploaded successfully")
+            Result.success(uploadResults)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Multiple upload failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun deleteTripImage(imageUrl: String): Result<Unit> {
+        return try {
+            val filePath = extractTripFilePathFromUrl(imageUrl)
+            Log.d("ImageStorageModel", "Deleting image at path: $filePath")
+
+            Collections.travelImagesBucket.delete(filePath)
+
+            Log.d("ImageStorageModel", "Image deleted successfully")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Delete failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun deleteTripImages(userId: String, tripId: String): Result<Unit> {
+        return try {
+            val folderPath = "$userId/$tripId"
+            Log.d("ImageStorageModel", "Deleting all images in trip folder: $folderPath")
+
+            // List all files in the trip folder
+            val files = Collections.travelImagesBucket.list(folderPath)
+
+            // Delete each file
+            files.forEach { file ->
+                Collections.travelImagesBucket.delete("$folderPath/${file.name}")
+            }
+
+            Log.d("ImageStorageModel", "All trip images deleted successfully")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Delete trip images failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun deleteReviewImages(
+        userId: String,
+        tripId: String,
+        reviewId: String
+    ): Result<Unit> {
+        return try {
+            val folderPath = "$userId/$tripId/reviews/$reviewId"
+            Log.d("ImageStorageModel", "Deleting all images in review folder: $folderPath")
+
+            // List all files in the trip folder
+            val files = Collections.travelImagesBucket.list(folderPath)
+
+            // Delete each file
+            files.forEach { file ->
+                Collections.travelImagesBucket.delete("$folderPath/${file.name}")
+            }
+
+            Log.d("ImageStorageModel", "All review images deleted successfully")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ImageStorageModel", "Delete review images failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private fun extractTripFilePathFromUrl(url: String): String {
+        // Extract file path from Supabase public URL
+        return url.substringAfter(Collections.TRAVEL_IMAGES_BUCKET_PREFIX)
+    }
+
+    private fun validateTripFolderStructure(userId: String, tripId: String): Boolean {
+        return userId.isNotBlank() && tripId.isNotBlank() &&
+                !userId.contains("/") && !tripId.contains("/")
+    }
+
+    private fun validateReviewFolderStructure(
+        userId: String,
+        tripId: String,
+        reviewId: String
+    ): Boolean {
+        return userId.isNotBlank() && tripId.isNotBlank() && reviewId.isNotBlank() &&
+                !userId.contains("/") && !tripId.contains("/") && !reviewId.contains("/")
     }
 }
 

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -497,6 +498,10 @@ fun CreateTravelProposalFirstScreen(
                         }
                     },
                     shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(end = 16.dp)
@@ -508,16 +513,24 @@ fun CreateTravelProposalFirstScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Next",
-                        tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
 
+                }
+                if (firstScreenError.hasError) {
+                    Text(
+                        text = "Please fix the errors before proceeding.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 4.dp)
+                            .align(Alignment.CenterHorizontally),
+                    )
                 }
             }
         }
     }
 }
-
 
 
 @OptIn(ExperimentalFoundationApi::class)

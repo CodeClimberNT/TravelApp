@@ -52,9 +52,14 @@ import com.google.firebase.Timestamp
 
 
 @Composable
-fun UserReviewDialog(userReviewVm: UserReviewViewModel, participants: List<ParticipantDetailed>, travelProposalViewModel: TravelProposalViewModel = viewModel(factory = AppFactory), onDismiss: () -> Unit) {
+fun UserReviewDialog(
+    userReviewVm: UserReviewViewModel,
+    participants: List<ParticipantDetailed>,
+    travelProposalViewModel: TravelProposalViewModel = viewModel(factory = AppFactory),
+    onDismiss: () -> Unit
+) {
 
-    Log.d("REVIEW DIALOG","PARTICIPANTS: $participants")
+    Log.d("REVIEW DIALOG", "PARTICIPANTS: $participants")
     Dialog(onDismissRequest = { }) {
 
         val scrollState = rememberScrollState()
@@ -89,9 +94,9 @@ fun UserReviewDialog(userReviewVm: UserReviewViewModel, participants: List<Parti
                     modifier = Modifier
                         .verticalScroll(scrollState)
                 ) {
-                    for (participant in participants){
+                    for (participant in participants) {
                         ProfileRow(
-                          participant.user,
+                            participant.user,
                             userReviewVm
                         )
                     }
@@ -120,8 +125,6 @@ fun UserReviewDialog(userReviewVm: UserReviewViewModel, participants: List<Parti
 
 @Composable
 fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
-
-    var participant by remember { mutableStateOf(UserProfile("", 0.0f, "")) }
     var showReview by remember { mutableStateOf(false) }
 
     Row(
@@ -174,7 +177,6 @@ fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
                     .size(height = 40.dp, width = 130.dp)
                     .padding(start = 16.dp),
                 onClick = {
-                    participant = user
                     showReview = true
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -188,12 +190,16 @@ fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
     HorizontalDivider(Modifier.padding(horizontal = 16.dp))
 
     if (showReview) {
-        SingleUserReviewCard(participant, userReviewVm) { newState -> showReview = newState }
+        SingleUserReviewCard(user, userReviewVm) { newState -> showReview = newState }
     }
 }
 
 @Composable
-fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, onDismiss: (Boolean) -> Unit) {
+fun SingleUserReviewCard(
+    user: UserProfile,
+    userReviewVm: UserReviewViewModel,
+    onDismiss: (Boolean) -> Unit
+) {
     val textState = remember { mutableStateOf("") }
     val textTitle = remember { mutableStateOf("") }
     var reviewValue by remember { mutableFloatStateOf(0.0f) }
@@ -280,18 +286,18 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, o
                         modifier = Modifier.padding(start = 16.dp),
                         onClick = {
                             /*todo() change reviewer ID*/
-                                    userReviewVm.writeReview(
-                                        review = UserReview(
-                                        reviewedUserUID = user.uid,
-                                        reviewerUID = "JkXtaeEEmsb0m459W2f2rTRZBpB2",
-                                        title = textTitle.value,
-                                        rating = reviewValue,
-                                        description = textState.value,
-                                        timestamp = Timestamp.now(),
-                                        )
-                                    )
-                                    onDismiss(false)
-                                  },
+                            userReviewVm.writeReview(
+                                review = UserReview(
+                                    reviewedUserUID = user.uid,
+                                    reviewerUID = "JkXtaeEEmsb0m459W2f2rTRZBpB2",
+                                    title = textTitle.value,
+                                    rating = reviewValue,
+                                    description = textState.value,
+                                    timestamp = Timestamp.now(),
+                                )
+                            )
+                            onDismiss(false)
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
@@ -302,5 +308,4 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, o
             }
         }
     }
-
 }

@@ -117,6 +117,7 @@ fun ProfilePicture(
                         userProfileViewModel.getInitialsFromUser(userProfile),
                         isPrimary = true,
                         isDashboard = isDashboard,
+                        isCandidate = isCandidate,
                         modifier = if (!isLandScape) Modifier else Modifier.size(100.dp)
                     )
                 }
@@ -169,7 +170,7 @@ fun ProfilePicture(
             // Editing Profile Picture
             when (userProfile.isProfileImage) {
                 "Icon", "Monogram" -> {
-                    userProfileViewModel.let { IconCarousel(it, isLandScape = isLandScape) }
+                    IconCarousel(userProfileViewModel, isLandScape = isLandScape)
                 }
 
                 "Uri" -> {
@@ -456,7 +457,7 @@ fun IconCarousel(viewModel: UserProfileViewModel, isLandScape: Boolean) {
             }) {
                 IconOrText(
                     item = icons.value[rightIndex],
-                    isSelected = false
+                    isSelected = false,
                 )
             }
         }
@@ -471,6 +472,7 @@ fun IconOrText(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     isDashboard: Boolean = false,
+    isCandidate: Boolean = false
 ) {
     val ctx = LocalContext.current
 
@@ -488,7 +490,7 @@ fun IconOrText(
         }
 
         is String -> {
-            MakeMonogramFromInitials(item, isSelected, isDashboard, modifier)
+            MakeMonogramFromInitials(item, isSelected, isDashboard, isCandidate, modifier)
         }
 
         else -> {
@@ -507,43 +509,65 @@ fun MakeMonogramFromInitials(
     text: String,
     isPrimary: Boolean,
     isDashboard: Boolean,
+    isCandidate: Boolean,
     modifier: Modifier = Modifier
 ) {
-    if (isDashboard) {
-        Text(
-            text,
-            style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.onPrimary,
-            modifier = modifier
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary
-                )
-                .size(72.dp)
-                .wrapContentSize(Alignment.Center)
-        )
-    } else if (isPrimary) {
-        Text(
-            text,
-            style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.onPrimary,
-            modifier = modifier
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary
-                )
-                .size(150.dp)
-                .wrapContentSize(Alignment.Center)
-        )
-    } else {
-        Text(
-            text,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = MaterialTheme.typography.displayLarge.fontWeight,
-            color = Color.Gray,
-            modifier = modifier
-                .size(48.dp)
-                .wrapContentSize(Alignment.Center)
-        )
+    when {
+        isDashboard -> {
+            Text(
+                text,
+                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = modifier
+                    .clip(CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.primary
+                    )
+                    .size(72.dp)
+                    .wrapContentSize(Alignment.Center)
+            )
+        }
+
+        isPrimary && !isCandidate -> {
+            Text(
+                text,
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = modifier
+                    .clip(CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.primary
+                    )
+                    .size(150.dp)
+                    .wrapContentSize(Alignment.Center)
+            )
+        }
+
+        isCandidate -> {
+            Text(
+                text,
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = modifier
+                    .clip(CircleShape)
+                    .background(
+                        MaterialTheme.colorScheme.primary
+                    )
+                    .size(72.dp)
+                    .wrapContentSize(Alignment.Center)
+            )
+        }
+
+        else -> {
+            Text(
+                text,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = MaterialTheme.typography.displayLarge.fontWeight,
+                color = Color.Gray,
+                modifier = modifier
+                    .size(48.dp)
+                    .wrapContentSize(Alignment.Center)
+            )
+        }
     }
 }
