@@ -524,7 +524,7 @@ class TravelProposalModel {
             "newApplication",
             userId,
             userId,
-            trip.tripPlannerId
+            tripPlannerId = trip.tripPlannerId
         )
 
         return true
@@ -734,8 +734,11 @@ class TravelProposalModel {
                 if (snapshot != null) {
                     val notifications = snapshot.documents.mapNotNull { document ->
                         try {
+                            Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
                             val notification = document.toObject(Notification::class.java)
+                            Log.d("CurrentUser", "User ID: $userId")
                             notification?.copy(id = document.id)
+
                         } catch (e: Exception) {
                             Log.e("Notifications", "Error parsing notification: ${e.message}")
                             null
@@ -757,7 +760,7 @@ class TravelProposalModel {
                             "lastMinuteAutomatic" -> notification.applicantId == userId
                             "checkRecommended" -> notification.applicantId == userId
                             else -> false
-                        } && !excludedNotificationTypes.contains(notification.type)
+                        }
                     }
                     trySend(notifications)
                 } else {

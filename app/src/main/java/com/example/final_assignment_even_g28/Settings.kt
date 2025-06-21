@@ -79,7 +79,7 @@ fun NotificationSettingsScreen(
                         else -> ""
                     }
 
-                    key?.let {
+                    key.let {
                         userModel.updateNotificationSetting(it, isEnabled)
                     }
                 }
