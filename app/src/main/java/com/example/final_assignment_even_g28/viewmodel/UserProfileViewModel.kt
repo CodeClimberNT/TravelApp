@@ -44,8 +44,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
 
-    private var _imageProfileUrl = MutableStateFlow<String>("")
-    val imageProfileUrl: StateFlow<String> get() = _imageProfileUrl
+    val leveledUp: StateFlow<Boolean> = model.leveledUp
 
     fun getUserByUID(uid: String) = model.getUserByUid(uid)
     fun getNicknameById(userId: Int): String? = model.getNicknameById(userId.toString())
@@ -414,7 +413,11 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun getImageFromUID(user: UserProfile): String{
-            return model.getImageFromUID(user.uid)
+        return model.getImageFromUID(user.uid)
+    }
+
+    fun editLevelUp(){
+        model.editLevelUp()
     }
 
 }

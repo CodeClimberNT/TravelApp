@@ -44,6 +44,9 @@ class UserProfileModel() {
     private val _isSigningIn = MutableStateFlow(false)
     val isSigningIn: StateFlow<Boolean> = _isSigningIn.asStateFlow()
 
+    private var _leveledUp = MutableStateFlow<Boolean>(false)
+    val leveledUp: StateFlow<Boolean> get() = _leveledUp
+
 
     init {
 
@@ -417,11 +420,22 @@ class UserProfileModel() {
     suspend fun gainExp(expValue: Int, context: Context){
         val newExp = loggedUser.value.exp + expValue
         _loggedUser.value = _loggedUser.value.copy(exp = newExp)
-        editLevel()
+        editLevel(expValue)
         editProfile(loggedUser.value, context)
     }
 
-    fun editLevel(){
+    fun editLevel(oldExp: Int){
+        var oldLvl: Int = 0;
+
+        when(oldExp){
+            in 0 .. 20 -> {oldLvl = 1}
+            in 21 .. 50 -> {oldLvl = 2}
+            in 51 .. 100 -> {oldLvl = 3}
+            in 101 .. 200 -> {oldLvl = 4}
+            in 201 .. 400 -> {oldLvl = 5}
+            else -> {oldLvl = 6}
+        }
+
         when(loggedUser.value.exp){
             in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
             in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
@@ -430,5 +444,12 @@ class UserProfileModel() {
             in 201 .. 400 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 5)}
             else -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 6)}
         }
+
+        if(oldLvl < _loggedUser.value.currentLevel)
+            _leveledUp.value = true
+    }
+
+    fun editLevelUp(){
+        _leveledUp.value = false
     }
 }
