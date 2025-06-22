@@ -1,37 +1,38 @@
 package com.example.final_assignment_even_g28.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.MutableState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AirplanemodeActive
+import androidx.compose.material.icons.filled.House
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.Tram
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.InfoFieldDefinition
 import com.example.final_assignment_even_g28.shared.validation.UserProfileError
 import com.example.final_assignment_even_g28.shared.validation.UserProfileValidator
 import com.example.final_assignment_even_g28.shared.validation.asList
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
+import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.auth.User
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-
-/*
-* FOR LOGIN:
-* mail: account@yahoo.com
-* password: accountpassword
-* */
-
 
 class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     private var _userProfile by mutableStateOf(UserProfile())
@@ -43,13 +44,16 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
 
+    val leveledUp: StateFlow<Boolean> = model.leveledUp
+
     fun getUserByUID(uid: String) = model.getUserByUid(uid)
     fun getNicknameById(userId: Int): String? = model.getNicknameById(userId.toString())
     fun getNicknameByUID(userUID: String): String? = model.getNicknameByUID(userUID)
 
     fun updateUserProfile(updatedProfile: UserProfile) = model.updateUserProfile(updatedProfile)
 
-    var editingProfile: MutableState<UserProfile> = mutableStateOf<UserProfile>(UserProfile())
+    private var _editingProfile = MutableStateFlow<UserProfile>(UserProfile())
+    val editingProfile: StateFlow<UserProfile> get() = _editingProfile
 
     private var _validationErrors by mutableStateOf(UserProfileError())
     val validationErrors: UserProfileError get() = _validationErrors
@@ -60,17 +64,27 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         val currentUser = Collections.auth.currentUser
         if (currentUser != null){
                model.loadUserByUID(currentUser.uid)
+            Log.d("INIT", "User charged: $")
         }
-        editingProfile.value = loggedUser.value
+        viewModelScope.launch {
+            loggedUser.collect { loggedUserValue ->
+                _editingProfile.value = loggedUserValue
+                Log.d("INIT", "loggedUser updated: $loggedUserValue")
+            }
+        }
     }
 
     fun login(email: String, password: String) {
         model.login(email, password)
+        _editingProfile.value = model.loggedUser.value
+        Log.d("INIT","logged User: ${loggedUser.value}, editUser: ${editingProfile.value}")
+
     }
 
 
     fun logOut() {
         model.logOut()
+        _editingProfile.value = model.loggedUser.value
     }
 
     fun signUp(userToSign: UserProfile, password: String) {
@@ -91,43 +105,23 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         if (isEditing) {
             return
         }
-        editingProfile.value = loggedUser.value
+        _editingProfile.value = model.loggedUser.value
         _validationErrors = UserProfileError()
         isEditing = true
     }
 
     fun cancelChanges() {
         isEditing = false
-        editingProfile.value = loggedUser.value
+        _editingProfile.value = model.loggedUser.value
     }
-
-/*
-fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean {
-        getUserByUid(userId)
-        if (selectedUserProfile.value != null) {
-            _userProfile = selectedUserProfile.value!!
-            return true
-        } else {
-            _userProfile = UserProfile(userId, userName, userEmail)
-            return false
-        }
-    }
- */
 
 
      fun saveAndExitEditing(context: Context) {
          viewModelScope.launch {
-             editingProfile.value.let { draft ->
-                 val errors = UserProfileValidator().validate(draft)
-                 if (errors.asList().any { it.isNotEmpty() }) {
-                     _validationErrors = errors
-                 } else {
-                     isEditing = false
-                     model.editProfile(editingProfile.value, context)
-                 }
-             }
+             isEditing = false
+             model.editProfile(editingProfile.value, context)
+             Log.d("Edit User","Saving Profile: ${editingProfile.value}")
          }
-
     }
 
      fun handleBackNavigation(context: Context) {
@@ -138,14 +132,47 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
         }
     }
 
+    fun getIcon(iconName: String): ImageVector{
+        when (iconName){
+            "DIRECTIONS_WALK" -> {
+                return Icons.AutoMirrored.Default.DirectionsWalk
+            }
+            "HOUSE" -> {
+                return Icons.Default.House
+            }
+            "ACCOUNT_CIRCLE" -> {
+                return Icons.Default.AccountCircle
+            }
+            "TRAIN" -> {
+                return Icons.Default.Train
+            }
+            "TRAM" -> {
+                return Icons.Default.Tram
+            }
+            "AIRPLANE" -> {
+                return Icons.Default.AirplanemodeActive
+            }
+            else -> {
+                return Icons.Default.AccountCircle
+            }
+        }
+    }
+
+    fun getIconNameFromString(iconString: String): String? {
+        val regex = """Icon\(icon=([A-Z_]+)\)""".toRegex()
+        val matchResult = regex.find(iconString)
+
+        return matchResult?.groups?.get(1)?.value
+    }
+
     fun getIconsList(): List<Any> {
         // Temporary add the initials to the list
         val initials = getInitials()
         val iconsList = model.getAvailableIcons() + initials
         val profilePicture = _userProfile.profilePicture
 
-        return when (profilePicture) {
-            is ProfilePictureData.Monogram -> {
+        return when (_userProfile.isProfileImage) {
+            "Monogram" -> {
                 iconsList.toMutableList().apply {
                     // I hope the compiler optimize this
                     val target = initials
@@ -154,140 +181,144 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
                 }
             }
 
-            is ProfilePictureData.Icon -> {
+            "Icon" -> {
                 iconsList.toMutableList().apply {
-                    val target = profilePicture.icon
-                    remove(target)
-                    add(0, target)
+                    val target = getIconNameFromString(_userProfile.profilePicture)
+                    if(target?.isNotEmpty() == true){
+                        remove(target)
+                        add(0, target)
+                    }
                 }
             }
-
-            is ProfilePictureData.UriData -> {
+            "Uri" -> {
                 iconsList
+            }
+            else -> {
+                emptyList()
             }
         }
     }
 
 
-    private fun getInitials(): String {
-        return loggedUser.value.name[0].toString() + { if (loggedUser.value.surname[0].toString().isNotEmpty())loggedUser.value.surname[0].toString() }
-    }
+     fun getInitials(): String {
+         if (editingProfile.value.surname.isEmpty())
+            return (editingProfile.value.name[0]).toString()
+         return (editingProfile.value.name[0].toString() + editingProfile.value.surname[0].toString())
+     }
 
-    fun getProfilePicture(): ProfilePictureData {
-        return loggedUser.value.profilePicture
-    }
-
-    fun getEditingProfilePicture(): ProfilePictureData {
-        return loggedUser.value.profilePicture
+    fun getInitialsFromUser(user: UserProfile): String{
+        if (user.surname.isEmpty())
+            return (user.name[0]).toString()
+        return (user.name[0].toString() + user.surname[0].toString())
     }
 
     fun updateName(name: String) {
-        editingProfile.value = editingProfile.value.copy(name = name)
+        _editingProfile.value = _editingProfile.value.copy(name = name)
     }
 
     fun updateSurname(surname: String) {
-        editingProfile.value = editingProfile.value.copy(surname = surname)
-    }
-
-    fun updateTypeOfExperiences(newTypeOfExperiences: String) {
-        val newTypeOfExperiences: List<String> = newTypeOfExperiences.split(",").map { it.trim() }
-        editingProfile.value = editingProfile.value.copy(typeOfExperiences = newTypeOfExperiences)
+        _editingProfile.value = _editingProfile.value.copy(surname = surname)
     }
 
     fun updateMostDesiredDestination(newDestination: String) {
-        editingProfile.value =
-            editingProfile.value.copy(mostDesiredDestination = newDestination)
+        _editingProfile.value = _editingProfile.value.copy(mostDesiredDestination = newDestination)
     }
 
     fun updateBio(newBio: String) {
-        editingProfile.value = editingProfile.value.copy(bio = newBio)
+        _editingProfile.value = _editingProfile.value.copy(bio = newBio)
     }
 
     fun updatePhoneNumber(newPhoneNumber: String) {
-        editingProfile.value = editingProfile.value.copy(phoneNumber = newPhoneNumber)
-    }
-
-    fun updateEmail(newEmail: String) {
-        editingProfile.value = editingProfile.value.copy(email = newEmail)
+        _editingProfile.value = _editingProfile.value.copy(phoneNumber = newPhoneNumber)
     }
 
     fun updateDateOfBirth(newDateOfBirth: Timestamp) {
-        editingProfile.value = editingProfile.value.copy(dateOfBirth = newDateOfBirth)
-    }
-
-    fun updatePastExperiences(newPastExperiences: String) {
-        editingProfile.value =
-            editingProfile.value.copy(pastExperiences = listOf(newPastExperiences))
-    }
-
-    fun updateBadge(newBadge: String) {
-        editingProfile.value = editingProfile.value.copy(badge = newBadge)
-    }
-
-    fun updateCurrentLevel(newLevel: Int) {
-        editingProfile.value = editingProfile.value.copy(currentLevel = newLevel)
-    }
-
-    fun updateRating(newRating: Float) {
-        editingProfile.value = editingProfile.value.copy(rating = newRating)
+        _editingProfile.value = _editingProfile.value.copy(dateOfBirth = newDateOfBirth)
     }
 
     fun updateProfilePicture() {
-        editingProfile.value = editingProfile.value.copy(
-            profilePicture = ProfilePictureData.Monogram(getInitials()),
+        _editingProfile.value = _editingProfile.value.copy(
             isProfileImage = "Monogram"
         )
+        viewModelScope.launch {
+            model.deleteUserProfileImage()
+        }
     }
 
     fun updateProfilePicture(icon: IconType) {
-        editingProfile.value = editingProfile.value.copy(
-            profilePicture = ProfilePictureData.Icon(icon),
+        _editingProfile.value = _editingProfile.value.copy(
+            profilePicture = icon.toString(),
             isProfileImage = "Icon"
         )
+        viewModelScope.launch {
+            model.deleteUserProfileImage()
+        }
     }
 
-    fun updateProfilePicture(imageUri: String) {
-        editingProfile.value = editingProfile.value.copy(
-            profilePicture = ProfilePictureData.UriData(imageUri),
+    fun updateProfilePicture(imageUri: String, context: Context) {
+        viewModelScope.launch {
+            model.uploadUserProfileImage(loggedUser.value.uid, imageUri, context)
+
+        }
+        _editingProfile.value = _editingProfile.value.copy(
+            profilePicture = imageUri,
             isProfileImage = "Uri"
         )
-
     }
 
+    fun getImageProfile(userUID: String): String{
+       return model.getImageUrlFromSupabase(userUID)
+    }
+
+    fun getUriImage(imageUri: String): Uri{
+       return model.fromStringToUri(imageUri)
+    }
+
+    fun updateAddTypeOfExperiences(experience: String){
+        var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
+        experienceList.add(experience)
+
+        _editingProfile.value = _editingProfile.value.copy(typeOfExperiences = experienceList)
+    }
+
+    fun updateDeleteTypeOfExperiences(experience: String){
+        var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
+        experienceList.remove(experience)
+
+        _editingProfile.value = _editingProfile.value.copy(typeOfExperiences = experienceList)
+    }
+
+    /*
+    fun getAllActivityTags(): List<Pair<ActivityTag, Boolean>> {
+        return ActivityTag.entries.map {
+            it to _editingProfile.value.typeOfExperiences.contains(it)
+        }
+    }*/
+
     fun validateFields(): Boolean {
-        val errors = UserProfileValidator().validate(editingProfile.value)
+        val errors = UserProfileValidator().validate(_editingProfile.value)
         _validationErrors = errors
-
         val isValid = errors.asList().all { it.isEmpty() }
-
 
         return isValid
     }
 
-    fun getEditFieldDefinitionList(): List<EditableFieldDefinition> {
-        Log.d("Edit Profile", "started")
-        var profile = editingProfile.value.copy()
-        Log.d("Edit Profile", "finished load")
+    fun getEditFieldDefinitionList(profile: UserProfile): List<EditableFieldDefinition> {
 
         return listOf(
             EditableFieldDefinition(
                 label = "Name",
                 value = profile.name,
-                errorMessage = validationErrors.fullName,
-                onValueChange = { updateName(it) }
+                errorMessage = validationErrors.name,
+                onValueChange = { updateName(it)
+                    Log.d("edit name","name changed to $it")
+                }
             ),
             EditableFieldDefinition(
                 label = "Surname",
                 value = profile.surname,
-                errorMessage = validationErrors.nickName,
+                errorMessage = validationErrors.surname,
                 onValueChange = { updateSurname(it) }
-            ),
-            EditableFieldDefinition(
-                label = "Email",
-                value = profile.email,
-                editable = false,
-                keyboardType = KeyboardType.Email,
-                onValueChange = { updateEmail(it) }
             ),
             EditableFieldDefinition(
                 label = "Phone Number",
@@ -296,38 +327,28 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
                 keyboardType = KeyboardType.Number,
                 onValueChange = { updatePhoneNumber(it) }
             ),
-            /*
-            EditableFieldDefinition(
-                label = "Type of Experiences Seek",
-                value = profile.typeOfExperiences.joinToString(","),
-                errorMessage = validationErrors.typeOfExperiences,
-                onValueChange = { updateTypeOfExperiences(it) }
-            ),*/
             EditableFieldDefinition(
                 label = "Desired Destination",
-                value = profile.mostDesiredDestination,
+                value = editingProfile.value.mostDesiredDestination,
                 errorMessage = validationErrors.mostDesiredDestination,
                 onValueChange = { updateMostDesiredDestination(it) }
             ),
             EditableFieldDefinition(
-                label = "Experiences as a Traveler",
-                value = profile.pastExperiences.toString(),
-                errorMessage = validationErrors.pastExperiences,
-                onValueChange = { updatePastExperiences(it) }
+                label = "Bio",
+                value = editingProfile.value.bio,
+                onValueChange = { updateBio(it) }
             ),
             EditableFieldDefinition(
-                label = "Bio",
-                value = profile.bio,
-                onValueChange = { updateBio(it) }
+                label = "Email",
+                value = profile.email,
+                editable = false,
+                keyboardType = KeyboardType.Email,
+                onValueChange = { }
             )
         )
     }
 
-    fun getInfoFieldDefinitionList(): List<InfoFieldDefinition> {
-        val profile = loggedUser.value
-
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
+    fun getInfoFieldDefinitionList(profile: UserProfile): List<InfoFieldDefinition> {
         return listOf(
             InfoFieldDefinition(
                 label = "name",
@@ -338,14 +359,6 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
                 value = profile.surname,
             ),
             InfoFieldDefinition(
-                label = "Date of Birth",
-                value = dateFormat.format(profile.dateOfBirth?.toDate()),
-            ),
-            InfoFieldDefinition(
-                label = "Email",
-                value = profile.email,
-            ),
-            InfoFieldDefinition(
                 label = "Phone Number",
                 value = "+39 ${profile.phoneNumber}",
             ),
@@ -354,13 +367,21 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
                 value = profile.mostDesiredDestination,
             ),
             InfoFieldDefinition(
-                label = "Experiences as a Traveler",
-                value = profile.pastExperiences.toString(),
-            ),
-            InfoFieldDefinition(
                 label = "Bio",
                 value = profile.bio
-            )
+            ),
+            InfoFieldDefinition(
+                label = "Email",
+                value = profile.email,
+            ),
+            InfoFieldDefinition(
+                label = "Date of Birth",
+                value = profile.dateOfBirth.toDateFormat()
+            ),
+            InfoFieldDefinition(
+                label = "Activities Preferences",
+                value = profile.typeOfExperiences.joinToString(", ")
+            ),
         )
     }
 
@@ -374,5 +395,29 @@ fun setCurrentUser(userId: String, userName: String, userEmail: String): Boolean
                 && password1 == password2)
     }
 
+    fun gainExp(value: Int, context: Context){
+        viewModelScope.launch {
+            model.gainExp(value, context)
+        }
+    }
+
+    fun getLevelRange(): Pair<Float, Float>{
+        when (loggedUser.value.currentLevel){
+            1 -> {return Pair(loggedUser.value.exp.toFloat(), 20f)}
+            2 -> {return Pair((loggedUser.value.exp.toFloat()-20), 30f)}
+            3 -> {return Pair(loggedUser.value.exp.toFloat()-50, 50f)}
+            4-> {return Pair(loggedUser.value.exp.toFloat()-100f, 100f)}
+            5-> {return Pair(loggedUser.value.exp.toFloat()-200f, 200f)}
+            else -> {return Pair(1f, 1f)}
+        }
+    }
+
+    fun getImageFromUID(user: UserProfile): String{
+        return model.getImageFromUID(user.uid)
+    }
+
+    fun editLevelUp(){
+        model.editLevelUp()
+    }
 
 }

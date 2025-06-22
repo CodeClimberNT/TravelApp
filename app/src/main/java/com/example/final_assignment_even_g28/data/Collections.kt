@@ -64,7 +64,7 @@ object Collections {
         }
     }
 
-    private val storage: Storage = supabaseClient.storage
+    val storage: Storage = supabaseClient.storage
 
     val travelProposals = db.collection(C_TRAVEL_PROPOSALS)
     val travelImagesBucket = storage.from(TRAVEL_IMAGES_BUCKET)

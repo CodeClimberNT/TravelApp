@@ -1,11 +1,12 @@
 package com.example.final_assignment_even_g28.data_class
 
+import androidx.compose.material.icons.Icons
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlin.math.exp
 
 @Serializable
 data class UserProfile(
@@ -25,8 +26,8 @@ data class UserProfile(
     var currentLevel: Int = 1,
     var rating: Float = 0.0f,
     var isProfileImage: String = "Monogram",
-    @get:Exclude
-    var profilePicture: ProfilePictureData = ProfilePictureData.Monogram(""),
+    var profilePicture: String = "",
+    var exp: Int = 0
 ) {
     constructor() : this(
         uid = "",
@@ -41,10 +42,11 @@ data class UserProfile(
         badge = "",
         currentLevel = 1,
         rating = 0.0F,
-        profilePicture = ProfilePictureData.Monogram("")
+        profilePicture = "",
+        exp = 0
     )
 
-    constructor(nickName: String, profilePicture: ProfilePictureData) : this(
+    constructor(nickName: String) : this(
         uid = "",
         fullName = "",
         nickName = nickName,
@@ -57,10 +59,11 @@ data class UserProfile(
         badge = "",
         currentLevel = 1,
         rating = 0.0F,
-        profilePicture = profilePicture
+        profilePicture = "",
+        exp = 0
     )
 
-    constructor(uid: String, nickName: String, profilePicture: ProfilePictureData) : this(
+    constructor(uid: String, nickName: String) : this(
         uid = uid,
         fullName = "",
         nickName = nickName,
@@ -73,7 +76,8 @@ data class UserProfile(
         badge = "",
         currentLevel = 1,
         rating = 0.0F,
-        profilePicture = profilePicture
+        profilePicture = "",
+        exp = 0
     )
 
     constructor(fullName: String, rating: Float, description: String) : this(
@@ -89,10 +93,11 @@ data class UserProfile(
         badge = "",
         currentLevel = 1,
         rating = rating,
-        profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
+        profilePicture = "",
+        exp = 0
     )
 
-    constructor(name: String, rating: Float, avatar: ProfilePictureData, contact: String) : this(
+    constructor(name: String, rating: Float, avatar: Icons, contact: String) : this(
         uid = "4",
 //        uid = "13",
         fullName = name,
@@ -106,7 +111,8 @@ data class UserProfile(
         badge = "",
         currentLevel = 1,
         rating = rating,
-        profilePicture = avatar
+        profilePicture = "",
+        exp = 0
     )
 
     constructor(uid: String, name: String, email: String) : this(
@@ -122,7 +128,8 @@ data class UserProfile(
         badge = "",
         currentLevel = 1,
         rating = 0.0F,
-        profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE)
+        profilePicture = "",
+        exp = 0
     )
 }
 

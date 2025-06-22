@@ -1,9 +1,14 @@
 package com.example.final_assignment_even_g28
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -27,7 +32,9 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,11 +45,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.UserProfile
+import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
@@ -64,7 +80,6 @@ sealed interface ProfileEvent {
     object LogoutClicked : ProfileEvent
 }
 
-@SuppressLint("SuspiciousIndentation")
 @Composable
 fun ProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
@@ -72,9 +87,10 @@ fun ProfileScreen(
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-    val profile by viewModel.loggedUser.collectAsState()
+    val profile by viewModel.editingProfile.collectAsState()
+    val leveledUp by viewModel.leveledUp.collectAsState()
 
-        Scaffold(
+    Scaffold(
             snackbarHost = { SnackbarHost(snackBarHostState) },
             bottomBar = { CustomBottomBar(navActions, bottomBarItem) },
             modifier = Modifier.fillMaxSize()
@@ -88,6 +104,7 @@ fun ProfileScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Log.d("INIT","User inside Profile Screen: $profile")
                 if (profile.uid.isEmpty()){
                     SignInScreen(navActions)
                 }else{
@@ -97,6 +114,8 @@ fun ProfileScreen(
                         navActions = navActions,
                         viewModel
                     )
+                    if(leveledUp)
+                        LevelUpCard(onDismissRequest = { viewModel.editLevelUp() })
                 }
             }
         }
@@ -105,8 +124,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileHeader(
     profile: UserProfile,
-    navActions: Navigation
-) {
+    navActions: Navigation,
+    userProfileModel: UserProfileViewModel = viewModel(factory = AppFactory)
+    ) {
 
     Column(
         modifier = Modifier
@@ -118,12 +138,19 @@ fun ProfileHeader(
         ) {
 
             /* --- avatar (or initials fallback) --- */
+
+            /*
 //            val avatarSize = 72.dp
-            ProfilePicture(
-                profilePicture = profile.profilePicture,
+                ProfilePicture(
                 isLandScape = false,
                 isDashboard = true
             )
+
+            */
+            val levelRange = userProfileModel.getLevelRange()
+            LevelProgressBar(levelRange.first, levelRange.second)
+
+
 
             Spacer(Modifier.width(16.dp))
 
@@ -269,9 +296,87 @@ private fun LevelAndChips(level: Int, interests: List<String>) {
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun ProfileScreenPreview() {
-//    val navActions = Navigation(rememberNavController())
-//    ProfileScreen(navActions = navActions, bottomBarItem = BottomBarItem.Profile)
-//}
+@Composable
+fun LevelProgressBar(exp: Float, nextLevelExp: Float) {
+    val progress = exp / nextLevelExp
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(80.dp)
+    ) {
+        Canvas(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val size = size.minDimension
+            val strokeWidth = 8f
+
+            drawArc(
+                color = Color.Gray,
+                startAngle = 270f,
+                sweepAngle = 360f,
+                useCenter = false,
+                size = Size(size, size),
+                style = Stroke(width = strokeWidth)
+            )
+            drawArc(
+                color = Color.Blue,
+                startAngle = 270f,
+                sweepAngle = 360f * progress,
+                useCenter = false,
+                size = Size(size, size),
+                style = Stroke(width = strokeWidth)
+            )
+        }
+        ProfilePicture(
+            isLandScape = false,
+            isDashboard = true
+        )
+    }
+}
+
+@Composable
+fun LevelUpCard(userProfileModel: UserProfileViewModel = viewModel(factory = AppFactory), onDismissRequest: () -> Unit){
+    val lvl = userProfileModel.loggedUser.collectAsState().value.currentLevel
+
+    Dialog(
+        onDismissRequest = onDismissRequest,
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .height(300.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Congratulations!",
+                    style = MaterialTheme.typography.headlineLarge
+                )
+                Text(
+                    text = "You have leveled Up!",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                Spacer(modifier = Modifier.size(20.dp))
+
+                Text(
+                    text = "${lvl-1} -> $lvl",
+                    style = MaterialTheme.typography.displayLarge
+                )
+
+                Spacer(modifier = Modifier.size(16.dp))
+
+                Button(
+                    onClick = onDismissRequest
+                ) {
+                    Text(
+                        text = "Thank you!"
+                    )
+                }
+            }
+        }
+    }
+}

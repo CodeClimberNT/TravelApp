@@ -2,6 +2,7 @@ package com.example.final_assignment_even_g28.model
 
 import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import androidx.core.net.toUri
@@ -13,21 +14,16 @@ import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
-import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import java.security.SecureRandom
-import java.util.UUID
 
 
 class UserProfileModel() {
@@ -48,8 +44,12 @@ class UserProfileModel() {
     private val _isSigningIn = MutableStateFlow(false)
     val isSigningIn: StateFlow<Boolean> = _isSigningIn.asStateFlow()
 
+    private var _leveledUp = MutableStateFlow<Boolean>(false)
+    val leveledUp: StateFlow<Boolean> get() = _leveledUp
+
+
     init {
-        // Initialize with mock data
+
         Collections.users.get().addOnSuccessListener { querySnapshot ->
             val userList = mutableListOf<UserProfile>()
             for(document in querySnapshot){
@@ -79,9 +79,10 @@ class UserProfileModel() {
                         Collections.users.document(user.uid).get()
                             .addOnSuccessListener { documentSnapshot ->
                                 val userProfile = documentSnapshot.toObject(UserProfile::class.java)
-                                if (userProfile!= null){
-                                    loadUser(userProfile)
-                                }
+
+                                if (userProfile?.uid != "")
+                                    loadUser(userProfile!!)
+
                             }.addOnFailureListener {
                                 //an user with that UID does not exists
                                 Log.e("Login","Impossible to retrieve a user with this UID: ${user.uid}")
@@ -186,7 +187,7 @@ class UserProfileModel() {
                                                             fullName = "",
                                                             nickName = "",
                                                             typeOfExperiences = emptyList(),
-                                                             mostDesiredDestination = "",
+                                                            mostDesiredDestination = "",
                                                             phoneNumber = "",
                                                             bio = "",
                                                             badge = "",
@@ -244,13 +245,14 @@ class UserProfileModel() {
                                     phoneNumber = userToSign.phoneNumber,
                                     email = userToSign.email,
                                     dateOfBirth = userToSign.dateOfBirth,
-                                    pastExperiences = userToSign.pastExperiences,
                                     bio = userToSign.bio,
                                     badge = userToSign.badge,
                                     currentLevel = 1,
                                     rating = 0.0f,
-                                    image = userToSign.profilePicture
-                                )
+                                    isProfileImage = "Monogram",
+                                    profilePicture = "",
+                                    exp = 0
+                                    )
                                 Collections.users.document(user.uid).set(savingUser)
                                     .addOnSuccessListener {
                                         Log.d("Firestore", "User successfully added with uid: ${user.uid}")
@@ -269,29 +271,36 @@ class UserProfileModel() {
             }
     }
 
-    suspend fun editProfile(userToEdit: UserProfile, context: Context) {
-        try {
-            withContext(Dispatchers.IO) {
-                try {
-                    val documentRef = Collections.users.document(userToEdit.uid)
-                    Tasks.await(documentRef.set(userToEdit))
+    suspend fun editProfile(userToSave: UserProfile, context: Context) {
+    try {
+            val snapshot = Collections.users.document(userToSave.uid).set(
+                UserToSave(
+                    name = userToSave.name,
+                    surname = userToSave.surname,
+                    uid = userToSave.uid,
+                    email = userToSave.email,
+                    dateOfBirth = userToSave.dateOfBirth,
+                    bio = userToSave.bio,
+                    phoneNumber = userToSave.phoneNumber,
+                    mostDesiredDestination = userToSave.mostDesiredDestination,
+                    typeOfExperiences = userToSave.typeOfExperiences,
+                    profilePicture = userToSave.profilePicture.toString(),
+                    isProfileImage = userToSave.isProfileImage,
+                    badge = userToSave.badge,
+                    currentLevel = userToSave.currentLevel,
+                    rating = userToSave.rating,
+                    exp = userToSave.exp
+                ),
+        ).await()
+            Log.d("Edit User", "User with uid ${userToSave.uid} correctly edited")
+            Log.d("Edit User", "changed saved")
 
-                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
+            _loggedUser.value = userToSave
+            uploadUserProfileImage(loggedUser.value.uid, userToSave.profilePicture, context)
+            Log.d("Edit User", "Try to save uid: ${loggedUser.value.uid}, uri: ${userToSave.profilePicture}")
 
-                    when (userToEdit.isProfileImage) {
-                        "Monogram" -> {}
-                        "Icon" -> {}
-                        "Uri" -> {uploadUserProfileImage(userToEdit.uid, (userToEdit.profilePicture as ProfilePictureData.UriData).uri, context)}
-                    }
-
-                    loadUserByUID(userToEdit.uid)
-
-                } catch (e: Exception) {
-                    Log.e("Edit User", "Error editing user: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("Edit User", "Error in coroutine: ${e.message}")
+        }catch (e: Exception){
+            Log.e("Edit Profile","Error editing Profile: $e")
         }
     }
 
@@ -342,48 +351,105 @@ class UserProfileModel() {
 
     }
 
+    fun fromStringToUri(uriString: String): Uri{
+        return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
+    }
+
+    fun getImageFromUID(userUID: String): String{
+        val url = Collections.userImagesBucket.publicUrl("$userUID/ProfileImage.jpg")
+
+        Log.d("Image","Recovering from url: $url")
+
+        return url
+    }
+
     suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
         return try {
             val fileName =
-                "${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(8)}.jpg"
+                "ProfileImage.jpg"
             val filePath = "$userUID/$fileName"
 
-            Log.d("UserProfileModel", "Uploading image to path: $filePath")
+            Log.d("Edit User", "Uploading image to path: $filePath")
 
-            val inputStream = context.contentResolver.openInputStream(imageUri.toUri())
+            val inputStream = context.contentResolver.openInputStream(fromStringToUri(imageUri))
             val bytes = inputStream?.readBytes() ?: throw Exception("Failed to read image")
             inputStream.close()
 
             // Upload to Supabase
-            Collections.userImagesBucket.upload(filePath, bytes)
+            if(Collections.userImagesBucket.exists(filePath)){
+                Collections.userImagesBucket.update(filePath, bytes)
+            }else{
+                Collections.userImagesBucket.upload(filePath, bytes)
+            }
 
             val publicUrl = Collections.userImagesBucket.publicUrl(filePath)
 
-            Log.d("UserProfileModel", "Image uploaded successfully to \"$publicUrl\"")
+            Log.d("Edit User", "Image uploaded successfully to \"$publicUrl\"")
             Result.success(publicUrl)
         } catch (e: Exception) {
-            Log.e("UserProfileModel", "Upload failed: ${e.message}")
+            Log.e("Edit User", "Upload failed: ${e.message}")
             Result.failure(e)
         }
     }
 
-    suspend fun deleteUserProfileImage(imageUrl: String): Result<Unit> {
-        return try {
-            val filePath = extractUserProfileFilePathFromUrl(imageUrl)
-            Log.d("ImageStorageModel", "Deleting image at path: $filePath")
+    fun getImageUrlFromSupabase(userUID: String): String {
+        val storage = Collections.storage
 
-            Collections.userImagesBucket.delete(filePath)
+        val publicUrl = storage.from(Collections.userImagesBucket.toString()).publicUrl("$userUID/ProfileImage.jpg")
 
-            Log.d("ImageStorageModel", "Image deleted successfully")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e("ImageStorageModel", "Delete failed: ${e.message}")
-            Result.failure(e)
+        return publicUrl
+    }
+
+    suspend fun deleteUserProfileImage(){
+        try {
+            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/ProfileImage.jpg")
+            Log.e("Delete Image","Try to delete Image from url: $url")
+            Collections.userImagesBucket.delete("${loggedUser.value.uid}/ProfileImage.jpg")
+            Log.e("Delete Image","Image deleted")
+
+        }catch (e: Exception){
+            Log.e("Delete Image","Impossible to delete image: $e")
         }
     }
 
     private fun extractUserProfileFilePathFromUrl(url: String): String {
         // Extract file path from Supabase public URL
         return url.substringAfter(Collections.USER_IMAGES_BUCKET_PREFIX)
+    }
+
+    suspend fun gainExp(expValue: Int, context: Context){
+        val newExp = loggedUser.value.exp + expValue
+        _loggedUser.value = _loggedUser.value.copy(exp = newExp)
+        editLevel(expValue)
+        editProfile(loggedUser.value, context)
+    }
+
+    fun editLevel(oldExp: Int){
+        var oldLvl: Int = 0;
+
+        when(oldExp){
+            in 0 .. 20 -> {oldLvl = 1}
+            in 21 .. 50 -> {oldLvl = 2}
+            in 51 .. 100 -> {oldLvl = 3}
+            in 101 .. 200 -> {oldLvl = 4}
+            in 201 .. 400 -> {oldLvl = 5}
+            else -> {oldLvl = 6}
+        }
+
+        when(loggedUser.value.exp){
+            in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
+            in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
+            in 51 .. 100 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 3)}
+            in 101 .. 200 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 4)}
+            in 201 .. 400 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 5)}
+            else -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 6)}
+        }
+
+        if(oldLvl < _loggedUser.value.currentLevel)
+            _leveledUp.value = true
+    }
+
+    fun editLevelUp(){
+        _leveledUp.value = false
     }
 }

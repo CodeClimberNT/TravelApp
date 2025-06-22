@@ -56,6 +56,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
@@ -82,6 +84,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.selects.select
 import kotlinx.datetime.LocalDate
 
 
@@ -102,11 +105,13 @@ fun EditUserProfileInfo(
 ) {
 
     val scrollable = rememberScrollState()
-    val profilePicture = viewModel.getEditingProfilePicture()
     var showCameraPopup by remember { mutableStateOf(false) }
     var popupSelectionState by remember { mutableStateOf(CameraPopupState.GALLERY) }
     var previewCamera by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
+    val profile by viewModel.editingProfile.collectAsState()
+    val profilePicture = profile.profilePicture
+
     val isLandScape by remember {
         mutableStateOf(
             ctx.resources.configuration.orientation == ORIENTATION_LANDSCAPE
@@ -116,7 +121,7 @@ fun EditUserProfileInfo(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         if (uri is Uri)
-            viewModel.updateProfilePicture(uri.toString())
+            viewModel.updateProfilePicture(uri.toString(), ctx)
         else
             Toast.makeText(
                 ctx,
@@ -192,7 +197,6 @@ fun EditUserProfileInfo(
                     Spacer(Modifier.height(16.dp))
 
                     ProfilePicture(
-                        profilePicture = profilePicture,
                         showCameraButton = true,
                         userProfileViewModel = viewModel,
                         onCameraClick = {
@@ -208,7 +212,7 @@ fun EditUserProfileInfo(
                     Spacer(Modifier.height(16.dp))
 
                     GenerateEditableFields(
-                        fields = viewModel.getEditFieldDefinitionList()
+                        fields = viewModel.getEditFieldDefinitionList(profile)
                     )
 
 
@@ -249,7 +253,6 @@ fun EditUserProfileInfo(
                         .padding(16.dp, 0.dp)
                 ) {
                     ProfilePicture(
-                        profilePicture = profilePicture,
                         showCameraButton = true,
                         userProfileViewModel = viewModel,
                         onCameraClick = {
@@ -274,7 +277,7 @@ fun EditUserProfileInfo(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         GenerateEditableFields(
-                            fields = viewModel.getEditFieldDefinitionList()
+                            fields = viewModel.getEditFieldDefinitionList(profile)
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -340,7 +343,7 @@ fun EditUserProfileInfo(
             onDismissCameraPreview = { previewCamera = false },
             isLandScape = isLandScape
         ) { uri ->
-            viewModel.updateProfilePicture(uri.toString())
+            viewModel.updateProfilePicture(uri.toString(), ctx)
         }
 }
 
@@ -352,7 +355,8 @@ fun GenerateEditableFields(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
     var selectDate by remember {mutableStateOf(false)}
-    var dateBirth by remember {mutableStateOf(viewModel.editingProfile.value.dateOfBirth)}
+    val profile by viewModel.editingProfile.collectAsState()
+
     val scrollState = rememberScrollState()
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -370,23 +374,23 @@ fun GenerateEditableFields(
             )
         }
 
-        ActivityList()
+            OutlinedTextField(
+                value = profile.dateOfBirth.toDateFormat(),
+                onValueChange = { },
+                label = { Text("Date of Birth") },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = { selectDate = true }) { Icon(Icons.Default.CalendarMonth, contentDescription = "Open Date Picker") }
+                },
+            )
 
-        OutlinedTextField(
-            value = dateBirth.toDateFormat(),
-            onValueChange = { },
-            label = { Text("Date of Birth") },
-            trailingIcon = {
-                IconButton(onClick = { selectDate = true }) { Icon(Icons.Default.CalendarMonth, contentDescription = "Open Date Picker") }
-            },
-        )
-
+            ActivityList()
 
         if (selectDate){
             DateEditPickerModal(
                 onDateSelected = {
                     if (it != null) {
-                        viewModel.editingProfile.value.dateOfBirth = Timestamp(it / 1000, 0)
+                        viewModel.updateDateOfBirth(Timestamp(it / 1000, 0))
                         Log.d("Date Selector","Date selected: ${Timestamp(it / 1000, 0)}")
                     }
                 },
@@ -397,7 +401,10 @@ fun GenerateEditableFields(
 }
 
 @Composable
-fun ActivityList(tripVm: TravelProposalViewModel = viewModel(factory = AppFactory)){
+fun ActivityList(userVm: UserProfileViewModel = viewModel(factory = AppFactory)){
+
+    val profile by userVm.editingProfile.collectAsState()
+
     Text(
         text = "Activities preferences",
         fontWeight = FontWeight.Normal,
@@ -410,11 +417,19 @@ fun ActivityList(tripVm: TravelProposalViewModel = viewModel(factory = AppFactor
             .padding(12.dp)
     ) {
 
-        tripVm.getAllActivityTags().forEach { activity ->
+        ActivityTag.entries.forEach { activity ->
             FilterChip(
-                selected = tripVm.filters.activities.contains(activity.first) == true,
-                onClick = {},
-                label = { Text(activity.first.value) })
+                selected = profile.typeOfExperiences.contains(activity.toString()),
+                onClick = {
+                    if (profile.typeOfExperiences.contains(activity.toString())){
+                        userVm.updateDeleteTypeOfExperiences(activity.toString())
+                        Log.d("Edit Profile","Removed Experience: ${activity.toString()}")
+                    }else{
+                        userVm.updateAddTypeOfExperiences(activity.toString())
+                        Log.d("Edit Profile","Added Experience: ${activity.toString()}")
+                    }
+                },
+                label = { Text(activity.value) })
             Spacer(modifier = Modifier.width(8.dp))
         }
     }
@@ -431,6 +446,7 @@ fun DateEditPickerModal(
     DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
         TextButton(onClick = {
             onDateSelected(datePickerState.selectedDateMillis)
+            Log.d("Date Selected","${datePickerState.selectedDateMillis}")
             onDismiss()
         }) {
             Text("OK")
