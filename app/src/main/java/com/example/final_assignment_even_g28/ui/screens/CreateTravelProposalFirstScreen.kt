@@ -524,10 +524,13 @@ fun CreateTravelProposalFirstScreen(
                 if (showItineraryCard.value) {
                     ItineraryDialog(
                         onDismiss = { showItineraryCard.value = false },
-                        onAccept = {
+                        onAccept = { selectedItinerary ->
+                            if (selectedItinerary != null) {
+                                tripVm.acceptSuggestedItinerary(selectedItinerary)
+                            }
                             showItineraryCard.value = false
                         },
-                        suggestion =  suggestion
+                        suggestion = suggestion
                     )
                 }
 

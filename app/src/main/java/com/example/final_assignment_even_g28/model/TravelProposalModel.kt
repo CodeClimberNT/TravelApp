@@ -812,7 +812,7 @@ class TravelProposalModel(
                     Log.d("getItinerarySuggestions", "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days")
 
                     //TODO: TO DECIDE IF <= OR ==
-                    originalDurationDays == userTripDurationDays
+                    originalDurationDays <= userTripDurationDays
                 }.filter { itinerary ->
                     itinerary.title.contains(travelName)
                 }

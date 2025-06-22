@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,7 +57,7 @@ import kotlinx.coroutines.flow.compose
 fun ItineraryDialog(
     viewModel: TravelProposalViewModel = viewModel(factory = AppFactory),
     onDismiss: () -> Unit,
-    onAccept: () -> Unit,
+    onAccept: (Itinerary?) -> Unit,
     suggestion : List<Itinerary>
 ) {
     var selectedItinerary by remember { mutableStateOf<Itinerary?>(null) }
@@ -143,7 +144,7 @@ fun ItineraryDialog(
                             .verticalScroll(scrollState)
                     ) {
                         Column {
-                            selectedItinerary?.stops?.forEachIndexed { index, step ->
+                            selectedItinerary?.stops?.forEachIndexed { index, stop ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -183,7 +184,10 @@ fun ItineraryDialog(
                                                 .size(circleSize)
                                                 .align(Alignment.Center)
                                                 .clip(CircleShape)
-                                                .background(Color.Black)
+                                                .background(
+                                                    if (stop.mandatory) MaterialTheme.colorScheme.error
+                                                    else MaterialTheme.colorScheme.onBackground
+                                                ),
                                         )
                                     }
 
@@ -195,16 +199,18 @@ fun ItineraryDialog(
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = step.date.toShortDateFormat(),
-                                            style = MaterialTheme.typography.labelSmall
+                                            text = stop.date.toShortDateFormat(),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = step.title,
-                                            style = MaterialTheme.typography.bodyMedium
+                                            text = stop.title,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
-                                            text = step.description,
-                                            style = MaterialTheme.typography.bodySmall
+                                            text = if(stop.description.length > 20) stop.description.substring(1, 20) + "..." else stop.description,
+                                            style = MaterialTheme.typography.bodyLarge,
                                         )
                                     }
                                 }
@@ -218,7 +224,9 @@ fun ItineraryDialog(
                         TextButton(onClick = { selectedItinerary = null }) {
                             Text("Cancel")
                         }
-                        Button(onClick = onAccept) {
+                        Button(onClick = {
+                            onAccept(selectedItinerary)
+                        }) {
                             Text("Accept")
                         }
                     }

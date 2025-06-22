@@ -1163,6 +1163,12 @@ class TravelProposalViewModel(
             }
         }
     }
+    fun acceptSuggestedItinerary(selectedItinerary: Itinerary) {
+        tempTravelProposal = tempTravelProposal.copy(
+            itinerary = selectedItinerary.stops
+        )
+        Log.d("TravelProposalViewModel", "Accepted suggested itinerary with ${selectedItinerary.stops.size} stops")
+    }
 
     fun itinerarySuggestions(tripName: String, tripStartDate: Timestamp, tripEndDate: Timestamp) {
         viewModelScope.launch {
