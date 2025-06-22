@@ -7,7 +7,6 @@ import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -84,14 +83,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -99,6 +96,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.rememberAsyncImagePainter
@@ -124,9 +122,6 @@ import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.CustomCap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -137,7 +132,6 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -149,10 +143,7 @@ import org.json.JSONObject
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
-import android.net.Uri
-import androidx.core.net.toUri
 
 
 //TODO: refactor this file with common component
@@ -1008,7 +999,7 @@ fun TravelActionBar(
             onApply = {
                 tripVm.applyToTrip(guests = it)
                 if (numApprovedParticipant >= 3) {
-                    userVm.updateBadgeTravelInPackProgress()
+                    userProfileViewModel.updateBadgeTravelInPackProgress()
                 }
                 showApplyDialog = false
                 userProfileViewModel.gainExp(5, ctx)
@@ -1292,7 +1283,7 @@ fun CandidateProfile(
         Column(
             modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
         ) {
-            Text(text = candidate.rating.toString(), modifier = Modifier.padding(6.dp))
+            Text(text = " % .2f".format(candidate.rating), modifier = Modifier.padding(6.dp))
         }
         Column(
             modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End

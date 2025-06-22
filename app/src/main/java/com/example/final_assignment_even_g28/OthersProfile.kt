@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AirplanemodeActive
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -117,7 +115,7 @@ fun ProfileColumn(user: UserProfile) {
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Text(
-                text = "lvl. 3",
+                text = "lvl. ${user.currentLevel}",
                 modifier = Modifier.padding((4.dp)),
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -174,7 +172,7 @@ fun ImageColumn(user: UserProfile) {
         }
         Row {
             Text(
-                text = "lvl. 3",
+                text = "lvl. ${user.currentLevel}",
                 modifier = Modifier.padding((4.dp)),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp

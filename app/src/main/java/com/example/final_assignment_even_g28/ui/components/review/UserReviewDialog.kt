@@ -194,13 +194,18 @@ fun ProfileRow(user: UserProfile) {
 }
 
 @Composable
-fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, userVM: UserProfileViewModel = viewModel(factory = AppFactory), onDismiss: (Boolean) -> Unit) {
+fun SingleUserReviewCard(
+    user: UserProfile,
+    userReviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
+    userVM: UserProfileViewModel = viewModel(factory = AppFactory),
+    onDismiss: (Boolean) -> Unit
+) {
     val textState = remember { mutableStateOf("") }
     val textTitle = remember { mutableStateOf("") }
     var reviewValue by remember { mutableFloatStateOf(0.0f) }
 
     val ctx = LocalContext.current
-    val loggedUser by userVm.loggedUser.collectAsState()
+    val loggedUser by userVM.loggedUser.collectAsState()
 
     Dialog(onDismissRequest = { onDismiss(false) }) {
         Card(
@@ -283,21 +288,21 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, u
                     Button(
                         modifier = Modifier.padding(start = 16.dp),
                         onClick = {
-                                    userReviewVm.writeReview(
-                                        review = UserReview(
-                                            reviewedUserUID = user.uid,
-                                            reviewerUID = userVM.loggedUser.value.uid,
-                                            reviewerName= loggedUser.value.name,
-                                            reviewedName=user.name,
-                                            title = textTitle.value,
-                                            rating = reviewValue,
-                                            description = textState.value,
-                                            timestamp = Timestamp.now(),
-                                        )
-                                    )
-                                     userVM.gainExp(5, ctx)
-                                    onDismiss(false)
-                                  },
+                            userReviewVm.writeReview(
+                                review = UserReview(
+                                    reviewedUserUID = user.uid,
+                                    reviewerUID = loggedUser.uid,
+                                    reviewerName = loggedUser.name,
+                                    reviewedName = user.name,
+                                    title = textTitle.value,
+                                    rating = reviewValue,
+                                    description = textState.value,
+                                    timestamp = Timestamp.now(),
+                                )
+                            )
+                            userVM.gainExp(5, ctx)
+                            onDismiss(false)
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )

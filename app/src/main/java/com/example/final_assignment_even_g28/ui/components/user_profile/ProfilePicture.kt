@@ -42,8 +42,6 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.ui.components.badge.BadgeIconWithInfo
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.Serializable
 
 /*
 @Serializable
@@ -142,7 +140,11 @@ fun ProfilePicture(
                 "Uri" -> {
                     Image(
                         painter =
-                            rememberAsyncImagePainter(userProfileViewModel.getImageFromUID(profile)),
+                            rememberAsyncImagePainter(
+                                userProfileViewModel.getImageFromUID(
+                                    userProfile
+                                )
+                            ),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = if (!isLandScape) Modifier
@@ -177,7 +179,11 @@ fun ProfilePicture(
                 "Uri" -> {
                     Image(
                         painter =
-                            rememberAsyncImagePainter(userProfileViewModel.getImageFromUID(profile)),
+                            rememberAsyncImagePainter(
+                                userProfileViewModel.getImageFromUID(
+                                    userProfile
+                                )
+                            ),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = if (!isLandScape) Modifier

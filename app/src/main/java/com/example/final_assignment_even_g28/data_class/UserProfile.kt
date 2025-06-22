@@ -1,9 +1,6 @@
 package com.example.final_assignment_even_g28.data_class
 
-import androidx.compose.material.icons.Icons
-import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -39,7 +36,7 @@ data class UserProfile(
     @Contextual var dateOfBirth: Timestamp = Timestamp.Companion.now(),
     var pastExperiences: List<String> = emptyList(),
     var bio: String = "",
-    @get:Exclude @set:Exclude var badge: Badge? = null,
+    var badge: Badge? = null,
     var currentLevel: Int = 1,
     var rating: Float = 0.0f,
     var isProfileImage: String = "Monogram",

@@ -3,7 +3,7 @@ package com.example.final_assignment_even_g28.navigation
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +25,7 @@ fun CustomBottomBar(navActions: Navigation, selectedItem: BottomBarItem) {
             selected = selectedItem == BottomBarItem.Explore,
             icon = {
                 Icon(
-                    imageVector = Icons.Default.LocationOn,
+                    imageVector = Icons.Default.Explore,
                     contentDescription = "Explore",
                     tint =
                         MaterialTheme.colorScheme

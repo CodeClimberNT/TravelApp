@@ -1,4 +1,5 @@
 package com.example.final_assignment_even_g28.ui.screens
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,14 +38,15 @@ import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 @Composable
-fun SignInScreen(navActions: Navigation,
-                 userVM: UserProfileViewModel = viewModel(factory = AppFactory),
-                 ) {
+fun SignInScreen(
+    navActions: Navigation,
+    userVM: UserProfileViewModel = viewModel(factory = AppFactory),
+) {
     val context = LocalContext.current
     var loading = userVM.isLoading.collectAsState()
 
-    var showRegisterModule by remember{ mutableStateOf(false)}
-    var showLogin by remember{ mutableStateOf(false)}
+    var showRegisterModule by remember { mutableStateOf(false) }
+    var showLogin by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
         Column(
@@ -62,31 +65,35 @@ fun SignInScreen(navActions: Navigation,
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            if(loading.value)
+            if (loading.value)
                 CircularProgressIndicator()
-            else{
+            else {
                 GoogleSignInButton { userVM.signUpWithGoogle(context) }
-                Button(onClick = { showRegisterModule = true }, modifier = Modifier
-                    .width(240.dp)
-                    .height(48.dp)) {
+                Button(
+                    onClick = { showRegisterModule = true }, modifier = Modifier
+                        .width(240.dp)
+                        .height(48.dp)
+                ) {
                     Spacer(Modifier.width(8.dp))
                     Text("Register")
                 }
-                Button(onClick = {
-                    showLogin = true
+                Button(
+                    onClick = {
+                        showLogin = true
 
-                }, modifier = Modifier
-                    .width(240.dp)
-                    .height(48.dp)) {
+                    }, modifier = Modifier
+                        .width(240.dp)
+                        .height(48.dp)
+                ) {
                     Spacer(Modifier.width(8.dp))
                     Text("Log In")
                 }
 
-                if(showRegisterModule){
-                    RegistrationForm(navActions){showRegisterModule = false}
+                if (showRegisterModule) {
+                    RegistrationForm(navActions) { showRegisterModule = false }
                 }
-                if(showLogin){
-                    LogInForm(navActions){showLogin = false}
+                if (showLogin) {
+                    LogInForm(navActions) { showLogin = false }
                 }
             }
 
@@ -97,12 +104,20 @@ fun SignInScreen(navActions: Navigation,
 
 @Composable
 private fun GoogleSignInButton(onClick: () -> Unit) {
-    Button(onClick = onClick, modifier = Modifier
-        .width(240.dp)
-        .height(48.dp)) {
-        Image(painterResource(id = R.drawable.ic_google_logo), contentDescription = null, modifier = Modifier.size(25.dp))
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.onPrimary),
+        modifier = Modifier
+            .width(240.dp)
+            .height(48.dp)
+    ) {
+        Image(
+            painterResource(id = R.drawable.ic_google_logo),
+            contentDescription = null,
+            modifier = Modifier.size(25.dp)
+        )
         Spacer(Modifier.width(8.dp))
-        Text("Sign in with Google")
+        Text("Sign in with Google", color = MaterialTheme.colorScheme.primary)
     }
 }
 

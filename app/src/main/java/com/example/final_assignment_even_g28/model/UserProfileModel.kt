@@ -22,18 +22,17 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
+import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -382,30 +381,18 @@ class UserProfileModel() {
                 try {
                     Log.d("Edit User", "Updating badge for user with UID: $userUID")
                     Log.d("Edit User", "New badge: $newBadge")
-                    _loggedUser.value.badge = newBadge
+//                    _loggedUser.value.badge = newBadge
                     Log.d("Edit User", "Logged user badge updated: ${_loggedUser.value.badge}")
                     // FIXME: use the commented code when the code is merged with the others
-//                    val documentRef = Collections.users.document(userUID)
-//                    val userToEdit = _userProfiles.value.firstOrNull { it.uid == userUID }
-//                        ?: throw Exception("User with UID $userUID not found")
-//                    userToEdit.badge = newBadge
-//                    Tasks.await(documentRef.set(userToEdit))
-//
-//                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
-//
-//                    when (userToEdit.isProfileImage) {
-//                        "Monogram" -> {}
-//                        "Icon" -> {}
-//                        "Uri" -> {
-//                            uploadUserProfileImage(
-//                                userToEdit.uid,
-//                                (userToEdit.profilePicture as ProfilePictureData.UriData).uri,
-//                                context
-//                            )
-//                        }
-//                    }
-//
-//                    loadUserByUID(userToEdit.uid)
+                    val documentRef = Collections.users.document(userUID)
+                    val userToEdit = _userProfiles.value.firstOrNull { it.uid == userUID }
+                        ?: throw Exception("User with UID $userUID not found")
+                    userToEdit.badge = newBadge
+                    Tasks.await(documentRef.set(userToEdit))
+
+                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
+
+                    loadUserByUID(userToEdit.uid)
 
                 } catch (e: Exception) {
                     Log.e("Edit User", "Error editing user: ${e.message}")
@@ -523,12 +510,12 @@ class UserProfileModel() {
 
     suspend fun gainExp(expValue: Int, context: Context) {
         val newExp = loggedUser.value.exp + expValue
+        editLevel(loggedUser.value.exp, newExp)
         _loggedUser.value = _loggedUser.value.copy(exp = newExp)
-        editLevel(expValue)
         editProfile(loggedUser.value, context)
     }
 
-    fun editLevel(oldExp: Int){
+    fun editLevel(oldExp: Int, newExp: Int) {
         var oldLvl: Int = 0;
 
         when(oldExp){
@@ -540,7 +527,7 @@ class UserProfileModel() {
             else -> {oldLvl = 6}
         }
 
-        when(loggedUser.value.exp){
+        when (newExp) {
             in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
             in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
             in 51 .. 100 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 3)}
