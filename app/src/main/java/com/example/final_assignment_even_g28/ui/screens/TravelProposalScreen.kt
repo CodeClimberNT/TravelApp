@@ -1,6 +1,7 @@
 package com.example.final_assignment_even_g28.ui.screens
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.location.Address
 import android.location.Geocoder
@@ -119,7 +120,10 @@ import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.CustomCap
+import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
@@ -127,6 +131,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
@@ -142,6 +147,8 @@ import java.net.URLEncoder
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
+import android.net.Uri
+import androidx.core.net.toUri
 
 
 //TODO: refactor this file with common component
@@ -364,6 +371,7 @@ fun TripOverview(
 
 ) {
     //var openCandidatesDialog = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
@@ -418,7 +426,10 @@ fun TripOverview(
                     elevation = ButtonDefaults.buttonElevation(12.dp),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(4.dp),
-                    onClick = {}, // will be updated with the tripPlanner.contact
+                    onClick = {
+                        val message = "Hi ${tripPlanner.name}, I'm interested in this trip itinerary."
+                        openWhatsAppChat(context, tripPlanner.phoneNumber, message)
+                    },
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Message,
@@ -468,6 +479,16 @@ fun TripOverview(
         }
 
     }
+}
+
+fun openWhatsAppChat(context: Context, phoneNumber: String, message: String? = null) {
+    val baseUrl = "https://wa.me/39$phoneNumber"
+    val url = message
+        ?.let { baseUrl + "?text=" + URLEncoder.encode(it, "UTF-8") }
+        ?: baseUrl
+
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+    context.startActivity(intent)
 }
 
 @Composable
@@ -689,6 +710,24 @@ fun TripMap(itinerary: List<ItineraryStop>) {
                         state = rememberUpdatedMarkerState(it),
                         title = itinerary[i].title
                     )
+                }
+                // Draw route line
+                val pts = locations.filterNotNull()
+                if (pts.size >= 2) {
+                    Polyline(points = pts, width = 6f, color = Color.Blue, jointType = JointType.ROUND, geodesic = true)
+
+                    /*val arrowCap = remember {
+                        CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.arrow), 30f)
+                    }*/
+                    pts.windowed(2).forEach { (from, to) ->
+                        Polyline(
+                            points = listOf(from, to),
+                            width = 6f,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            //endCap = arrowCap,
+                            geodesic = true
+                        )
+                    }
                 }
             }
         }
