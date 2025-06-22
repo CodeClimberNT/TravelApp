@@ -1,25 +1,25 @@
 package com.example.final_assignment_even_g28.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material.icons.outlined.Reviews
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +47,7 @@ import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.ui.components.review.DisplayReviewImages
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
@@ -118,34 +120,42 @@ fun MyUserReviewsList(
 @Composable
 fun ReviewsList(reviews: List<UserReview>, madeByYou: Boolean = false) {
     if (reviews.isNotEmpty()) {
-        FlowColumn(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            Text("Average Rating: ", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.weight(1f))
+            RatingStar(
+                reviews.map { it.rating }.average().toFloat(),
+                maxRating = 5,
+                onStarClick = {},
+                isIndicator = false
+            )
+            Text(
+                text = "${" % .2f".format(reviews.map({ it.rating }).average())} / 5",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+        HorizontalDivider()
+        LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp)
         ) {
-            if (reviews.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Average Rating: ", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.weight(1f))
-                    RatingStar(
-                        reviews.map { it.rating }.average().toFloat(),
-                        maxRating = 5,
-                        onStarClick = {},
-                        isIndicator = false
-                    )
-                    Text(
-                        text = "${" % .2f".format(reviews.map({ it.rating }).average())} / 5",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+            item {
+                Spacer(Modifier.height(8.dp))
+            }
+
+            items(reviews) { review ->
+                UserReviewCard(review, madeByYou)
 
             }
-            reviews.forEach { review ->
-                UserReviewCard(review, madeByYou)
+
+            item {
+                Spacer(Modifier.height(8.dp))
             }
         }
     } else {
@@ -171,6 +181,11 @@ fun UserReviewCard(
     madeByYou: Boolean,
     userVm: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
+    val user =
+        userVm.getUserProfileByUID(if (madeByYou) review.reviewedUserUID else review.reviewerUID)
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.elevatedCardElevation(10.dp)
@@ -182,12 +197,8 @@ fun UserReviewCard(
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(50.dp)
-                )
+                ProfilePicture(user, isLandScape = isLandscape, isCandidate = true)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     if (madeByYou) review.reviewedName else review.reviewerName,
                     style = MaterialTheme.typography.headlineSmall,

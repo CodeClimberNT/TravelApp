@@ -67,7 +67,7 @@ fun OtherProfileScreen(
     val travelProposals by tripVm.allTravelProposals.collectAsState(emptyList())
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
     val travelProposal = travelProposals.firstOrNull() ?: TravelProposal()
-    val otherUser = userVm.getOtherUserProfile(userUID)
+    val otherUser = userVm.getUserProfileByUID(userUID)
 
 
     Scaffold(

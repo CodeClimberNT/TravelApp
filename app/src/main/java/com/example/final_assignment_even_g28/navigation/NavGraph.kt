@@ -113,8 +113,8 @@ fun NavGraph(
                     navActions = navActions,
                     bottomBarItem = BottomBarItem.MyTrips,
                     snackBarHostState = snackbarHostState,
-//                    sharedTransitionScope = this@SharedTransitionLayout,
-//                    animatedContentScope = this@composable,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this@composable,
                 )
             }
 
@@ -249,11 +249,10 @@ fun NavGraph(
                     navActions = navActions,
                     bottomBarItem = selectedItem,
                     tripId = tripId ?: "",
-                    userReviewVm = reviewVm,
                     snackBarHostState = snackbarHostState,
                     initialTabIndex = if (showReviewsTab) 1 else 0,
-//                    sharedTransitionScope = this@SharedTransitionLayout,
-//                    animatedContentScope = this@composable,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this@composable,
                 )
             }
             composable(

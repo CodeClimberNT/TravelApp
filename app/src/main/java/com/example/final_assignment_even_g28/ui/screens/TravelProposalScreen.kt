@@ -164,7 +164,6 @@ fun TravelProposalScreen(
                             animatedVisibilityScope = animatedContentScope
                         )
                         .fillMaxSize()
-                        .clickable { /* popBackStack() */ }
                 ) {
                     Column(
                         modifier = Modifier

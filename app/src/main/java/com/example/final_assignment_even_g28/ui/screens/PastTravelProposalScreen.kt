@@ -2,6 +2,9 @@ package com.example.final_assignment_even_g28.ui.screens
 
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,18 +19,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Reviews
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.PeopleOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -64,13 +66,13 @@ import com.example.final_assignment_even_g28.ui.components.NeedToLogin
 import com.example.final_assignment_even_g28.ui.components.review.PastTravelReviews
 import com.example.final_assignment_even_g28.ui.components.review.ReviewDialog
 import com.example.final_assignment_even_g28.ui.components.review.UserReviewDialog
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun PastTravelProposalScreen(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
@@ -78,9 +80,10 @@ fun PastTravelProposalScreen(
     bottomBarItem: BottomBarItem,
     tripId: String,
     userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory),
-    userReviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
     snackBarHostState: SnackbarHostState,
-    initialTabIndex: Int = 0
+    initialTabIndex: Int = 0,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope
 ) {
     tripVm.clickTripInfo(tripId, isPast = true)
     val travelProposal by tripVm.travelProposal.collectAsState()
@@ -115,73 +118,90 @@ fun PastTravelProposalScreen(
         }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
 
-        if (loggedUser.uid.isEmpty()){
+        if (loggedUser.uid.isEmpty()) {
             //need to Login
             NeedToLogin(navAction = navActions)
-        }else{
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                ImageCarousel(travelProposal.images)
-                Spacer(modifier = Modifier.height(16.dp))
-                HeroSection(
-                    title = travelProposal.title,
-                    duration = tripVm.showDatesInTripInfo(
-                        travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
-                    ),
-                    tags = travelProposal.activities.map { it.value },
-                    travelProposalVM = tripVm,
-                    navActions = navActions,
-                )
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                InfoReviewTab(tabIndex, reviews.size, onTabSelected = { tabIndex = it })
-                when (tabIndex) {
-                    0 -> {
-                        TripOverview(tripPlanner, tripVm)
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                        ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
-                        TripDescription(travelProposal.description)
-                        if (isLandscape) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(
-                                        MaterialTheme.colorScheme.secondary
+        } else {
+            Box(Modifier.fillMaxSize()) {
+                with(sharedTransitionScope) {
+                    Card(
+                        modifier = Modifier
+                            .sharedElement(
+                                rememberSharedContentState(key = "card_$tripId"),
+                                animatedVisibilityScope = animatedContentScope
+                            )
+                            .fillMaxSize()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            ImageCarousel(travelProposal.images)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HeroSection(
+                                title = travelProposal.title,
+                                duration = tripVm.showDatesInTripInfo(
+                                    travelProposal.tripStartDate.toDate(),
+                                    travelProposal.tripEndDate.toDate()
+                                ),
+                                tags = travelProposal.activities.map { it.value },
+                                travelProposalVM = tripVm,
+                                navActions = navActions,
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            InfoReviewTab(tabIndex, reviews.size, onTabSelected = { tabIndex = it })
+                            when (tabIndex) {
+                                0 -> {
+                                    TripOverview(tripPlanner, tripVm)
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 4.dp)
                                     )
-                                    .padding(
-                                        horizontal = 16.dp
-                                    ), verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(end = 8.dp)
-                                ) {
-                                    ItinerarySection(
-                                        travelProposal.itinerary
+                                    ActivitiesPercentages(
+                                        travelProposal.experienceComposition,
+                                        isLandscape
                                     )
+                                    TripDescription(travelProposal.description)
+                                    if (isLandscape) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    MaterialTheme.colorScheme.secondary
+                                                )
+                                                .padding(
+                                                    horizontal = 16.dp
+                                                ), verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(end = 8.dp)
+                                            ) {
+                                                ItinerarySection(
+                                                    travelProposal.itinerary
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(
+                                                        start = 8.dp
+                                                    )
+                                            ) { TripMap() }
+                                        }
+                                    } else {
+                                        ItinerarySection(travelProposal.itinerary)
+                                        TripMap()
+                                    }
                                 }
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(
-                                            start = 8.dp
-                                        )
-                                ) { TripMap() }
-                            }
-                        } else {
-                            ItinerarySection(travelProposal.itinerary)
-                            TripMap()
-                        }
-                    }
 
-                    1 -> {
-                        PastTravelReviews(reviews)
+                                1 -> {
+                                    PastTravelReviews(reviews)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -206,7 +226,8 @@ fun PastTravelProposalScreen(
 
 @Composable
 fun TripOverview(tripPlanner: Planner, vm: TravelProposalViewModel) {
-
+    val configuration = LocalConfiguration.current
+    val isLandScape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             "Trip Planner",
@@ -218,20 +239,7 @@ fun TripOverview(tripPlanner: Planner, vm: TravelProposalViewModel) {
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
             // User Avatar (Placeholder) -> will be updated with the tripPlanner.avatar
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary, shape = CircleShape
-                    ), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
+            ProfilePicture(tripPlanner, isLandScape = isLandScape, isDashboard = true)
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -292,7 +300,8 @@ fun InfoReviewTab(
                 selected = state == index,
                 onClick = { onTabSelected(index) },
                 text = { Text(text = title) },
-                icon = { Icon(icon, title) })
+                icon = { Icon(icon, title) }
+            )
         }
     }
 }

@@ -82,8 +82,6 @@ class TravelProposalViewModel(
 
     var reviewErrors by mutableStateOf(ReviewError())
 
-
-
     var filters by mutableStateOf(Filters())
 
 
@@ -238,6 +236,12 @@ class TravelProposalViewModel(
 
         }
 
+    }
+
+    fun isTripInPast(travelProposal: TravelProposal): Boolean {
+        val currentTime = Timestamp.now()
+        val tripStartTime = travelProposal.tripEndDate
+        return tripStartTime < currentTime
     }
 
     fun addImageFromGallery(uri: Uri) {

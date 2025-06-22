@@ -156,7 +156,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getOtherUserProfile(userUID: String): UserProfile {
+    fun getUserProfileByUID(userUID: String): UserProfile {
         return model.getUserByUid(userUID) ?: UNKNOWN_USER
     }
 
