@@ -282,11 +282,10 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, u
                     Button(
                         modifier = Modifier.padding(start = 16.dp),
                         onClick = {
-                            /*todo() change reviewer ID*/
                                     userReviewVm.writeReview(
                                         review = UserReview(
                                         reviewedUserUID = user.uid,
-                                        reviewerUID = "JkXtaeEEmsb0m459W2f2rTRZBpB2",
+                                        reviewerUID = userVM.loggedUser.value.uid,
                                         title = textTitle.value,
                                         rating = reviewValue,
                                         description = textState.value,
