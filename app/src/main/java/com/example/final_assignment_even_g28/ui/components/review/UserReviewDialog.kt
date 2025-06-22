@@ -49,7 +49,6 @@ import com.example.final_assignment_even_g28.data_class.UserReview
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.google.firebase.Timestamp
 
