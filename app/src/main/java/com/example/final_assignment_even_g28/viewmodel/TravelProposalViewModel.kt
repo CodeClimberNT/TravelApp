@@ -59,7 +59,6 @@ class TravelProposalViewModel(
 
     var tempTravelProposal by mutableStateOf(TravelProposal())
 
-    var isTravelListLoaded by mutableStateOf(false)
     var isEditing by mutableStateOf(false)
         private set
 
@@ -67,13 +66,9 @@ class TravelProposalViewModel(
     var secondScreenValidationError by mutableStateOf(TravelProposalSecondScreenError())
 
 
-    var isExpanded by mutableStateOf(false)
-        private set
-
     var groupSizeOptions = (1..15).toList()
 
-
-    private val currentUser = userModel.loggedUser
+    private val currentUser: StateFlow<UserProfile> = userModel.loggedUser
 
     var filterErrors by mutableStateOf(FilterError())
         private set
@@ -81,6 +76,7 @@ class TravelProposalViewModel(
     var tempReview by mutableStateOf(TravelReview())
 
     var reviewErrors by mutableStateOf(ReviewError())
+        private set
 
     var filters by mutableStateOf(Filters())
 
@@ -127,16 +123,16 @@ class TravelProposalViewModel(
     val notifications: StateFlow<List<Notification>>
         get() = _notifications
 
-    private val _newTravelProposalNotification = MutableStateFlow<Notification?>(null)
-    val newTravelProposalNotification: StateFlow<Notification?>
-        get() = _newTravelProposalNotification
+    private val _snackbarNotification = MutableStateFlow<Notification?>(null)
+    val snackbarNotification: StateFlow<Notification?>
+        get() = _snackbarNotification
 
 
-    private val _unreadCount = MutableStateFlow(0)
-    val unreadCount: StateFlow<Int>
-        get() = _unreadCount
+    private val _unreadNotificationCount = MutableStateFlow(0)
+    val unreadNotificationCount: StateFlow<Int>
+        get() = _unreadNotificationCount
 
-    private val existingNotificationIds = mutableSetOf<String>()
+    private val alreadyFetchedNotificationIds = mutableSetOf<String>()
 
     private val sentLastMinuteNotifications = mutableSetOf<String>()
 
@@ -177,13 +173,13 @@ class TravelProposalViewModel(
             Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
 
             val userId = currentUser.value.uid
-            tripModel.getNotifications(userId, excludedNotificationTypes)
+            tripModel.getNotificationsForUserUID(userId, excludedNotificationTypes)
                 .collect { notifications ->
                     // NOTIFICATION BELL
                     _notifications.value = notifications
 
-                    val unreadCount = notifications.count { !it.isRead(currentUser.value.uid) }
-                    _unreadCount.value = unreadCount
+                    _unreadNotificationCount.value =
+                        notifications.count { !it.isRead(currentUser.value.uid) }
 
                     //SNACKBAR
                     notifications.forEach { notification ->
@@ -200,22 +196,21 @@ class TravelProposalViewModel(
                         )
                         Log.d(
                             "forEachNotification",
-                            "!existingNotificationIds.contains(notification.id): ${
-                                !existingNotificationIds.contains(notification.id)
+                            "!alreadyFetchedNotificationIds.contains(notification.id): ${
+                                !alreadyFetchedNotificationIds.contains(notification.id)
                             }"
                         )
                         if (notification.isRecent() &&
                             !notification.isRead(currentUser.value.uid) &&
-                            !existingNotificationIds.contains(notification.id)
+                            !alreadyFetchedNotificationIds.contains(notification.id)
                         ) {
-
-                            existingNotificationIds.add(notification.id)
-                            _newTravelProposalNotification.value = notification
+                            alreadyFetchedNotificationIds.add(notification.id)
+                            _snackbarNotification.value = notification
 
                             Log.d("New Notification", "New notification: ${notification.title}")
                             Log.d(
                                 "New Notification",
-                                "New notification: ${_newTravelProposalNotification.value}"
+                                "New notification: ${_snackbarNotification.value}"
                             )
                         }
                     }
@@ -590,10 +585,6 @@ class TravelProposalViewModel(
         newGroupSize: Int,
     ) {
         tempTravelProposal = tempTravelProposal.copy(maxParticipant = newGroupSize)
-    }
-
-    fun toggleExpanded() {
-        isExpanded = !isExpanded
     }
 
     var minValue by mutableIntStateOf(0)

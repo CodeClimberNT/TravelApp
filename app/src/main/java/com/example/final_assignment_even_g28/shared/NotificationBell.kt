@@ -56,7 +56,7 @@ fun NotificationBell(navActions: Navigation, tripVm : TravelProposalViewModel = 
 
     val notifications by tripVm.notifications.collectAsState(initial = emptyList())
 
-    val unreadCount by tripVm.unreadCount.collectAsState()
+    val unreadCount by tripVm.unreadNotificationCount.collectAsState()
 
     Box(contentAlignment = Alignment.TopEnd) {
         Box {

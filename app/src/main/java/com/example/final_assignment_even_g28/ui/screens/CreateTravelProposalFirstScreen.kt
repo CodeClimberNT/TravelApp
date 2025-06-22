@@ -86,7 +86,7 @@ fun CreateTravelProposalFirstScreen(
     val travelProposal = tripVm.tempTravelProposal
     var showStartDate by remember { mutableStateOf(false) }
     var showEndDate by remember { mutableStateOf(false) }
-
+    var isExpanded by remember { mutableStateOf(false) }
 
     val showItineraryCard = remember { mutableStateOf(false) }
     val scrollable = rememberScrollState()
@@ -180,9 +180,9 @@ fun CreateTravelProposalFirstScreen(
                             readOnly = true,
                             isError = firstScreenError.maxParticipant.isNotBlank(),
                             trailingIcon = {
-                                IconButton(onClick = { tripVm.toggleExpanded() }) {
+                                IconButton(onClick = { isExpanded = !isExpanded }) {
                                     Icon(
-                                        imageVector = if (!tripVm.isExpanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
+                                        imageVector = if (!isExpanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
                                         contentDescription = "Drop Down"
                                     )
                                 }
@@ -206,8 +206,8 @@ fun CreateTravelProposalFirstScreen(
                         }
                     }
                     DropdownMenu(
-                        expanded = tripVm.isExpanded,
-                        onDismissRequest = { tripVm.toggleExpanded() },
+                        expanded = isExpanded,
+                        onDismissRequest = { isExpanded = !isExpanded },
                         modifier = Modifier
                             .background(color = MaterialTheme.colorScheme.surface)
                             .clip(
@@ -231,7 +231,7 @@ fun CreateTravelProposalFirstScreen(
                         tripVm.groupSizeOptions.forEach { size ->
                             DropdownMenuItem(text = { Text(size.toString()) }, onClick = {
                                 tripVm.updateGroupSize(size)
-                                tripVm.toggleExpanded()
+                                isExpanded = false
                             })
                         }
                     }

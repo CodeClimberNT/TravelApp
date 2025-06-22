@@ -82,7 +82,6 @@ object Destinations {
     const val SETTINGS_ROUTE = Screens.SETTINGS
 }
 
-//TODO: check if it is possible to use singleton to not move the instance around
 class Navigation(
     private val navController: NavHostController,
 ) {

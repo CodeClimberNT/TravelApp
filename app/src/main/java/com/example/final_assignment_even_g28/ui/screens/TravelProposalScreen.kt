@@ -157,71 +157,66 @@ fun TravelProposalScreen(
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()) {
             with(sharedTransitionScope) {
-                Card(
+                Column(
                     modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
                         .sharedElement(
                             rememberSharedContentState(key = "card_$tripId"),
                             animatedVisibilityScope = animatedContentScope
                         )
-                        .fillMaxSize()
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        ImageCarousel(travelProposal.images)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        HeroSection(
-                            title = travelProposal.title,
-                            duration = tripVm.showDatesInTripInfo(
-                                travelProposal.tripStartDate.toDate(),
-                                travelProposal.tripEndDate.toDate()
-                            ),
-                            tags = travelProposal.activities.map { it.value },
-                            travelProposalVM = tripVm,
-                            navActions = navActions,
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                        TripOverview(
-                            tripVm = tripVm,
-                            proposal = travelProposal,
-                            tripPlanner = tripPlanner,
-                            navActions = navActions,
-                            bottomBarItem = bottomBarItem,
-                            openCandidatesDialog
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                        ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
-                        TripDescription(travelProposal.description)
-                        if (isLandscape) {
-                            Row(
+                    ImageCarousel(travelProposal.images)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HeroSection(
+                        title = travelProposal.title,
+                        duration = tripVm.showDatesInTripInfo(
+                            travelProposal.tripStartDate.toDate(),
+                            travelProposal.tripEndDate.toDate()
+                        ),
+                        tags = travelProposal.activities.map { it.value },
+                        travelProposalVM = tripVm,
+                        navActions = navActions,
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    TripOverview(
+                        tripVm = tripVm,
+                        proposal = travelProposal,
+                        tripPlanner = tripPlanner,
+                        navActions = navActions,
+                        bottomBarItem = bottomBarItem,
+                        openCandidatesDialog
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
+                    TripDescription(travelProposal.description)
+                    if (isLandscape) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.secondary)
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.secondary)
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(end = 8.dp)
-                                ) {
-                                    ItinerarySection(travelProposal.itinerary)
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp)
-                                ) {
-                                    TripMap()
-                                }
+                                ItinerarySection(travelProposal.itinerary)
                             }
-                        } else {
-                            ItinerarySection(travelProposal.itinerary)
-                            TripMap()
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
+                            ) {
+                                TripMap()
+                            }
                         }
+                    } else {
+                        ItinerarySection(travelProposal.itinerary)
+                        TripMap()
                     }
                 }
             }

@@ -1,6 +1,5 @@
 package com.example.final_assignment_even_g28.navigation
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -11,7 +10,6 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,7 +36,6 @@ import com.example.final_assignment_even_g28.ui.screens.TravelProposalScreen
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
-import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalSharedTransitionApi::class)
@@ -46,8 +43,6 @@ import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 fun NavGraph(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
-    reviewVm: UserReviewViewModel = viewModel(factory = AppFactory),
-    context: Context,
 ) {
     SharedTransitionLayout {
         val navController: NavHostController = rememberNavController()
@@ -56,24 +51,24 @@ fun NavGraph(
         }
         val bottomBarItemSelected = remember { mutableStateOf(BottomBarItem.Explore) }
         val snackbarHostState = remember { SnackbarHostState() }
-        val profile by userVm.loggedUser.collectAsState()
+        val snackbarNotification = tripVm.snackbarNotification.collectAsState()
+
 
         //used for notification
-        LaunchedEffect(profile) {
-            tripVm.newTravelProposalNotification.collect { notification ->
-                notification?.let {
-                    Log.d("SnackbarDebug", "Showing notification: ${it.type}, ${it.title}")
-                    snackbarHostState.showSnackbar(
-                        message = tripVm.getNotificationMessage(it.type, it.title, true),
-                        actionLabel = "View",
-                        duration = SnackbarDuration.Short
-                    ).let { result ->
-                        if (result == SnackbarResult.ActionPerformed) {
-                            handleNotificationNavigation(it, navActions)
-                        }
+        LaunchedEffect(snackbarNotification.value) {
+            val notification = snackbarNotification.value
+            notification?.let {
+                Log.d("SnackbarDebug", "Showing notification: ${it.type}, ${it.title}")
+                snackbarHostState.showSnackbar(
+                    message = tripVm.getNotificationMessage(it.type, it.title, true),
+                    actionLabel = "View",
+                    duration = SnackbarDuration.Short
+                ).let { result ->
+                    if (result == SnackbarResult.ActionPerformed) {
+                        handleNotificationNavigation(it, navActions)
                     }
-                } ?: Log.d("SnackbarDebug", "No notification to show")
-            }
+                }
+            } ?: Log.d("SnackbarDebug", "No notification to show")
         }
 
 

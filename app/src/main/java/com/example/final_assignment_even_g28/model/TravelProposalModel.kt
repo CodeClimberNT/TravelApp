@@ -640,7 +640,7 @@ class TravelProposalModel(
     }
 
 
-    fun getNotifications(
+    fun getNotificationsForUserUID(
         userId: String,
         excludedNotificationTypes: List<NotificationType>
     ): Flow<List<Notification>> =
@@ -666,7 +666,7 @@ class TravelProposalModel(
                             }.filter { notification ->
                                 !excludedNotificationTypes.contains(notification.type)
                             }.filter { notification ->
-                                // Filtra le notifiche per destinatario
+                                // Filter notifications based on user ID and type
                                 when (notification.type) {
                                     NotificationType.NEW_PROPOSAL -> {
                                         notification.notificationOwnerId != userId

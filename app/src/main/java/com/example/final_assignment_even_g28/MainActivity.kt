@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.ui.platform.LocalContext
 import com.example.final_assignment_even_g28.navigation.NavGraph
 import com.example.final_assignment_even_g28.ui.theme.MadTheme
 
@@ -33,9 +32,7 @@ class MainActivity : ComponentActivity() {
 //                    viewModel.initializeBadgesToAllUsers()
 //                    initializeAllBadges = true
 //                }
-                NavGraph(
-                    context = LocalContext.current
-                )
+                NavGraph()
             }
         }
     }
