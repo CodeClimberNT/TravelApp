@@ -67,11 +67,8 @@ class UserReviewModel {
                     val ratings = reviews.map { review ->
                         review.rating
                     }
-                    val averageRating = if (ratings.isNotEmpty()) {
-                        ratings.sum() / ratings.size
-                    } else {
-                        0f
-                    }
+                    val averageRating = ratings.average().toFloat()
+
                     if (averageRating < 0 || averageRating > 5) {
                         throw IllegalArgumentException("Invalid average rating: $averageRating")
                     }

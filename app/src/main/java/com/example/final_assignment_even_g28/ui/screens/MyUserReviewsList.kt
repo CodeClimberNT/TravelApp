@@ -51,10 +51,6 @@ import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 
-//account1 uid: gnAtiJ2STlaIu0i7l7DN6QpZCKq2
-//account 5 uid: JkXtaeEEmsb0m459W2f2rTRZBpB2
-
-//@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyUserReviewsList(
     userReviewViewModel: UserReviewViewModel = viewModel(factory = AppFactory),
@@ -111,8 +107,8 @@ fun MyUserReviewsList(
             }
 
             when (tabIndex) {
-                0 -> ReviewsList(reviewsMadeToMe)
-                else -> ReviewsList(reviewsMadeByMe, displayReviewed = true)
+                0 -> ReviewsList(reviewsMadeToMe, madeByYou = false)
+                else -> ReviewsList(reviewsMadeByMe, madeByYou = true)
             }
         }
     }
@@ -120,7 +116,7 @@ fun MyUserReviewsList(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ReviewsList(reviews: List<UserReview>, displayReviewed: Boolean = false) {
+fun ReviewsList(reviews: List<UserReview>, madeByYou: Boolean = false) {
     if (reviews.isNotEmpty()) {
         FlowColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -149,7 +145,7 @@ fun ReviewsList(reviews: List<UserReview>, displayReviewed: Boolean = false) {
 
             }
             reviews.forEach { review ->
-                UserReviewCard(review, displayReviewed)
+                UserReviewCard(review, madeByYou)
             }
         }
     } else {
@@ -172,22 +168,9 @@ fun ReviewsList(reviews: List<UserReview>, displayReviewed: Boolean = false) {
 @Composable
 fun UserReviewCard(
     review: UserReview,
-    displayReviewed: Boolean = false,
+    madeByYou: Boolean,
     userVm: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
-    var nickname = ""
-    if (!displayReviewed) {
-        if (review.reviewerName.isNotEmpty())
-            nickname = review.reviewerName
-        else
-            nickname = review.reviewedName
-    } else {
-        if (review.reviewedName.isNotEmpty())
-            nickname = review.reviewedName
-        else
-            nickname = review.reviewerName
-    }
-
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.elevatedCardElevation(10.dp)
@@ -206,7 +189,7 @@ fun UserReviewCard(
                     modifier = Modifier.size(50.dp)
                 )
                 Text(
-                    nickname,
+                    if (madeByYou) review.reviewedName else review.reviewerName,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
