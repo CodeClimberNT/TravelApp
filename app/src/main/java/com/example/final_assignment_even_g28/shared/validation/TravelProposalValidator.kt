@@ -175,9 +175,9 @@ object TravelProposalValidator {
                         "Title must be at least 3 characters long"
                     }
 
-                    stop.title.length > 25 -> {
+                    stop.title.length > 35 -> {
                         isValid = false
-                        "Title must be less than 25 characters long"
+                        "Title must be less than 35 characters long"
                     }
 
                     else -> ""
