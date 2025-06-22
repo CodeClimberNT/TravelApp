@@ -72,7 +72,11 @@ object TravelProposalValidator {
         var isValid = true
         val titleValidation = validateTitle(title)
 
-        val (itineraryErrors, itineraryIsValid) = validateItinerary(itinerary)
+        val (itineraryErrors, itineraryIsValid) = validateItinerary(
+            itinerary,
+            tripStartDate,
+            tripEndDate
+        )
 
         val errors = TravelProposalFirstScreenError(
             title = if (titleValidation.isNotBlank()) {
@@ -150,7 +154,11 @@ object TravelProposalValidator {
         return Pair(errors, isValid)
     }
 
-    private fun validateItinerary(itinerary: List<ItineraryStop>): Pair<Map<Int, ItineraryStopError>, Boolean> {
+    private fun validateItinerary(
+        itinerary: List<ItineraryStop>,
+        tripStartDate: Timestamp,
+        tripEndDate: Timestamp
+    ): Pair<Map<Int, ItineraryStopError>, Boolean> {
         val errors = mutableMapOf<Int, ItineraryStopError>()
         var isValid = true
 
@@ -178,6 +186,16 @@ object TravelProposalValidator {
                     stop.date <= Timestamp.now() -> {
                         isValid = false
                         "Date cannot be in the past"
+                    }
+
+                    stop.date < tripStartDate -> {
+                        isValid = false
+                        "Date cannot be before the trip started"
+                    }
+
+                    stop.date > tripEndDate -> {
+                        isValid = false
+                        "Date cannot be after the trip ended"
                     }
 
                     index < itinerary.size - 1 && stop.date > itinerary[index + 1].date -> {
