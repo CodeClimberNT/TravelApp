@@ -80,7 +80,7 @@ fun UserReviewDialog(userReviewVm: UserReviewViewModel, participants: List<Parti
                             .padding(top = 16.dp, start = 16.dp, bottom = 6.dp)
                     )
                     Text(
-                        text = "List of yout trip companions",
+                        text = "List of your trip companions",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 16.dp)
                     )
