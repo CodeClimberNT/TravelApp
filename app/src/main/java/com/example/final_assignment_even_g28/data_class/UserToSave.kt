@@ -3,8 +3,6 @@ package com.example.final_assignment_even_g28.data_class
 import com.google.firebase.Timestamp
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import android.net.Uri
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 
 @Serializable
 data class UserToSave(

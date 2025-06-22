@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -46,6 +47,7 @@ import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.getNameFromFullName
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.google.firebase.Timestamp
 
@@ -192,10 +194,12 @@ fun ProfileRow(user: UserProfile, userReviewVm: UserReviewViewModel) {
 }
 
 @Composable
-fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, onDismiss: (Boolean) -> Unit) {
+fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, userVM: UserProfileViewModel = viewModel(factory = AppFactory), onDismiss: (Boolean) -> Unit) {
     val textState = remember { mutableStateOf("") }
     val textTitle = remember { mutableStateOf("") }
     var reviewValue by remember { mutableFloatStateOf(0.0f) }
+
+    val ctx = LocalContext.current
 
     Dialog(onDismissRequest = { onDismiss(false) }) {
         Card(
@@ -289,6 +293,7 @@ fun SingleUserReviewCard(user: UserProfile, userReviewVm: UserReviewViewModel, o
                                         timestamp = Timestamp.now(),
                                         )
                                     )
+                                    userVM.gainExp(5, ctx)
                                     onDismiss(false)
                                   },
                         colors = ButtonDefaults.buttonColors(

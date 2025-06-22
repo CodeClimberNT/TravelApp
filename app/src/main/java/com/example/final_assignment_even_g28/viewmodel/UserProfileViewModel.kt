@@ -26,9 +26,10 @@ import com.example.final_assignment_even_g28.shared.validation.UserProfileError
 import com.example.final_assignment_even_g28.shared.validation.UserProfileValidator
 import com.example.final_assignment_even_g28.shared.validation.asList
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.auth.User
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -42,6 +43,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     val selectedUserProfile: StateFlow<UserProfile?> = model.selectedUserProfile
 
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
+
+    private var _imageProfileUrl = MutableStateFlow<String>("")
+    val imageProfileUrl: StateFlow<String> get() = _imageProfileUrl
 
     fun getUserByUID(uid: String) = model.getUserByUid(uid)
     fun getNicknameById(userId: Int): String? = model.getNicknameById(userId.toString())
@@ -131,22 +135,22 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun getIcon(iconName: String): ImageVector{
         when (iconName){
-            "Icon(icon=DIRECTIONS_WALK)" -> {
+            "DIRECTIONS_WALK" -> {
                 return Icons.AutoMirrored.Default.DirectionsWalk
             }
-            "Icon(icon=HOUSE)" -> {
+            "HOUSE" -> {
                 return Icons.Default.House
             }
-            "Icon(icon=ACCOUNT_CIRCLE)" -> {
+            "ACCOUNT_CIRCLE" -> {
                 return Icons.Default.AccountCircle
             }
-            "Icon(icon=TRAIN)" -> {
+            "TRAIN" -> {
                 return Icons.Default.Train
             }
-            "Icon(icon=TRAM)" -> {
+            "TRAM" -> {
                 return Icons.Default.Tram
             }
-            "Icon(icon=AIRPLANE)" -> {
+            "AIRPLANE" -> {
                 return Icons.Default.AirplanemodeActive
             }
             else -> {
@@ -229,46 +233,38 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         _editingProfile.value = _editingProfile.value.copy(phoneNumber = newPhoneNumber)
     }
 
-    fun updateEmail(newEmail: String) {
-
-    }
-
     fun updateDateOfBirth(newDateOfBirth: Timestamp) {
         _editingProfile.value = _editingProfile.value.copy(dateOfBirth = newDateOfBirth)
     }
 
-    fun updatePastExperiences(newPastExperiences: String) {
-    }
-
-    fun updateBadge(newBadge: String) {
-    }
-
-    fun updateCurrentLevel(newLevel: Int) {
-    }
-
-    fun updateRating(newRating: Float) {
-    }
-
     fun updateProfilePicture() {
         _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = ProfilePictureData.Monogram(getInitials()).toString(),
             isProfileImage = "Monogram"
         )
+        viewModelScope.launch {
+            model.deleteUserProfileImage()
+        }
     }
 
     fun updateProfilePicture(icon: IconType) {
         _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = ProfilePictureData.Icon(icon).toString(),
+            profilePicture = icon.toString(),
             isProfileImage = "Icon"
         )
+        viewModelScope.launch {
+            model.deleteUserProfileImage()
+        }
     }
 
-    fun updateProfilePicture(imageUri: String) {
+    fun updateProfilePicture(imageUri: String, context: Context) {
+        viewModelScope.launch {
+            model.uploadUserProfileImage(loggedUser.value.uid, imageUri, context)
+
+        }
         _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = ProfilePictureData.UriData(imageUri).toString(),
+            profilePicture = imageUri,
             isProfileImage = "Uri"
         )
-
     }
 
     fun getImageProfile(userUID: String): String{
@@ -348,7 +344,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 value = profile.email,
                 editable = false,
                 keyboardType = KeyboardType.Email,
-                onValueChange = { updateEmail(it) }
+                onValueChange = { }
             )
         )
     }
@@ -404,6 +400,21 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         viewModelScope.launch {
             model.gainExp(value, context)
         }
+    }
+
+    fun getLevelRange(): Pair<Float, Float>{
+        when (loggedUser.value.currentLevel){
+            1 -> {return Pair(loggedUser.value.exp.toFloat(), 20f)}
+            2 -> {return Pair((loggedUser.value.exp.toFloat()-20), 30f)}
+            3 -> {return Pair(loggedUser.value.exp.toFloat()-50, 50f)}
+            4-> {return Pair(loggedUser.value.exp.toFloat()-100f, 100f)}
+            5-> {return Pair(loggedUser.value.exp.toFloat()-200f, 200f)}
+            else -> {return Pair(1f, 1f)}
+        }
+    }
+
+    fun getImageFromUID(user: UserProfile): String{
+            return model.getImageFromUID(user.uid)
     }
 
 }

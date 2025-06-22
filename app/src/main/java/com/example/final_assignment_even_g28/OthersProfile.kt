@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AirplanemodeActive
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +43,6 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.example.final_assignment_even_g28.ui.screens.Tag
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
@@ -66,9 +67,6 @@ fun OtherProfileScreen(
     //    val user: UserProfile = travelProposal.getUser(userName)!!
     val user = UserProfile(
         name = "John Doe",
-        rating = 4.5f,
-        avatar = ProfilePictureData.DEFAULT,
-        contact = ""
     )
 
     Scaffold(

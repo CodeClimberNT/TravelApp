@@ -46,6 +46,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.utils.AppFactory
 import kotlinx.serialization.Polymorphic
 
+/*
 @Serializable
 @Polymorphic
 sealed class ProfilePictureData {
@@ -63,7 +64,7 @@ sealed class ProfilePictureData {
     }
 
 }
-
+*/
 
 @Composable
 fun ProfilePicture(
@@ -139,7 +140,7 @@ fun ProfilePicture(
                 "Uri" -> {
                     Image(
                         painter =
-                            rememberAsyncImagePainter(userProfileViewModel.getUriImage(profile.profilePicture)),
+                            rememberAsyncImagePainter(userProfileViewModel.getImageFromUID(profile)),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = if (!isLandScape) Modifier
@@ -161,7 +162,7 @@ fun ProfilePicture(
                 "Uri" -> {
                     Image(
                         painter =
-                            rememberAsyncImagePainter(userProfileViewModel.getUriImage(profile.profilePicture)),
+                            rememberAsyncImagePainter(userProfileViewModel.getImageFromUID(profile)),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = if (!isLandScape) Modifier
@@ -249,7 +250,6 @@ fun ProfilePicture(
 @Composable
 fun IconCarousel(viewModel: UserProfileViewModel, isLandScape: Boolean) {
     val icons = remember { mutableStateOf(viewModel.getIconsList()) }
-    val userProfile = viewModel.userProfile
 
     var selectedIndex by remember { mutableIntStateOf(0) }
 

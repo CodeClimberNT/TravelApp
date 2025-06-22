@@ -54,11 +54,13 @@ import com.example.final_assignment_even_g28.ui.theme.PartyColor
 import com.example.final_assignment_even_g28.ui.theme.RelaxColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 @Composable
 fun CreateTravelProposalSecondScreen(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
     navActions: Navigation,
+    userVM: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
     val travelProposal = tripVm.tempTravelProposal
     val experienceComposition = travelProposal.experienceComposition
@@ -269,6 +271,7 @@ fun CreateTravelProposalSecondScreen(
                             tripVm.updateTravelProposal(ctx)
                         } else {
                             tripVm.addTravelProposal(ctx)
+                            userVM.gainExp(10, ctx)
                         }
                         tripVm.exitEditingTravelProposal()
 

@@ -75,11 +75,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -293,6 +296,7 @@ fun HeroSection(
         ) {
             Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             if (!travelProposalVM.isMyTrip()) {
+                //is not your trip
                 TextButton(onClick = {
                     travelProposalVM.clickCloneTrip(currentUser?.uid ?: "0")
                     navActions.navigateToCreateNewTravelProposal()
@@ -636,11 +640,16 @@ fun CombinedBottomBar(
 
 @Composable
 fun TravelActionBar(
-    tripVm: TravelProposalViewModel, proposal: TravelProposal, price: String, navActions: Navigation
+    tripVm: TravelProposalViewModel, proposal: TravelProposal, price: String, navActions: Navigation, userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
     var showApplyDialog by remember { mutableStateOf(false) }
+    var showPendingDialog by remember { mutableStateOf(false) }
+    var showAcceptedDialog by remember { mutableStateOf(false) }
+
     val userParticipationStatus = tripVm.getUserParticipantStatus()
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
+
+    val ctx = LocalContext.current
 
     Log.d("TravelActionBar", "trip planner: $tripPlanner")
 
@@ -675,8 +684,22 @@ fun TravelActionBar(
                             .height(40.dp),
                         elevation = ButtonDefaults.buttonElevation(8.dp),
                         shape = RoundedCornerShape(10.dp),
-                        onClick = { showApplyDialog = true },
-                        enabled = (userParticipationStatus == null),
+                        onClick = when(userParticipationStatus){
+                            ParticipantStatus.PENDING -> {
+                                { showPendingDialog = true }
+                            }
+                            ParticipantStatus.APPROVED -> {
+                                { showAcceptedDialog = true }
+                            }
+                            ParticipantStatus.REJECTED -> {
+                                {}
+                            }
+                            null -> {
+                                { showApplyDialog = true }
+                            }
+                        }
+                                  ,
+                        enabled = true,
                         colors = when (userParticipationStatus) {
                             ParticipantStatus.APPROVED -> {
                                 ButtonDefaults.buttonColors(
@@ -701,26 +724,21 @@ fun TravelActionBar(
                     ) {
                         when (userParticipationStatus) {
                             ParticipantStatus.APPROVED -> {
-                                Text(
-                                    text = "Approved!",
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                                    Text(
+                                        text = "Approved!",
+                                    )
                             }
-
                             ParticipantStatus.PENDING -> {
-                                Text(
-                                    text = "Pending",
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                                    Text(
+                                        text = "Pending",
+                                    )
                             }
 
                             ParticipantStatus.REJECTED -> {
-                                Text(
-                                    text = "Rejected",
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                                    Text(
+                                        text = "Rejected",
+                                    )
                             }
-
                             else -> {
                                 Text(
                                     text = "Apply",
@@ -785,7 +803,125 @@ fun TravelActionBar(
             onApply = {
                 tripVm.applyToTrip(guests = it)
                 showApplyDialog = false
+                userProfileViewModel.gainExp(5, ctx)
             })
+    }
+    if(showAcceptedDialog){
+        AcceptedDialog(onDismissRequest = { showAcceptedDialog = false }, travelProposalVM = tripVm)
+    }
+    if (showPendingDialog){
+        PendingDialog(onDismissRequest = { showPendingDialog = false }, travelProposalVM = tripVm)
+    }
+}
+
+@Composable
+fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel) {
+    Dialog(onDismissRequest = { onDismissRequest() }) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+
+            ) {
+            Column(
+                Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Text(
+                    text = "Changed your Mind?",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp),
+                    style =  MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.size(20.dp))
+                Button(
+                    onClick = {
+                        //TODO()
+                        //travelProposalVM.rejectParticipant()
+                    },
+                    modifier = Modifier.size(height = 50.dp, width = 200.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Remove your Participation")
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+                Button(
+                    onClick = { onDismissRequest },
+                    modifier = Modifier.size(height = 50.dp, width = 200.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("Cancel")
+                }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel){
+    Dialog(onDismissRequest = { onDismissRequest() }) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+
+        ) {
+            Column(
+                Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Text(
+                    text = "Changed your Mind?",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp),
+                    style =  MaterialTheme.typography.titleLarge
+                    )
+                Spacer(modifier = Modifier.size(20.dp))
+                Button(
+                    onClick = {
+                        //TODO()
+                    },
+                    modifier = Modifier.size(height = 50.dp, width = 200.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("Add/Remove Guest")
+                }
+                Spacer(modifier = Modifier.size(12.dp))
+                Button(
+                    onClick = {
+                        //TODO()
+                    },
+                    modifier = Modifier.size(height = 50.dp, width = 200.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Remove your Request")
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+                Button(
+                    onClick = { onDismissRequest },
+                    modifier = Modifier.size(height = 50.dp, width = 200.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("Cancel")
+                }
+
+            }
+        }
     }
 }
 

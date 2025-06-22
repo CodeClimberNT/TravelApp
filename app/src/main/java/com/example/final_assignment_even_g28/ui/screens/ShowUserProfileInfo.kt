@@ -15,6 +15,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -84,18 +86,6 @@ fun ShowUserProfileInfo(
                         style = MaterialTheme.typography.headlineLarge
                     )
                 },
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.startEditing()
-                        onEditClick()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Profile",
-                            modifier = Modifier.size(40.dp)
-                        )
-                    }
-                },
                 colors =
                     TopAppBarDefaults.topAppBarColors(
                         MaterialTheme.colorScheme.inversePrimary,
@@ -104,7 +94,19 @@ fun ShowUserProfileInfo(
             )
         },
         bottomBar = { CustomBottomBar(navActions = navActions, selectedItem = bottomBarItem) },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {Button(
+                                onClick = {
+                                    viewModel.startEditing()
+                                    onEditClick()
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Profile",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+        }
     ) { innerPadding ->
         // Content of the screen
         val scrollable = rememberScrollState()

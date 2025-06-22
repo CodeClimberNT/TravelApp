@@ -1,7 +1,7 @@
 package com.example.final_assignment_even_g28.data_class
 
+import androidx.compose.material.icons.Icons
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.serialization.Contextual
@@ -46,7 +46,7 @@ data class UserProfile(
         exp = 0
     )
 
-    constructor(nickName: String, profilePicture: ProfilePictureData) : this(
+    constructor(nickName: String) : this(
         uid = "",
         fullName = "",
         nickName = nickName,
@@ -63,7 +63,7 @@ data class UserProfile(
         exp = 0
     )
 
-    constructor(uid: String, nickName: String, profilePicture: ProfilePictureData) : this(
+    constructor(uid: String, nickName: String) : this(
         uid = uid,
         fullName = "",
         nickName = nickName,
@@ -97,7 +97,7 @@ data class UserProfile(
         exp = 0
     )
 
-    constructor(name: String, rating: Float, avatar: ProfilePictureData, contact: String) : this(
+    constructor(name: String, rating: Float, avatar: Icons, contact: String) : this(
         uid = "4",
 //        uid = "13",
         fullName = name,

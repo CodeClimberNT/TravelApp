@@ -121,7 +121,7 @@ fun EditUserProfileInfo(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         if (uri is Uri)
-            viewModel.updateProfilePicture(uri.toString())
+            viewModel.updateProfilePicture(uri.toString(), ctx)
         else
             Toast.makeText(
                 ctx,
@@ -343,7 +343,7 @@ fun EditUserProfileInfo(
             onDismissCameraPreview = { previewCamera = false },
             isLandScape = isLandScape
         ) { uri ->
-            viewModel.updateProfilePicture(uri.toString())
+            viewModel.updateProfilePicture(uri.toString(), ctx)
         }
 }
 

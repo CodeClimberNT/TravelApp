@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.UserProfile
+import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
@@ -70,7 +71,6 @@ sealed interface ProfileEvent {
     object LogoutClicked : ProfileEvent
 }
 
-@SuppressLint("SuspiciousIndentation")
 @Composable
 fun ProfileScreen(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
@@ -80,7 +80,7 @@ fun ProfileScreen(
 ) {
     val profile by viewModel.editingProfile.collectAsState()
 
-        Scaffold(
+    Scaffold(
             snackbarHost = { SnackbarHost(snackBarHostState) },
             bottomBar = { CustomBottomBar(navActions, bottomBarItem) },
             modifier = Modifier.fillMaxSize()
@@ -112,8 +112,9 @@ fun ProfileScreen(
 @Composable
 fun ProfileHeader(
     profile: UserProfile,
-    navActions: Navigation
-) {
+    navActions: Navigation,
+    userProfileModel: UserProfileViewModel = viewModel(factory = AppFactory)
+    ) {
 
     Column(
         modifier = Modifier
@@ -134,7 +135,8 @@ fun ProfileHeader(
             )
 
             */
-            LevelProgressBar(250f, 1000f)
+            val levelRange = userProfileModel.getLevelRange()
+            LevelProgressBar(levelRange.first, levelRange.second)
 
 
 

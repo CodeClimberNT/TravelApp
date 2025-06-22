@@ -1,8 +1,10 @@
 package com.example.final_assignment_even_g28.utils
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.Icon
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePictureData
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -20,7 +22,7 @@ fun Timestamp?.toDateFormat(): String {
 val UNKNOWN_USER = UserProfile(
     uid = "0",
     name = "Unknown User",
-    profilePicture = ProfilePictureData.Icon(IconType.ACCOUNT_CIRCLE).toString()
+    profilePicture = Icons.Default.AccountCircle.toString()
 )
 
 // https://www.epochconverter.com/

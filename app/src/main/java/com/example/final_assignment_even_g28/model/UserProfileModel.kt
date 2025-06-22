@@ -17,9 +17,11 @@ import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.tasks.await
 import java.security.SecureRandom
 
@@ -350,6 +352,14 @@ class UserProfileModel() {
         return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
     }
 
+    fun getImageFromUID(userUID: String): String{
+        val url = Collections.userImagesBucket.publicUrl("$userUID/ProfileImage.jpg")
+
+        Log.d("Image","Recovering from url: $url")
+
+        return url
+    }
+
     suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
         return try {
             val fileName =
@@ -387,18 +397,15 @@ class UserProfileModel() {
         return publicUrl
     }
 
-    suspend fun deleteUserProfileImage(imageUrl: String): Result<Unit> {
-        return try {
-            val filePath = extractUserProfileFilePathFromUrl(imageUrl)
-            Log.d("ImageStorageModel", "Deleting image at path: $filePath")
+    suspend fun deleteUserProfileImage(){
+        try {
+            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/ProfileImage.jpg")
+            Log.e("Delete Image","Try to delete Image from url: $url")
+            Collections.userImagesBucket.delete("${loggedUser.value.uid}/ProfileImage.jpg")
+            Log.e("Delete Image","Image deleted")
 
-            Collections.userImagesBucket.delete(filePath)
-
-            Log.d("ImageStorageModel", "Image deleted successfully")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e("ImageStorageModel", "Delete failed: ${e.message}")
-            Result.failure(e)
+        }catch (e: Exception){
+            Log.e("Delete Image","Impossible to delete image: $e")
         }
     }
 
@@ -410,6 +417,18 @@ class UserProfileModel() {
     suspend fun gainExp(expValue: Int, context: Context){
         val newExp = loggedUser.value.exp + expValue
         _loggedUser.value = _loggedUser.value.copy(exp = newExp)
+        editLevel()
         editProfile(loggedUser.value, context)
+    }
+
+    fun editLevel(){
+        when(loggedUser.value.exp){
+            in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
+            in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
+            in 51 .. 100 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 3)}
+            in 101 .. 200 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 4)}
+            in 201 .. 400 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 5)}
+            else -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 6)}
+        }
     }
 }
