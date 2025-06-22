@@ -14,6 +14,7 @@ import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.BadgeType
 import com.example.final_assignment_even_g28.data_class.ExperienceComposition
 import com.example.final_assignment_even_g28.data_class.Filters
+import com.example.final_assignment_even_g28.data_class.Itinerary
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
@@ -35,6 +36,7 @@ import com.example.final_assignment_even_g28.shared.validation.TravelProposalSec
 import com.example.final_assignment_even_g28.shared.validation.TravelProposalValidator
 import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.utils.toDateFormat
+import com.example.final_assignment_even_g28.utils.toMillis
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -85,6 +87,9 @@ class TravelProposalViewModel(
     val allTravelProposals: StateFlow<List<TravelProposal>>
         get() = _allTravelProposals
 
+    private val _listOfItinerarySuggestions = MutableStateFlow<List<Itinerary>>(emptyList())
+    val listOfItinerarySuggestions: StateFlow<List<Itinerary>>
+        get() = _listOfItinerarySuggestions
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val myTravelProposals: Flow<List<TravelProposal>> = currentUser.flatMapLatest { user ->
@@ -138,7 +143,6 @@ class TravelProposalViewModel(
 
 
     init {
-        itinerarySuggestions()
         loadAllTravelProposals()
         getNotification()
         pollingNotifications()
@@ -1155,18 +1159,67 @@ class TravelProposalViewModel(
             }
         }
     }
+    fun acceptSuggestedItinerary(selectedItinerary: Itinerary) {
+        tempTravelProposal = tempTravelProposal.copy(
+            itinerary = selectedItinerary.stops
+        )
+        Log.d("TravelProposalViewModel", "Accepted suggested itinerary with ${selectedItinerary.stops.size} stops")
+    }
 
-    fun itinerarySuggestions() {
+    fun itinerarySuggestions(tripName: String, tripStartDate: Timestamp, tripEndDate: Timestamp) {
         viewModelScope.launch {
-            tripModel.getItinerarySuggestions().collect { suggestions ->
-                if (suggestions.isNotEmpty()) {
-                    Log.d("TravelProposalViewModel", "Itinerary suggestions received: $suggestions")
-                } else {
-                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
+            // Calcola la durata aggiungendo 1 per includere sia il giorno iniziale che finale
+            val userTotalDays = ((tripEndDate.seconds - tripStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
+
+            Log.d("Itinerary", "User trip duration: $userTotalDays days")
+
+            tripModel.getItinerarySuggestions(tripName, userTotalDays).collect { suggestions ->
+                val updatedSuggestions = suggestions.map { itinerary ->
+                    val userStartDate = tripStartDate
+                    val userEndDate = tripEndDate
+
+                    if (itinerary.stops.isEmpty()) {
+                        return@map itinerary
+                    }
+
+
+                    val sortedStops = itinerary.stops.sortedBy { it.date.seconds }
+                    val originalStartDate = sortedStops.first().date
+                    val originalEndDate = sortedStops.last().date
+                    val originalDurationDays = ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
+
+                    val updatedStops = itinerary.stops.map { stop ->
+                        val newDate = if (originalDurationDays == 1) {
+
+                            userStartDate
+                        } else {
+
+                            val dayOffsetFromOriginalStart = ((stop.date.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
+
+
+                            Timestamp(Date(userStartDate.toDate().time + (dayOffsetFromOriginalStart * 24 * 60 * 60 * 1000)))
+                        }
+
+                        stop.copy(date = newDate)
+                    }
+
+                    itinerary.copy(stops = updatedStops)
                 }
+
+                _listOfItinerarySuggestions.value = updatedSuggestions
+                Log.d("Itinerary", "Updated suggestions with user dates maintaining original distances: ${updatedSuggestions.size}")
             }
         }
     }
+//            tripModel.getItinerarySuggestions(""/*tempTravelProposal.title*/).collect { suggestions ->
+//                if (suggestions.isNotEmpty()) {
+//                    _listOfItinerarySuggestions.value = suggestions
+//                    Log.d("Itinerary", "Itinerary suggestions received: $suggestions")
+//                    Log.d("Itinerary", "List: ${_listOfItinerarySuggestions.value}")
+//                } else {
+//                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
+//                }
+//            }
 
     //-------------🚨EMERGENCY ONLY🚨-------------//
     fun deleteAllProposals() {

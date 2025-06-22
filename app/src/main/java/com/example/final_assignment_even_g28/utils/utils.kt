@@ -32,6 +32,11 @@ fun Timestamp.Companion.MAX(): Timestamp {
     return Timestamp(Date(32_535_215_999_000))
 }
 
+fun Timestamp?.toShortDateFormat(): String {
+    val formatter = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
+    return formatter.format(this?.toDate() ?: Date())
+}
+
 val UNKNOWN_USER = UserProfile(
     uid = "0",
     name = "Unknown User",

@@ -48,6 +48,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -104,6 +105,7 @@ fun CreateTravelProposalFirstScreen(
         tripVm.exitEditingTravelProposal()
         navActions.back()
     }
+    val suggestion by tripVm.listOfItinerarySuggestions.collectAsState()
 
     Scaffold(
         topBar = {
@@ -503,7 +505,10 @@ fun CreateTravelProposalFirstScreen(
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                         modifier = Modifier
                             .size(32.dp)
-                            .clickable { showItineraryCard.value = true },
+                            .clickable {
+                                tripVm.itinerarySuggestions(tripVm.tempTravelProposal.title, tripVm.tempTravelProposal.tripStartDate, tripVm.tempTravelProposal.tripEndDate)
+                                showItineraryCard.value = true
+                                },
                         tonalElevation = 0.dp,
                         shadowElevation = 0.dp
                     ) {
@@ -519,9 +524,13 @@ fun CreateTravelProposalFirstScreen(
                 if (showItineraryCard.value) {
                     ItineraryDialog(
                         onDismiss = { showItineraryCard.value = false },
-                        onAccept = {
+                        onAccept = { selectedItinerary ->
+                            if (selectedItinerary != null) {
+                                tripVm.acceptSuggestedItinerary(selectedItinerary)
+                            }
                             showItineraryCard.value = false
-                        }
+                        },
+                        suggestion = suggestion
                     )
                 }
 

@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.final_assignment_even_g28.data.Collections
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.Filters
+import com.example.final_assignment_even_g28.data_class.Itinerary
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationType
@@ -782,25 +783,41 @@ class TravelProposalModel(
             }
     }
 
-    fun getItinerarySuggestions(): Flow<List<ItineraryStop>> = callbackFlow {
-        Log.d("getItinerarySuggestions", "Fetched  itineraries")
-        val query = Collections.itineraries
+    fun getItinerarySuggestions(travelName: String, userTripDurationDays: Int): Flow<List<Itinerary>> = callbackFlow {
+        Log.d("getItinerarySuggestions", "Fetching itinerary suggestions for: $travelName")
+        Log.d("getItinerarySuggestions", "User trip duration: $userTripDurationDays days")
+
+        val query: Query = Collections.itineraries//.whereEqualTo("title", travelName)
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.e(
-                    "getItinerarySuggestions",
-                    "Error fetching itinerary suggestions: ${error.message}"
-                )
+                Log.e("getItinerarySuggestions", "Error fetching itinerary suggestions: ${error.message}")
                 trySend(emptyList())
                 return@addSnapshotListener
             }
 
             if (snapshot != null) {
                 val itineraries = snapshot.documents.mapNotNull { document ->
-                    document.toObject(ItineraryStop::class.java)
+                    document.toObject(Itinerary::class.java)
+                }.filter { itinerary ->
+
+                    if (itinerary.stops.isEmpty()) return@filter false
+
+                    val sortedStops = itinerary.stops.sortedBy { it.date.seconds }
+                    val originalStartDate = sortedStops.first().date
+                    val originalEndDate = sortedStops.last().date
+
+                    val originalDurationDays = ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
+
+                    Log.d("getItinerarySuggestions", "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days")
+
+                    //TODO: TO DECIDE IF <= OR ==
+                    originalDurationDays <= userTripDurationDays
+                }.filter { itinerary ->
+                    itinerary.title.contains(travelName)
                 }
-                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} itineraries")
+
+                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} compatible itineraries")
                 trySend(itineraries)
             } else {
                 trySend(emptyList())

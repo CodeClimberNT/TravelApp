@@ -24,6 +24,11 @@ data class ItineraryStop(
     val mandatory: Boolean = false,
 )
 
+data class Itinerary(
+    val title: String = "",
+    val stops: List<ItineraryStop> = emptyList()
+)
+
 
 @Serializable
 enum class ParticipantStatus(val value: String) {
