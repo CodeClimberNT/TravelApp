@@ -19,9 +19,11 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
@@ -62,7 +64,7 @@ class TravelProposalModel(
             }
         }
         awaitClose { listener.remove() }
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun getTravelProposalById(id: String): Flow<TravelProposal?> = callbackFlow {
         val listener =
@@ -80,7 +82,7 @@ class TravelProposalModel(
                 }
             }
         awaitClose { listener.remove() }
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun getMyTravelProposals(userId: String): Flow<List<TravelProposal>> = callbackFlow {
         val currentTime = Timestamp.now()
@@ -173,7 +175,7 @@ class TravelProposalModel(
             ownedListener.remove()
             participatingListener.remove()
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
 
     fun getPastTravelProposals(userId: String): Flow<List<TravelProposal>> = callbackFlow {
@@ -264,7 +266,7 @@ class TravelProposalModel(
             ownedListener.remove()
             participatedListener.remove()
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun getReviewsForProposal(proposalId: String): Flow<List<TravelReview>> = callbackFlow {
         val query = Collections.getReviewCollection(proposalId)
@@ -295,7 +297,7 @@ class TravelProposalModel(
         }
 
         awaitClose { listener.remove() }
-    }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun submitReview(
         review: TravelReview,
@@ -694,7 +696,7 @@ class TravelProposalModel(
                     }
                 }
             awaitClose { listener.remove() }
-        }
+        }.flowOn(Dispatchers.IO)
 
     fun markNotificationAsRead(notificationId: String, userId: String) {
         Collections.notifications.document(notificationId)
@@ -806,7 +808,7 @@ class TravelProposalModel(
         }
 
         awaitClose { listener.remove() }
-    }
+    }.flowOn(Dispatchers.IO)
 
     // ----- Helper functions for image storage ----- //
     private suspend fun uploadTripImage(

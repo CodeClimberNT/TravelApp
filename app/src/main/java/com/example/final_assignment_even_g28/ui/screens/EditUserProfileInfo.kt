@@ -1,7 +1,7 @@
 package com.example.final_assignment_even_g28.ui.screens
 
 import android.Manifest
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.content.res.Configuration
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -100,12 +101,9 @@ fun EditUserProfileInfo(
     var previewCamera by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     val profile by viewModel.editingProfile.collectAsState()
+    val configuration = LocalConfiguration.current
+    val isLandScape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val isLandScape by remember {
-        mutableStateOf(
-            ctx.resources.configuration.orientation == ORIENTATION_LANDSCAPE
-        )
-    }
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
