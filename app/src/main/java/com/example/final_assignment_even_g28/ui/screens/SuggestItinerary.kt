@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,17 +48,22 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Itinerary
 import com.example.final_assignment_even_g28.utils.AppFactory
+import com.example.final_assignment_even_g28.utils.toShortDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import kotlinx.coroutines.flow.compose
 
 @Composable
 fun ItineraryDialog(
     viewModel: TravelProposalViewModel = viewModel(factory = AppFactory),
     onDismiss: () -> Unit,
-    onAccept: () -> Unit
+    onAccept: () -> Unit,
+    suggestion : List<Itinerary>
 ) {
     var selectedItinerary by remember { mutableStateOf<Itinerary?>(null) }
 
-    val suggestions by viewModel.itinerarySuggestions().collectAsState(initial = emptyList())
+    //val tripName = viewModel.tempTravelProposal.title
+    val suggestions = suggestion
+
 
     Dialog(onDismissRequest = { onDismiss() }) {
         Card(
@@ -189,7 +195,7 @@ fun ItineraryDialog(
                                         verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text = step.date.toDate().toString(),
+                                            text = step.date.toShortDateFormat(),
                                             style = MaterialTheme.typography.labelSmall
                                         )
                                         Text(

@@ -783,19 +783,15 @@ class TravelProposalModel(
             }
     }
 
-    fun getItinerarySuggestions(travelName: String = "Test New Travel Proposal"): Flow<List<Itinerary>> = callbackFlow {
+    fun getItinerarySuggestions(travelName: String, userTripDurationDays: Int): Flow<List<Itinerary>> = callbackFlow {
         Log.d("getItinerarySuggestions", "Fetching itinerary suggestions for: $travelName")
-        Log.d("getItinerarySuggestions", "Fetched  itineraries")
-        val query: Query
+        Log.d("getItinerarySuggestions", "User trip duration: $userTripDurationDays days")
 
-             query = Collections.itineraries.whereEqualTo("title", "Test New Travel Proposal")
+        val query: Query = Collections.itineraries//.whereEqualTo("title", travelName)
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.e(
-                    "getItinerarySuggestions",
-                    "Error fetching itinerary suggestions: ${error.message}"
-                )
+                Log.e("getItinerarySuggestions", "Error fetching itinerary suggestions: ${error.message}")
                 trySend(emptyList())
                 return@addSnapshotListener
             }
@@ -803,8 +799,25 @@ class TravelProposalModel(
             if (snapshot != null) {
                 val itineraries = snapshot.documents.mapNotNull { document ->
                     document.toObject(Itinerary::class.java)
+                }.filter { itinerary ->
+
+                    if (itinerary.stops.isEmpty()) return@filter false
+
+                    val sortedStops = itinerary.stops.sortedBy { it.date.seconds }
+                    val originalStartDate = sortedStops.first().date
+                    val originalEndDate = sortedStops.last().date
+
+                    val originalDurationDays = ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
+
+                    Log.d("getItinerarySuggestions", "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days")
+
+                    //TODO: TO DECIDE IF <= OR ==
+                    originalDurationDays == userTripDurationDays
+                }.filter { itinerary ->
+                    itinerary.title.contains(travelName)
                 }
-                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} itineraries")
+
+                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} compatible itineraries")
                 trySend(itineraries)
             } else {
                 trySend(emptyList())
@@ -812,7 +825,7 @@ class TravelProposalModel(
         }
 
         awaitClose { listener.remove() }
-    }
+    }.flowOn(Dispatchers.Main)
 
     // ----- Helper functions for image storage ----- //
     private suspend fun uploadTripImage(
