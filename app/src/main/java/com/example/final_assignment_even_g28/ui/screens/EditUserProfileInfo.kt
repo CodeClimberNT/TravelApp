@@ -1,17 +1,13 @@
 package com.example.final_assignment_even_g28.ui.screens
 
 import android.Manifest
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.content.res.Configuration
 import android.net.Uri
 import android.util.Log
-import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,8 +33,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -46,14 +40,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -65,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,18 +66,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
 import com.example.final_assignment_even_g28.shared.EditableTextField
+import com.example.final_assignment_even_g28.ui.components.modal.DatePickerModal
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.toDateFormat
-import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
+import com.example.final_assignment_even_g28.utils.toMillis
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.selects.select
-import kotlinx.datetime.LocalDate
 
 
 enum class CameraPopupState {
@@ -110,13 +101,9 @@ fun EditUserProfileInfo(
     var previewCamera by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     val profile by viewModel.editingProfile.collectAsState()
-    val profilePicture = profile.profilePicture
+    val configuration = LocalConfiguration.current
+    val isLandScape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val isLandScape by remember {
-        mutableStateOf(
-            ctx.resources.configuration.orientation == ORIENTATION_LANDSCAPE
-        )
-    }
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
@@ -197,6 +184,7 @@ fun EditUserProfileInfo(
                     Spacer(Modifier.height(16.dp))
 
                     ProfilePicture(
+                        userProfile = profile,
                         showCameraButton = true,
                         userProfileViewModel = viewModel,
                         onCameraClick = {
@@ -253,6 +241,7 @@ fun EditUserProfileInfo(
                         .padding(16.dp, 0.dp)
                 ) {
                     ProfilePicture(
+                        userProfile = profile,
                         showCameraButton = true,
                         userProfileViewModel = viewModel,
                         onCameraClick = {
@@ -354,10 +343,9 @@ fun GenerateEditableFields(
     fields: List<EditableFieldDefinition>,
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
-    var selectDate by remember {mutableStateOf(false)}
+    var selectDate by remember { mutableStateOf(false) }
     val profile by viewModel.editingProfile.collectAsState()
-
-    val scrollState = rememberScrollState()
+    Log.d("Edit Profile", "Current profile dob ${profile.dateOfBirth.toDateFormat()}")
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier.fillMaxWidth()//.verticalScroll(scrollState),
@@ -374,24 +362,30 @@ fun GenerateEditableFields(
             )
         }
 
-            OutlinedTextField(
-                value = profile.dateOfBirth.toDateFormat(),
-                onValueChange = { },
-                label = { Text("Date of Birth") },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    IconButton(onClick = { selectDate = true }) { Icon(Icons.Default.CalendarMonth, contentDescription = "Open Date Picker") }
-                },
-            )
+        OutlinedTextField(
+            value = profile.dateOfBirth.toDateFormat(),
+            onValueChange = { },
+            label = { Text("Date of Birth") },
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = { selectDate = true }) {
+                    Icon(
+                        Icons.Default.CalendarMonth,
+                        contentDescription = "Open Date Picker"
+                    )
+                }
+            },
+        )
 
-            ActivityList()
+        ActivityList()
 
-        if (selectDate){
-            DateEditPickerModal(
+        if (selectDate) {
+            DatePickerModal(
+                initialDate = profile.dateOfBirth.toMillis(),
                 onDateSelected = {
                     if (it != null) {
                         viewModel.updateDateOfBirth(Timestamp(it / 1000, 0))
-                        Log.d("Date Selector","Date selected: ${Timestamp(it / 1000, 0)}")
+                        Log.d("Date Selector", "Date selected: ${Timestamp(it / 1000, 0)}")
                     }
                 },
                 onDismiss = { selectDate = false },
@@ -401,7 +395,7 @@ fun GenerateEditableFields(
 }
 
 @Composable
-fun ActivityList(userVm: UserProfileViewModel = viewModel(factory = AppFactory)){
+fun ActivityList(userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
 
     val profile by userVm.editingProfile.collectAsState()
 
@@ -421,12 +415,12 @@ fun ActivityList(userVm: UserProfileViewModel = viewModel(factory = AppFactory))
             FilterChip(
                 selected = profile.typeOfExperiences.contains(activity.toString()),
                 onClick = {
-                    if (profile.typeOfExperiences.contains(activity.toString())){
+                    if (profile.typeOfExperiences.contains(activity.toString())) {
                         userVm.updateDeleteTypeOfExperiences(activity.toString())
-                        Log.d("Edit Profile","Removed Experience: ${activity.toString()}")
-                    }else{
+                        Log.d("Edit Profile", "Removed Experience: ${activity.toString()}")
+                    } else {
                         userVm.updateAddTypeOfExperiences(activity.toString())
-                        Log.d("Edit Profile","Added Experience: ${activity.toString()}")
+                        Log.d("Edit Profile", "Added Experience: ${activity.toString()}")
                     }
                 },
                 label = { Text(activity.value) })
@@ -435,30 +429,6 @@ fun ActivityList(userVm: UserProfileViewModel = viewModel(factory = AppFactory))
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DateEditPickerModal(
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val datePickerState = rememberDatePickerState()
-
-    DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
-        TextButton(onClick = {
-            onDateSelected(datePickerState.selectedDateMillis)
-            Log.d("Date Selected","${datePickerState.selectedDateMillis}")
-            onDismiss()
-        }) {
-            Text("OK")
-        }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text("Cancel")
-        }
-    }) {
-        DatePicker(state = datePickerState)
-    }
-}
 
 @Composable
 fun CameraPopup(

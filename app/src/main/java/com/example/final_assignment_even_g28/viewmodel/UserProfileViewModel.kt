@@ -18,6 +18,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.Badge
+import com.example.final_assignment_even_g28.data_class.BadgeType
+import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.shared.EditableFieldDefinition
@@ -26,6 +29,7 @@ import com.example.final_assignment_even_g28.shared.validation.UserProfileError
 import com.example.final_assignment_even_g28.shared.validation.UserProfileValidator
 import com.example.final_assignment_even_g28.shared.validation.asList
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
+import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.auth.User
@@ -40,17 +44,11 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val isLoading: StateFlow<Boolean> = model.isSigningIn
 
-    val selectedUserProfile: StateFlow<UserProfile?> = model.selectedUserProfile
-
     val loggedUser: StateFlow<UserProfile> = model.loggedUser
 
     val leveledUp: StateFlow<Boolean> = model.leveledUp
 
-    fun getUserByUID(uid: String) = model.getUserByUid(uid)
-    fun getNicknameById(userId: Int): String? = model.getNicknameById(userId.toString())
-    fun getNicknameByUID(userUID: String): String? = model.getNicknameByUID(userUID)
-
-    fun updateUserProfile(updatedProfile: UserProfile) = model.updateUserProfile(updatedProfile)
+    val userBadges: StateFlow<List<Badge>> = model.userBadges
 
     private var _editingProfile = MutableStateFlow<UserProfile>(UserProfile())
     val editingProfile: StateFlow<UserProfile> get() = _editingProfile
@@ -62,8 +60,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     init {
         val currentUser = Collections.auth.currentUser
-        if (currentUser != null){
-               model.loadUserByUID(currentUser.uid)
+        if (currentUser != null) {
+            model.loadUserByUID(currentUser.uid)
             Log.d("INIT", "User charged: $")
         }
         viewModelScope.launch {
@@ -77,7 +75,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     fun login(email: String, password: String) {
         model.login(email, password)
         _editingProfile.value = model.loggedUser.value
-        Log.d("INIT","logged User: ${loggedUser.value}, editUser: ${editingProfile.value}")
+        Log.d("INIT", "logged User: ${loggedUser.value}, editUser: ${editingProfile.value}")
 
     }
 
@@ -91,14 +89,51 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         model.signUp(userToSign, password)
     }
 
-    fun signUpWithGoogle(context: Context){
+    fun signUpWithGoogle(context: Context) {
         viewModelScope.launch {
             model.signUpWithGoogle(context)
         }
     }
 
-    fun deleteAccount(){
+    fun deleteAccount() {
         model.deleteAccount()
+    }
+
+
+//    fun updateNotificationSettings(settings: List<NotificationPreference>) {
+//        viewModelScope.launch {
+//            val currentUserUid = Collections.auth.currentUser?.uid ?: ""
+//            model.updateNotificationSettings(currentUserUid, settings)
+//            val updatedUser = loggedUser.value.copy(notificationSettings = settings)
+//            model.loadUser(updatedUser)
+//        }
+//    }
+
+//    fun updateSingleNotificationSetting(key: String, isEnabled: Boolean) {
+//        viewModelScope.launch {
+//            val currentUserUid = Collections.auth.currentUser?.uid ?: ""
+//            val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
+//                if (pref.type == key) pref.copy(enabled = isEnabled) else pref
+//            }
+//            Log.d("UpdateNotification", "Updated settings: $updatedSettings")
+//            model.updateNotificationSettings(currentUserUid, updatedSettings)
+//        }
+//    }
+
+    fun updateNotificationSetting(type: NotificationPreferenceType, enabled: Boolean) {
+        viewModelScope.launch {
+            val currentUserUid = loggedUser.value.uid
+            val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
+                if (pref.type == type) pref.copy(enabled = enabled) else pref
+            }
+            model.updateNotificationSettings(currentUserUid, updatedSettings)
+            (model.loggedUser as MutableStateFlow).value =
+                loggedUser.value.copy(notificationSettings = updatedSettings)
+        }
+    }
+
+    fun getNotificationSetting(type: NotificationPreferenceType): Boolean {
+        return loggedUser.value.notificationSettings.find { it.type == type }?.enabled == true
     }
 
     fun startEditing() {
@@ -116,15 +151,19 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
 
-     fun saveAndExitEditing(context: Context) {
-         viewModelScope.launch {
-             isEditing = false
-             model.editProfile(editingProfile.value, context)
-             Log.d("Edit User","Saving Profile: ${editingProfile.value}")
-         }
+    fun saveAndExitEditing(context: Context) {
+        viewModelScope.launch {
+            isEditing = false
+            model.editProfile(editingProfile.value, context)
+            Log.d("Edit User", "Saving Profile: ${editingProfile.value}")
+        }
     }
 
-     fun handleBackNavigation(context: Context) {
+    fun getUserProfileByUID(userUID: String): UserProfile {
+        return model.getUserByUid(userUID) ?: UNKNOWN_USER
+    }
+
+    fun handleBackNavigation(context: Context) {
         if (validateFields()) {
             saveAndExitEditing(context)
         } else {
@@ -152,6 +191,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             "AIRPLANE" -> {
                 return Icons.Default.AirplanemodeActive
             }
+
             else -> {
                 return Icons.Default.AccountCircle
             }
@@ -184,32 +224,31 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             "Icon" -> {
                 iconsList.toMutableList().apply {
                     val target = getIconNameFromString(_userProfile.profilePicture)
-                    if(target?.isNotEmpty() == true){
+                    if (target?.isNotEmpty() == true) {
                         remove(target)
                         add(0, target)
                     }
                 }
             }
+
             "Uri" -> {
                 iconsList
             }
+
             else -> {
                 emptyList()
             }
         }
     }
 
+    fun getInitials(): String {
+        return getInitialsFromUser(editingProfile.value)
+    }
 
-     fun getInitials(): String {
-         if (editingProfile.value.surname.isEmpty())
-            return (editingProfile.value.name[0]).toString()
-         return (editingProfile.value.name[0].toString() + editingProfile.value.surname[0].toString())
-     }
-
-    fun getInitialsFromUser(user: UserProfile): String{
+    fun getInitialsFromUser(user: UserProfile): String {
         if (user.surname.isEmpty())
-            return (user.name[0]).toString()
-        return (user.name[0].toString() + user.surname[0].toString())
+            return (user.name[0]).toString().uppercase()
+        return (user.name[0].toString().uppercase() + user.surname[0].toString().uppercase())
     }
 
     fun updateName(name: String) {
@@ -245,6 +284,12 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
+    fun updateBadge(newBadge: Badge, context: Context) {
+        viewModelScope.launch {
+            model.updateUserProfileBadge(loggedUser.value.uid, newBadge, context)
+        }
+    }
+
     fun updateProfilePicture(icon: IconType) {
         _editingProfile.value = _editingProfile.value.copy(
             profilePicture = icon.toString(),
@@ -266,22 +311,22 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         )
     }
 
-    fun getImageProfile(userUID: String): String{
-       return model.getImageUrlFromSupabase(userUID)
+    fun getImageProfile(userUID: String): String {
+        return model.getImageUrlFromSupabase(userUID)
     }
 
-    fun getUriImage(imageUri: String): Uri{
-       return model.fromStringToUri(imageUri)
+    fun getUriImage(imageUri: String): Uri {
+        return model.fromStringToUri(imageUri)
     }
 
-    fun updateAddTypeOfExperiences(experience: String){
+    fun updateAddTypeOfExperiences(experience: String) {
         var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
         experienceList.add(experience)
 
         _editingProfile.value = _editingProfile.value.copy(typeOfExperiences = experienceList)
     }
 
-    fun updateDeleteTypeOfExperiences(experience: String){
+    fun updateDeleteTypeOfExperiences(experience: String) {
         var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
         experienceList.remove(experience)
 
@@ -310,8 +355,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 label = "Name",
                 value = profile.name,
                 errorMessage = validationErrors.name,
-                onValueChange = { updateName(it)
-                    Log.d("edit name","name changed to $it")
+                onValueChange = {
+                    updateName(it)
+                    Log.d("edit name", "name changed to $it")
                 }
             ),
             EditableFieldDefinition(
@@ -385,9 +431,11 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         )
     }
 
-    fun isRegistrationDataCorrect(name: String, surname: String,
-                                  email: String, password1: String,
-                                    password2: String) : Boolean{
+    fun isRegistrationDataCorrect(
+        name: String, surname: String,
+        email: String, password1: String,
+        password2: String
+    ): Boolean {
         val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$"
         return (name.isNotEmpty() && surname.isNotEmpty()
                 && email.matches(emailRegex.toRegex())
@@ -395,7 +443,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1 == password2)
     }
 
-    fun gainExp(value: Int, context: Context){
+    fun gainExp(value: Int, context: Context) {
         viewModelScope.launch {
             model.gainExp(value, context)
         }
@@ -420,4 +468,29 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         model.editLevelUp()
     }
 
+    //---- Badge Progress Utility Functions ----//
+    fun updateBadgeTravelInPackProgress() {
+        viewModelScope.launch {
+            model.triggerBadgeProgress(
+                targetUserUID = loggedUser.value.uid,
+                badgeType = BadgeType.TRAVEL_IN_PACK,
+                incrementBy = 1
+            )
+        }
+    }
+
+
+    //-------------🚨EMERGENCY ONLY🚨-------------//
+    fun deleteAllBadges() {
+        viewModelScope.launch {
+            model.deleteAllBadges()
+        }
+    }
+
+    fun initializeBadgesToAllUsers() {
+        viewModelScope.launch {
+            model.initializeBadgesToAllUsers()
+        }
+    }
+    //-------------🚨EMERGENCY ONLY🚨-------------//
 }

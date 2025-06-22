@@ -34,7 +34,7 @@ enum class IconType {
         }
 
         fun toList(): List<IconType> {
-            return IconType.entries
+            return IconType.entries.filter { it != DEFAULT }
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,11 +31,11 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,11 +47,13 @@ import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,8 +72,10 @@ import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data_class.Price
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.shared.EditableTextField
+import com.example.final_assignment_even_g28.ui.components.modal.DatePickerModal
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.toDateFormat
+import com.example.final_assignment_even_g28.utils.toMillis
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,7 +85,11 @@ fun CreateTravelProposalFirstScreen(
     navActions: Navigation,
 ) {
     val travelProposal = tripVm.tempTravelProposal
+    var showStartDate by remember { mutableStateOf(false) }
+    var showEndDate by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
 
+    val showItineraryCard = remember { mutableStateOf(false) }
     val scrollable = rememberScrollState()
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -96,6 +105,7 @@ fun CreateTravelProposalFirstScreen(
         tripVm.exitEditingTravelProposal()
         navActions.back()
     }
+    val suggestion by tripVm.listOfItinerarySuggestions.collectAsState()
 
     Scaffold(
         topBar = {
@@ -172,9 +182,9 @@ fun CreateTravelProposalFirstScreen(
                             readOnly = true,
                             isError = firstScreenError.maxParticipant.isNotBlank(),
                             trailingIcon = {
-                                IconButton(onClick = { tripVm.toggleExpanded() }) {
+                                IconButton(onClick = { isExpanded = !isExpanded }) {
                                     Icon(
-                                        imageVector = if (!tripVm.isExpanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
+                                        imageVector = if (!isExpanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
                                         contentDescription = "Drop Down"
                                     )
                                 }
@@ -198,8 +208,8 @@ fun CreateTravelProposalFirstScreen(
                         }
                     }
                     DropdownMenu(
-                        expanded = tripVm.isExpanded,
-                        onDismissRequest = { tripVm.toggleExpanded() },
+                        expanded = isExpanded,
+                        onDismissRequest = { isExpanded = !isExpanded },
                         modifier = Modifier
                             .background(color = MaterialTheme.colorScheme.surface)
                             .clip(
@@ -223,7 +233,7 @@ fun CreateTravelProposalFirstScreen(
                         tripVm.groupSizeOptions.forEach { size ->
                             DropdownMenuItem(text = { Text(size.toString()) }, onClick = {
                                 tripVm.updateGroupSize(size)
-                                tripVm.toggleExpanded()
+                                isExpanded = false
                             })
                         }
                     }
@@ -239,7 +249,11 @@ fun CreateTravelProposalFirstScreen(
                         RangeSlider(
                             value = (travelProposal.price.min.toFloat())..(travelProposal.price.max.toFloat()),
                             onValueChange = { values ->
-                                tripVm.updatePriceRange(Price(values.start.toInt(), values.endInclusive.toInt()))
+                                tripVm.updatePriceRange(
+                                    Price(
+                                        values.start.toInt(), values.endInclusive.toInt()
+                                    )
+                                )
                             },
                             valueRange = 0f..1000f,
 
@@ -292,7 +306,7 @@ fun CreateTravelProposalFirstScreen(
                     ),
                     trailingIcon = {
 
-                        IconButton(onClick = { tripVm.toggleStartDate() }) {
+                        IconButton(onClick = { showStartDate = true }) {
                             Icon(
 
                                 imageVector = Icons.Default.CalendarMonth,
@@ -306,14 +320,13 @@ fun CreateTravelProposalFirstScreen(
                         .padding(start = 0.dp)
 
                 )
-                if (tripVm.showStartDate) {
+                if (showStartDate) {
                     DatePickerModal(
-                        onDateSelected = { tripVm.selectedStartDate = it },
-                        onDismiss = { tripVm.showStartDate = false },
-                        vm = tripVm,
-                        typeOfDate = "start"
-
-                    )
+                        initialDate = travelProposal.tripStartDate.toMillis(),
+                        onDateSelected = { tripVm.startDateSelected(it) },
+                        onDismiss = {
+                            showStartDate = false
+                        })
                 }
 
                 OutlinedTextField(
@@ -329,7 +342,7 @@ fun CreateTravelProposalFirstScreen(
                         bottomStart = 0.dp,
                     ),
                     trailingIcon = {
-                        IconButton(onClick = { tripVm.toggleEndDate() }) {
+                        IconButton(onClick = { showEndDate = true }) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = "Date Picker",
@@ -342,16 +355,14 @@ fun CreateTravelProposalFirstScreen(
                         .padding(start = 0.dp)
 
                 )
-                if (tripVm.showEndDate) {
+                if (showEndDate) {
                     DatePickerModal(
+                        initialDate = travelProposal.tripEndDate.toMillis(),
                         onDateSelected = {
-                            tripVm.selectedEndDate = it
-                        },
-                        onDismiss = { tripVm.showEndDate = false },
-                        vm = tripVm,
-                        typeOfDate = "end"
-
-                    )
+                            tripVm.endDateSelected(it)
+                        }, onDismiss = {
+                            showEndDate = false
+                        })
                 }
 
             }
@@ -477,25 +488,64 @@ fun CreateTravelProposalFirstScreen(
                     top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp
                 )
             ) {
-                Text(
-                    "ITINERARY",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(
-                        top = 8.dp, start = 16.dp, end = 16.dp, bottom = 0.dp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "ITINERARY",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
-                )
 
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable {
+                                tripVm.itinerarySuggestions(tripVm.tempTravelProposal.title, tripVm.tempTravelProposal.tripStartDate, tripVm.tempTravelProposal.tripEndDate)
+                                showItineraryCard.value = true
+                                },
+                        tonalElevation = 0.dp,
+                        shadowElevation = 0.dp
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = "Help",
+                            modifier = Modifier.padding(4.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                if (showItineraryCard.value) {
+                    ItineraryDialog(
+                        onDismiss = { showItineraryCard.value = false },
+                        onAccept = { selectedItinerary ->
+                            if (selectedItinerary != null) {
+                                tripVm.acceptSuggestedItinerary(selectedItinerary)
+                            }
+                            showItineraryCard.value = false
+                        },
+                        suggestion = suggestion
+                    )
+                }
 
                 ItineraryWithStops(tripVm = tripVm)
                 Button(
                     onClick = {
                         if (tripVm.validateFirstScreenFields()) {
-                            //vm.saveTravelProposal(vm.travelProposal)
-
                             navActions.navigateToSecondScreen()
                         }
                     },
                     shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(end = 16.dp)
@@ -507,47 +557,22 @@ fun CreateTravelProposalFirstScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Next",
-                        tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
 
                 }
+                if (firstScreenError.hasError) {
+                    Text(
+                        text = "Please fix the errors before proceeding.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 4.dp)
+                            .align(Alignment.CenterHorizontally),
+                    )
+                }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit,
-    vm: TravelProposalViewModel,
-    typeOfDate: String = "start",
-    index: Int = -1,
-) {
-    val datePickerState = rememberDatePickerState()
-
-    DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
-        TextButton(onClick = {
-            onDateSelected(datePickerState.selectedDateMillis)
-            if (typeOfDate == "start") {
-                vm.startDateSelected(datePickerState.selectedDateMillis)
-            } else if (typeOfDate == "end") {
-                vm.endDateSelected(datePickerState.selectedDateMillis)
-            } else {
-                vm.updateStopDate(datePickerState.selectedDateMillis, index)
-            }
-            onDismiss()
-        }) {
-            Text("OK")
-        }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text("Cancel")
-        }
-    }) {
-        DatePicker(state = datePickerState)
     }
 }
 
@@ -586,11 +611,10 @@ fun DisplayImagesWithAddButton(
                                 .clip(RoundedCornerShape(8.dp))
                         ) {
                             Image(
-                                painter =
-                                    rememberAsyncImagePainter(
-                                        model = image,
-                                        error = painterResource(id = R.drawable.error_image)
-                                    ),
+                                painter = rememberAsyncImagePainter(
+                                    model = image,
+                                    error = painterResource(id = R.drawable.error_image)
+                                ),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -668,7 +692,7 @@ fun ItineraryWithStops(
     val optionalColor = MaterialTheme.colorScheme.onSecondaryContainer
     val itinerarySize = travelProposal.itinerary.size
     val stopDateIndex = remember { mutableIntStateOf(-1) }
-
+    var showStopDate by remember { mutableStateOf(false) }
     val firstScreenError = tripVm.firstScreenValidationError
 
     Column {
@@ -733,7 +757,6 @@ fun ItineraryWithStops(
                             onValueChange = { },
                             label = { Text("Day") },
 
-
                             shape = RoundedCornerShape(
                                 topStart = 0.dp,
                                 topEnd = 10.dp,
@@ -741,9 +764,9 @@ fun ItineraryWithStops(
                                 bottomStart = 0.dp,
                             ),
                             trailingIcon = {
-
                                 IconButton(onClick = {
-                                    tripVm.toggleStopDate(); stopDateIndex.intValue = index
+                                    showStopDate = true
+                                    stopDateIndex.intValue = index
                                 }) {
                                     Icon(
 
@@ -756,25 +779,19 @@ fun ItineraryWithStops(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 0.dp)
-
                         )
 
-
-                        if (tripVm.showStopDate && stopDateIndex.intValue == index) {
+                        if (showStopDate && stopDateIndex.intValue == index) {
                             DatePickerModal(
-                                onDateSelected = {
-                                    tripVm.selectedStopDate = it
+                                initialDate = stop.date.toMillis(),
+                                onDateSelected = { date ->
+                                    tripVm.updateStopDate(date, index)
                                 },
-                                onDismiss = { tripVm.showStopDate = false },
-                                vm = tripVm,
-                                typeOfDate = "stop",
-                                index = index
-
+                                onDismiss = { showStopDate = false },
                             )
-
                         }
-
                     }
+
                     Row(modifier = Modifier.fillMaxWidth()) {
                         if (firstScreenError.itineraryErrors[index]?.title?.isNotBlank() == true) {
                             Text(
@@ -901,12 +918,6 @@ fun ItineraryWithStops(
                         )
 
                     }
-//                    if (index == itinerarySize - 1)
-//
-//                        Button(onClick = { vm.addStop() }, modifier = Modifier.padding(16.dp)) {
-//                            Text("Add Stop")
-//
-//                        }
                 }
 
             }

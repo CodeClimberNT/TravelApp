@@ -8,6 +8,9 @@ import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -37,7 +40,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccountBalance
@@ -110,6 +112,7 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.theme.AdventureColor
 import com.example.final_assignment_even_g28.ui.theme.CultureColor
 import com.example.final_assignment_even_g28.ui.theme.DimColor
@@ -117,7 +120,6 @@ import com.example.final_assignment_even_g28.ui.theme.PartyColor
 import com.example.final_assignment_even_g28.ui.theme.RelaxColor
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
-import com.example.final_assignment_even_g28.utils.getNameFromFullName
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
@@ -154,7 +156,7 @@ import androidx.core.net.toUri
 
 
 //TODO: refactor this file with common component
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun TravelProposalScreen(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
@@ -162,7 +164,9 @@ fun TravelProposalScreen(
     bottomBarItem: BottomBarItem,
     tripId: String,
     snackBarHostState: SnackbarHostState,
-    showParticipantsDialog: Boolean = false
+    showParticipantsDialog: Boolean = false,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope
 ) {
     tripVm.clickTripInfo(tripId)
     val travelProposal by tripVm.travelProposal.collectAsState()
@@ -175,10 +179,10 @@ fun TravelProposalScreen(
 
     LaunchedEffect(showParticipantsDialog) {
         if (showParticipantsDialog) {
-
             openCandidatesDialog.value = true
         }
     }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
@@ -191,60 +195,70 @@ fun TravelProposalScreen(
             )
         }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            ImageCarousel(travelProposal.images)
-            Spacer(modifier = Modifier.height(16.dp))
-            HeroSection(
-                title = travelProposal.title,
-                duration = tripVm.showDatesInTripInfo(
-                    travelProposal.tripStartDate.toDate(), travelProposal.tripEndDate.toDate()
-                ),
-                tags = travelProposal.activities.map { it.value },
-                travelProposalVM = tripVm,
-                navActions = navActions,
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            TripOverview(
-                tripVm = tripVm,
-                proposal = travelProposal,
-                tripPlanner = tripPlanner,
-                navActions = navActions,
-                bottomBarItem = bottomBarItem,
-                openCandidatesDialog
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
-            TripDescription(travelProposal.description)
-            if (isLandscape) {
-                Row(
+        Box(Modifier.fillMaxSize()) {
+            with(sharedTransitionScope) {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.secondary)
-                        .padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
+                        .sharedElement(
+                            rememberSharedContentState(key = "card_$tripId"),
+                            animatedVisibilityScope = animatedContentScope
+                        )
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
-                    ) {
+                    ImageCarousel(travelProposal.images)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HeroSection(
+                        title = travelProposal.title,
+                        duration = tripVm.showDatesInTripInfo(
+                            travelProposal.tripStartDate.toDate(),
+                            travelProposal.tripEndDate.toDate()
+                        ),
+                        tags = travelProposal.activities.map { it.value },
+                        travelProposalVM = tripVm,
+                        navActions = navActions,
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    TripOverview(
+                        tripVm = tripVm,
+                        proposal = travelProposal,
+                        tripPlanner = tripPlanner,
+                        navActions = navActions,
+                        bottomBarItem = bottomBarItem,
+                        openCandidatesDialog
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
+                    TripDescription(travelProposal.description)
+                    if (isLandscape) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.secondary)
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
+                            ) {
+                                ItinerarySection(travelProposal.itinerary)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
+                            ) {
+                                TripMap(travelProposal.itinerary)
+                            }
+                        }
+                    } else {
                         ItinerarySection(travelProposal.itinerary)
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp)
-                    ) {
                         TripMap(travelProposal.itinerary)
                     }
                 }
-            } else {
-                ItinerarySection(travelProposal.itinerary)
-                TripMap(travelProposal.itinerary)
             }
         }
     }
@@ -320,7 +334,7 @@ fun HeroSection(
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     navActions: Navigation
 ) {
-    val currentUser by userVm.selectedUserProfile.collectAsState()
+    val currentUser by userVm.loggedUser.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -335,7 +349,7 @@ fun HeroSection(
             if (!travelProposalVM.isMyTrip()) {
                 //is not your trip
                 TextButton(onClick = {
-                    travelProposalVM.clickCloneTrip(currentUser?.uid ?: "0")
+                    travelProposalVM.clickCloneTrip(currentUser.uid)
                     navActions.navigateToCreateNewTravelProposal()
                 }) {
                     Text(
@@ -375,7 +389,8 @@ fun TripOverview(
 ) {
     //var openCandidatesDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
-
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             "Trip Planner",
@@ -386,21 +401,7 @@ fun TripOverview(
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
-            // FIXME: updated to use tripPlanner.avatar
-            // waiting user to be finished
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(MaterialTheme.colorScheme.primary, shape = CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
+            ProfilePicture(tripPlanner, isLandscape, isDashboard = true)
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -855,8 +856,7 @@ fun TravelActionBar(
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
 
     val ctx = LocalContext.current
-
-    Log.d("TravelActionBar", "trip planner: $tripPlanner")
+    val numApprovedParticipant = tripVm.getNumApprovedParticipants(proposal)
 
     Surface(
         modifier = Modifier
@@ -1007,6 +1007,9 @@ fun TravelActionBar(
             onDismiss = { showApplyDialog = false },
             onApply = {
                 tripVm.applyToTrip(guests = it)
+                if (numApprovedParticipant >= 3) {
+                    userVm.updateBadgeTravelInPackProgress()
+                }
                 showApplyDialog = false
                 userProfileViewModel.gainExp(5, ctx)
             })
@@ -1150,7 +1153,8 @@ fun ParticipantList(
             ParticipantStatus.REJECTED -> -1
         }
     }
-    Log.d("ParticipantList", "participants $sortedParticipant")
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
@@ -1174,7 +1178,6 @@ fun ParticipantList(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Icon(
                             imageVector = Icons.Default.People, contentDescription = "People count"
                         )
@@ -1205,6 +1208,7 @@ fun ParticipantList(
                                 },
                                 tripVm = tripVm,
                                 travelProposal = travelProposal,
+                                isLandscape = isLandscape,
                                 navActions = navActions,
                                 bottomBarItem = bottomBarItem,
                             )
@@ -1247,14 +1251,13 @@ fun CandidateProfile(
     isChecked: Boolean?,
     tripVm: TravelProposalViewModel,
     travelProposal: TravelProposal,
+    isLandscape: Boolean,
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
 ) {
-
     var showNullDialog by remember { mutableStateOf(false) }
     var acceptedDialog by remember { mutableStateOf(false) }
     var rejectedDialog by remember { mutableStateOf(false) }
-
     var showMiniProfile by remember { mutableStateOf(false) }
 
     Row(
@@ -1265,25 +1268,12 @@ fun CandidateProfile(
             .fillMaxWidth()
     ) {
         Column {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary, shape = CircleShape
-                    ), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
+            ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
 
         Column {
             Text(
-                text = getNameFromFullName(candidate.fullName) + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
+                text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
                     .padding(start = 8.dp)
@@ -1382,7 +1372,7 @@ fun NullDialog(
             Column(Modifier.fillMaxSize()) {
 
                 Text(
-                    text = "Accept ${getNameFromFullName(candidate.fullName)} ?",
+                    text = "Accept ${candidate.name} ?",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                     fontWeight = FontWeight.Bold
@@ -1465,7 +1455,7 @@ fun AcceptedDialog(
             Column(Modifier.fillMaxSize()) {
 
                 Text(
-                    text = "Reject ${getNameFromFullName(candidate.fullName)} ?",
+                    text = "Reject ${candidate.name} ?",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                     fontWeight = FontWeight.Bold
@@ -1533,7 +1523,7 @@ fun RejectedDialog(
             Column(Modifier.fillMaxSize()) {
 
                 Text(
-                    text = "Accept ${getNameFromFullName(candidate.fullName)} ?",
+                    text = "Accept ${candidate.name} ?",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                     fontWeight = FontWeight.Bold
@@ -1598,19 +1588,17 @@ fun MiniProfileDialog(
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    //modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.account_image),
-                            contentDescription = "",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .width(100.dp)
-                                .height(100.dp)
-                                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                        ProfilePicture(
+                            candidate,
+                            isLandScape = false,
+                            isDashboard = true
                         )
                         Text(
                             text = "Lvl. 3",
@@ -1620,7 +1608,7 @@ fun MiniProfileDialog(
                     }
                     Column {
                         Text(
-                            text = getNameFromFullName(candidate.fullName),
+                            text = candidate.name,
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
                             fontWeight = FontWeight.Bold
@@ -1669,7 +1657,7 @@ fun MiniProfileDialog(
                         modifier = Modifier.padding(8.dp), onClick = {
                             onShow(false)
                             navActions.navigateToOtherProfile(
-                                getNameFromFullName(candidate.fullName),
+                                candidate.uid,
                                 bottomBarItem == BottomBarItem.MyTrips
                             )
                         }, colors = ButtonDefaults.buttonColors(
@@ -1806,7 +1794,12 @@ fun PreviewMiniProfile() {
     val navActions = Navigation(navController)
 
     MiniProfileDialog(
-        UserProfile("Giovanna Azzurri", 4.0f, "This is my description"),
+        UserProfile(
+            name = "Giovanna",
+            surname = "Azzurri",
+            rating = 4.0f,
+            bio = "This is my description"
+        ),
         navActions,
         BottomBarItem.MyTrips
     ) { }

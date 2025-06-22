@@ -26,8 +26,10 @@ object Collections {
     private const val C_TRAVEL_REVIEW = "travel_reviews"
     private const val C_USERS = "users"
     private const val C_USER_REVIEW = "user_review"
+    private const val C_USER_BADGE = "user_badges"
 
     private const val C_NOTIFICATIONS = "notifications"
+    private const val C_ITINERARIES = "itineraries"
 
     private const val TRAVEL_IMAGES_BUCKET = "travel-images"
     private const val USER_IMAGES_BUCKET = "user-images"
@@ -71,6 +73,7 @@ object Collections {
     val userImagesBucket = storage.from(USER_IMAGES_BUCKET)
 
     val notifications = db.collection(C_NOTIFICATIONS)
+    val itineraries = db.collection(C_ITINERARIES)
 
     val users = db.collection(C_USERS)
     val userReview = db.collection(C_USER_REVIEW)
@@ -78,6 +81,11 @@ object Collections {
     fun getReviewCollection(tripId: String): CollectionReference {
         Log.d("Collections", "Getting review collection for tripId: $tripId")
         return travelProposals.document(tripId).collection(C_TRAVEL_REVIEW)
+    }
+
+    fun getBadgeCollection(userUID: String): CollectionReference {
+        Log.d("Collections", "Getting badge collection for userUID: $userUID")
+        return users.document(userUID).collection(C_USER_BADGE)
     }
 }
 

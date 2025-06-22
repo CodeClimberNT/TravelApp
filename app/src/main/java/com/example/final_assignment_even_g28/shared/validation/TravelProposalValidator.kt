@@ -32,7 +32,25 @@ data class TravelProposalFirstScreenError(
     val tripDescription: String = "",
     val tripImages: String = "",
     val itineraryErrors: Map<Int, ItineraryStopError> = emptyMap()
-)
+) {
+    val hasError: Boolean
+        get() = toList.any { it.isNotEmpty() }
+
+    val toList: List<String>
+        get() = listOf(
+            title,
+            maxParticipant,
+            description,
+            activities,
+            price,
+            tripStartDate,
+            tripEndDate,
+            itinerary,
+            tripDescription,
+            tripImages
+        ) +
+                itineraryErrors.values.flatMap { it.toList }
+}
 
 data class TravelProposalSecondScreenError(
     val title: String = "",
@@ -54,7 +72,11 @@ object TravelProposalValidator {
         var isValid = true
         val titleValidation = validateTitle(title)
 
-        val (itineraryErrors, itineraryIsValid) = validateItinerary(itinerary)
+        val (itineraryErrors, itineraryIsValid) = validateItinerary(
+            itinerary,
+            tripStartDate,
+            tripEndDate
+        )
 
         val errors = TravelProposalFirstScreenError(
             title = if (titleValidation.isNotBlank()) {
@@ -132,7 +154,11 @@ object TravelProposalValidator {
         return Pair(errors, isValid)
     }
 
-    private fun validateItinerary(itinerary: List<ItineraryStop>): Pair<Map<Int, ItineraryStopError>, Boolean> {
+    private fun validateItinerary(
+        itinerary: List<ItineraryStop>,
+        tripStartDate: Timestamp,
+        tripEndDate: Timestamp
+    ): Pair<Map<Int, ItineraryStopError>, Boolean> {
         val errors = mutableMapOf<Int, ItineraryStopError>()
         var isValid = true
 
@@ -149,6 +175,11 @@ object TravelProposalValidator {
                         "Title must be at least 3 characters long"
                     }
 
+                    stop.title.length > 35 -> {
+                        isValid = false
+                        "Title must be less than 35 characters long"
+                    }
+
                     else -> ""
                 },
                 date = when {
@@ -157,9 +188,24 @@ object TravelProposalValidator {
                         "Date cannot be empty"
                     }
 
-                    stop.date < Timestamp.now() -> {
+                    stop.date <= Timestamp.now() -> {
                         isValid = false
                         "Date cannot be in the past"
+                    }
+
+                    stop.date < tripStartDate -> {
+                        isValid = false
+                        "Date cannot be before the trip started"
+                    }
+
+                    stop.date > tripEndDate -> {
+                        isValid = false
+                        "Date cannot be after the trip ended"
+                    }
+
+                    index < itinerary.size - 1 && stop.date > itinerary[index + 1].date -> {
+                        isValid = false
+                        "Itinerary stops must be in chronological order"
                     }
 
                     else -> ""
@@ -169,7 +215,10 @@ object TravelProposalValidator {
                     "Description cannot be empty"
                 } else "",
             )
-            if (stopErrors.title.isNotBlank() || stopErrors.date.isNotBlank() || stopErrors.description.isNotBlank() || stopErrors.mandatory.isNotBlank()) {
+
+            if (stopErrors.date.isNotBlank() && stopErrors.date.contains("chronological")) {
+                errors[index + 1] = stopErrors
+            } else if (stopErrors.title.isNotBlank() || stopErrors.date.isNotBlank() || stopErrors.description.isNotBlank() || stopErrors.mandatory.isNotBlank()) {
                 errors[index] = stopErrors
             }
         }

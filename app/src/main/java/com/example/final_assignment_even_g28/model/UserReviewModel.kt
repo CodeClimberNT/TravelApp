@@ -1,75 +1,108 @@
 package com.example.final_assignment_even_g28.model
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data.Collections
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserReview
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
-class UserReviewModel(){
+class UserReviewModel {
+    fun getMyReviews(userUID: String): Flow<List<UserReview>> = callbackFlow {
+        val collection = Collections.userReview.whereEqualTo("reviewerUID", userUID)
 
-    private val userProfileModel = UserProfileModel()
+        val listener = collection.addSnapshotListener { querySnapshot, error ->
+            if (error != null) {
+                Log.e("UserReviewModel", "Error fetching reviews: ${error.message}")
+                close(error)
+                return@addSnapshotListener
+            }
+            if (querySnapshot != null) {
+                val reviews = querySnapshot.documents.mapNotNull { doc ->
+                    doc.toObject(UserReview::class.java)
+                }.sortedByDescending { it.timestamp }
+                trySend(reviews)
+            } else {
+                Log.d("UserReviewModel", "No reviews found for user: $userUID")
+                trySend(emptyList())
+            }
+        }
+        awaitClose { listener.remove() }
+    }.flowOn(Dispatchers.IO)
 
-    private val _myReviews = MutableStateFlow<List<UserReview>>(emptyList())
-    val myReviews: StateFlow<List<UserReview>> get() = _myReviews
+    fun getOtherReviews(userUID: String): Flow<List<UserReview>> = callbackFlow {
+        val collection = Collections.userReview.whereEqualTo("reviewedUserUID", userUID)
 
-    private val _othersReview = MutableStateFlow<List<UserReview>>(emptyList())
-    val othersReview: StateFlow<List<UserReview>> get() = _othersReview
+        val listener = collection.addSnapshotListener { querySnapshot, error ->
+            if (error != null) {
+                Log.e("UserReviewModel", "Error fetching reviews: ${error.message}")
+                close(error)
+                return@addSnapshotListener
+            }
+            if (querySnapshot != null) {
+                val reviews = querySnapshot.documents.mapNotNull { doc ->
+                    doc.toObject(UserReview::class.java)
+                }.sortedByDescending { it.timestamp }
+                trySend(reviews)
+            } else {
+                Log.d("UserReviewModel", "No reviews found for user: $userUID")
+                trySend(emptyList())
+            }
+        }
+        awaitClose { listener.remove() }
+    }.flowOn(Dispatchers.IO)
 
-    fun getReviews(userUID: String){
-           Collections.userReview.get().addOnSuccessListener {querySnapshot ->
-                val reviews = querySnapshot.documents.mapNotNull { documentSnapshot ->
-                    val userReview = documentSnapshot.toObject(UserReview::class.java)
+    suspend fun writeReview(review: UserReview): Result<String> {
+        return try {
+            val docRef = Collections.userReview.add(review).await()
+            Log.d("UserReviewModel", "Review written successfully: ${docRef.id}")
+            val userDocRef = Collections.users.document(review.reviewedUserUID).get().await()
+            if (userDocRef.exists()) {
+                userDocRef.toObject(UserProfile::class.java)?.let { user ->
+                    val reviews = getReviews(user.uid)
+                    val ratings = reviews.map { review ->
+                        review.rating
+                    }
+                    val averageRating = ratings.average().toFloat()
 
-                    val reviewerName = userProfileModel.loggedUser.value.name
-                    val reviewedName = userReview?.reviewedUserUID?.let { userProfileModel.getNameByUID(it.toString()) }
-
-                    userReview?.copy(
-                        reviewerName = reviewerName,
-                        reviewedName = reviewedName ?: "Unknown User"
-                    )
-                }
-                val myReviewsList = mutableListOf<UserReview>()
-                val othersReviewList = mutableListOf<UserReview>()
-
-                for (review in reviews){
-                    if(review.reviewerUID == userUID){
-                        myReviewsList.add(review)
-                    }else{
-                        if (review.reviewedUserUID == userUID){
-                            othersReviewList.add(review)
-                        }
+                    if (averageRating < 0 || averageRating > 5) {
+                        throw IllegalArgumentException("Invalid average rating: $averageRating")
+                    }
+                    user.rating = averageRating
+                    Log.d("UserReviewModel", "User review count updated successfully")
+                    user.let { updatedUser ->
+                        Collections.users.document(updatedUser.uid).set(updatedUser)
+                            .await()
+                        Log.d("UserReviewModel", "User rating updated successfully")
+                        Result.success(docRef.id)
                     }
                 }
-                _myReviews.value = myReviewsList
-                _othersReview.value = othersReviewList
+            } else {
+                throw IllegalArgumentException("User not found for UID: ${review.reviewedUserUID}")
             }
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Log.e("UserReviewModel", "${e.message}")
+            Result.failure(e)
+        }
     }
 
-    fun writeReview(review: UserReview) {
-                Collections.userReview.add(review)
-                Log.d("Write Review", "Review added successfully")
+    private suspend fun getReviews(userUID: String): List<UserReview> {
+        return try {
+            val snapshot =
+                Collections.userReview.whereEqualTo("reviewedUserUID", userUID).get().await()
+            val reviews = snapshot.documents.mapNotNull {
+                it.toObject(UserReview::class.java)
+            }
+            reviews
 
-                val travelProposalModel = TravelProposalModel()
-                travelProposalModel.addNotification(
-                    tripId = "",
-                    title = review.title,
-                    type = "userReviewReceived",
-                    notificationOwnerId = review.reviewerUID.toString(),
-                    applicantId = review.reviewedUserUID.toString(),
-                    tripPlannerId = null,
-                    reviewedUser = review.reviewedUserUID.toString()
-                )
-
-                getReviews(review.reviewerUID)
+        } catch (e: Exception) {
+            Log.e("UserReviewModel", "Error fetching total number of reviews: ${e.message}")
+            emptyList<UserReview>()
+        }
     }
 }

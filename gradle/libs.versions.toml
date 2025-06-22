@@ -1,6 +1,7 @@
 [versions]
 accompanistPermissions = "0.30.1"
 agp = "8.9.1"
+animation = "1.8.3"
 compose = "1.1.1"
 credentialsPlayServicesAuthVersion = "1.3.0"
 credentialsVersion = "1.3.0"
@@ -49,6 +50,7 @@ ui = "1.8.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 #androidx-credentials-play-services-auth-v130 = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuthVersion" }
 androidx-credentials-v130 = { module = "androidx.credentials:credentials", version.ref = "credentialsVersion" }

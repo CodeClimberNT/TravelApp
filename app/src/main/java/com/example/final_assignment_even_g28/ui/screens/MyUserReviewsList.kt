@@ -1,25 +1,25 @@
 package com.example.final_assignment_even_g28.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material.icons.outlined.Reviews
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -36,27 +36,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.UserReview
-import com.example.final_assignment_even_g28.model.UserProfileModel
-import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.ui.components.review.DisplayReviewImages
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
+import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 
-
-//account1 uid: gnAtiJ2STlaIu0i7l7DN6QpZCKq2
-//account 5 uid: JkXtaeEEmsb0m459W2f2rTRZBpB2
-
-//@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyUserReviewsList(
     userReviewViewModel: UserReviewViewModel = viewModel(factory = AppFactory),
@@ -67,12 +63,9 @@ fun MyUserReviewsList(
 ) {
     var tabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Made to you", "Made by you")
-    val profile = userProfileViewModel.loggedUser.collectAsState()
 
-    userReviewViewModel.getReviews(profile.value.uid)
-
-    var reviewsMadeToMe = userReviewViewModel.othersReview.collectAsState()
-    var reviewsMadeByMe = userReviewViewModel.myReviews.collectAsState()
+    val reviewsMadeToMe by userReviewViewModel.othersReviews.collectAsState()
+    val reviewsMadeByMe by userReviewViewModel.myReviews.collectAsState()
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -116,8 +109,8 @@ fun MyUserReviewsList(
             }
 
             when (tabIndex) {
-                0 -> ReviewsList(reviewsMadeToMe.value)
-                else -> ReviewsList(reviewsMadeByMe.value, displayReviewed = true)
+                0 -> ReviewsList(reviewsMadeToMe, madeByYou = false)
+                else -> ReviewsList(reviewsMadeByMe, madeByYou = true)
             }
         }
     }
@@ -125,52 +118,59 @@ fun MyUserReviewsList(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ReviewsList(reviews: List<UserReview>, displayReviewed: Boolean = false) {
-if (reviews.isNotEmpty()){
-    FlowColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        if (reviews.isNotEmpty()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Average Rating: ", style = MaterialTheme.typography.headlineSmall)
-                Spacer(modifier = Modifier.weight(1f))
-                RatingStar(
-                    reviews.map { it.rating }.average().toFloat(),
-                    maxRating = 5,
-                    onStarClick = {},
-                    isIndicator = false
-                )
-                Text(
-                    text = "${" % .2f".format(reviews.map({ it.rating }).average())} / 5",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+fun ReviewsList(reviews: List<UserReview>, madeByYou: Boolean = false) {
+    if (reviews.isNotEmpty()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            Text("Average Rating: ", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.weight(1f))
+            RatingStar(
+                reviews.map { it.rating }.average().toFloat(),
+                maxRating = 5,
+                onStarClick = {},
+                isIndicator = false
+            )
+            Text(
+                text = "${" % .2f".format(reviews.map({ it.rating }).average())} / 5",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+        HorizontalDivider()
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp)
+        ) {
+            item {
+                Spacer(Modifier.height(8.dp))
             }
 
+            items(reviews) { review ->
+                UserReviewCard(review, madeByYou)
+
+            }
+
+            item {
+                Spacer(Modifier.height(8.dp))
+            }
         }
-        reviews.forEach { review ->
-            UserReviewCard(review, displayReviewed)
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "There are no Reviews to see",
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
-    }
-    }
-    else{
-    Row(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "There are no Reviews to see",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
     }
 }
 
@@ -178,21 +178,13 @@ if (reviews.isNotEmpty()){
 @Composable
 fun UserReviewCard(
     review: UserReview,
-    displayReviewed: Boolean = false,
+    madeByYou: Boolean,
     userVm: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
-    var nickname = ""
-    if (!displayReviewed) {
-        if (review.reviewerName.isNotEmpty())
-            nickname = review.reviewerName
-        else
-            nickname = review.reviewedName
-    } else {
-        if (review.reviewedName.isNotEmpty())
-            nickname = review.reviewedName
-        else
-            nickname = review.reviewerName
-    }
+    val user =
+        userVm.getUserProfileByUID(if (madeByYou) review.reviewedUserUID else review.reviewerUID)
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -205,14 +197,10 @@ fun UserReviewCard(
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(50.dp)
-                )
+                ProfilePicture(user, isLandScape = isLandscape, isCandidate = true)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    nickname,
+                    if (madeByYou) review.reviewedName else review.reviewerName,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )

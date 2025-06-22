@@ -277,7 +277,6 @@ fun CreateTravelProposalSecondScreen(
 
                         navActions.navigateToTravelList()
                     }
-
                 }, shape = RoundedCornerShape(10.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
