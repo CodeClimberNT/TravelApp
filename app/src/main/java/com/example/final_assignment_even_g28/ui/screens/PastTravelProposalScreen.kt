@@ -106,6 +106,7 @@ fun PastTravelProposalScreen(
             tabIndex = initialTabIndex
         }
     }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {

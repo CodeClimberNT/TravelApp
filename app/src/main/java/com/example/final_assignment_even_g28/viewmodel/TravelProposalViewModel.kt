@@ -788,6 +788,11 @@ class TravelProposalViewModel(
         if (filters.title.isEmpty()) filters = filters.copy(title = "Anywhere")
     }
 
+    fun resetFilters() {
+        filters = Filters()
+        filterErrors = FilterError()
+    }
+
     fun toggleActivity(activity: Pair<ActivityTag, Boolean>) {
         val activities = filters.activities
         val updatedActivities = if (activity.first in activities) activities - activity.first

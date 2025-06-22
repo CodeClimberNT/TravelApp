@@ -10,7 +10,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,6 +34,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Soap
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -41,8 +43,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -64,7 +68,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,14 +103,6 @@ fun TravelProposalList(
     val filters = tripVm.filters
     val filterBgColor = MaterialTheme.colorScheme.primaryContainer
     val filterTextColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val gradientBrush = remember {
-        Brush.verticalGradient(
-            colors = listOf(
-                filterBgColor,
-                filterBgColor.copy(alpha = 0.8f)
-            )
-        )
-    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -117,7 +112,6 @@ fun TravelProposalList(
                 isExpanded = isFilterExpanded,
                 bgColor = filterBgColor,
                 textColor = filterTextColor,
-                gradient = gradientBrush,
                 onToggle = { isFilterExpanded = !isFilterExpanded },
                 filterSummary = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -125,15 +119,16 @@ fun TravelProposalList(
                             text = buildString {
                                 append(filters.title)
                                 filters.startDate?.let { append(" | ${it.toDateFormat()}") }
-                                filters.endDate?.let { append(" - ${it.toDateFormat()}") }
+                                filters.endDate?.let { append(" - ${it.toDateFormat()} |") }
                             },
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+//                            modifier = Modifier.padding(start = 8.dp)
                         )
                         Spacer(Modifier.width(8.dp))
 
-                        filters.activities.take(2).forEach { act ->
+                        filters.activities.take(1).forEach { act ->
                             AssistChip(
                                 onClick = {},
                                 label = {
@@ -143,17 +138,20 @@ fun TravelProposalList(
                                     )
                                 },
                                 colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    leadingIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                    labelColor = filterTextColor,
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                ),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = filterTextColor
                                 ),
                                 modifier = Modifier.height(28.dp)
                             )
                             Spacer(Modifier.width(4.dp))
                         }
-                        if (filters.activities.size > 2) {
+                        if (filters.activities.size > 1) {
                             Text(
-                                "+${filters.activities.size - 2}",
+                                "+${filters.activities.size - 1}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -164,7 +162,6 @@ fun TravelProposalList(
                         tripVm = tripVm,
                         bgColor = filterBgColor,
                         textColor = filterTextColor,
-                        gradient = gradientBrush,
                         onToggle = { isFilterExpanded = !isFilterExpanded },
                     )
                 }
@@ -258,7 +255,6 @@ fun ExpandableFilterTopBar(
     isExpanded: Boolean,
     bgColor: Color,
     textColor: Color,
-    gradient: Brush,
     onToggle: () -> Unit,
     filterSummary: @Composable () -> Unit,
     expandedContent: @Composable () -> Unit
@@ -266,10 +262,6 @@ fun ExpandableFilterTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                gradient,
-                shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
-            )
             .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
     ) {
         Column(Modifier.fillMaxWidth()) {
@@ -290,7 +282,6 @@ fun ExpandableFilterTopBar(
                                 "Filters",
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = textColor,
-                                modifier = Modifier.padding(start = 16.dp)
                             )
                         }
                         Row(
@@ -308,6 +299,7 @@ fun ExpandableFilterTopBar(
                             contentDescription = if (isExpanded) "Hide filters" else "Show filters",
                             modifier = Modifier
                                 .rotate(if (isExpanded) 180f else 0f)
+                                .size(42.dp)
                         )
                     }
                 },
@@ -334,7 +326,7 @@ fun ExpandableFilterTopBar(
                         Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+//                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         expandedContent()
                     }
@@ -351,7 +343,6 @@ fun FilterForm(
     tripVm: TravelProposalViewModel,
     bgColor: Color,
     textColor: Color,
-    gradient: Brush,
     onToggle: () -> Unit
 ) {
     var isGroupSizeExtended by remember { mutableStateOf(false) }
@@ -539,7 +530,19 @@ fun FilterForm(
                             activity
                         )
                     },
-                    label = { Text(activity.first.value, color = textColor) })
+                    label = { Text(activity.first.value, color = textColor) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        labelColor = textColor,
+                        containerColor = bgColor,
+                        selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        true,
+                        false,
+                        borderColor = textColor
+                    ),
+                )
                 Spacer(modifier = Modifier.width(8.dp))
             }
         }
@@ -666,6 +669,7 @@ fun FormButton(tripVm: TravelProposalViewModel, onApplyFilters: () -> Unit) {
     val filterError = tripVm.filterErrors
     val errorToShow = filterError.toList.firstOrNull { it.isNotBlank() }
 
+
     if (filterError.hasError && errorToShow != null) {
         Text(
             text = errorToShow,
@@ -673,21 +677,47 @@ fun FormButton(tripVm: TravelProposalViewModel, onApplyFilters: () -> Unit) {
             modifier = Modifier.padding(6.dp)
         )
     }
-    Button(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 15.dp, end = 15.dp),
-        onClick = onApplyFilters,
-        shape = RoundedCornerShape(10.dp),
-        enabled = !filterError.hasError
-    ) {
-        Text(
-            modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
-            text = "Search",
-            color = MaterialTheme.colorScheme.onPrimary,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp
-        )
+    Row(modifier = Modifier.fillMaxWidth()) {
+
+        IconButton(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(50.dp),
+            onClick = {
+                tripVm.resetFilters()
+                //TODO(NOT): do not touch, the WW3 depend on this function
+                onApplyFilters()
+            },
+            shape = RoundedCornerShape(10.dp),
+            enabled = !filterError.hasError,
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+            )
+        ) {
+            Icon(
+                //FIXME: use a more appropriate icon for reset
+                imageVector = Icons.Default.Soap,
+                modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
+                contentDescription = "Reset Filters",
+            )
+        }
+        Spacer(Modifier.width(24.dp))
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 16.dp),
+            onClick = onApplyFilters,
+            shape = RoundedCornerShape(10.dp),
+            enabled = !filterError.hasError
+        ) {
+            Text(
+                modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
+                text = "Search",
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
+            )
+        }
     }
 }
 
