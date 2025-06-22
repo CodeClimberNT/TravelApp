@@ -9,7 +9,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,24 +50,40 @@ fun NavGraph(
         }
         val bottomBarItemSelected = remember { mutableStateOf(BottomBarItem.Explore) }
         val snackbarHostState = remember { SnackbarHostState() }
-        val snackbarNotification = tripVm.snackbarNotification.collectAsState()
+//        val snackbarNotification = tripVm.snackbarNotification.collectAsState()
 
 
         //used for notification
-        LaunchedEffect(snackbarNotification.value) {
-            val notification = snackbarNotification.value
-            notification?.let {
-                Log.d("SnackbarDebug", "Showing notification: ${it.type}, ${it.title}")
+        LaunchedEffect(Unit) {
+            tripVm.notificationEvents.collect { notification ->
+                Log.d("SnackbarDebug", "update for notification")
+//                if (snackbarNotification.type == NotificationType.NULL) {
+//                    Log.d("SnackbarDebug", "No notification to show")
+//                    return@collect
+//                }
+                if (notification.type == NotificationType.NULL) {
+                    Log.d("SnackbarDebug", "No notification to show")
+                    return@collect
+                }
+
+                Log.d(
+                    "SnackbarDebug",
+                    "Showing notification: ${notification.type}, ${notification.title}"
+                )
                 snackbarHostState.showSnackbar(
-                    message = tripVm.getNotificationMessage(it.type, it.title, true),
+                    message = tripVm.getNotificationMessage(
+                        notification.type,
+                        notification.title,
+                        true
+                    ),
                     actionLabel = "View",
                     duration = SnackbarDuration.Short
                 ).let { result ->
                     if (result == SnackbarResult.ActionPerformed) {
-                        handleNotificationNavigation(it, navActions)
+                        handleNotificationNavigation(notification, navActions)
                     }
                 }
-            } ?: Log.d("SnackbarDebug", "No notification to show")
+            }
         }
 
 

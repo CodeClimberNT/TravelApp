@@ -36,13 +36,15 @@ import com.example.final_assignment_even_g28.shared.validation.TravelProposalSec
 import com.example.final_assignment_even_g28.shared.validation.TravelProposalValidator
 import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.utils.toDateFormat
-import com.example.final_assignment_even_g28.utils.toMillis
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -70,7 +72,9 @@ class TravelProposalViewModel(
 
     var groupSizeOptions = (1..15).toList()
 
-    private val currentUser: StateFlow<UserProfile> = userModel.loggedUser
+    private val currentUser = MutableStateFlow<UserProfile>(UserProfile())
+//    private val currentUser: StateFlow<UserProfile>
+//        get() = _currentUser
 
     var filterErrors by mutableStateOf(FilterError())
         private set
@@ -128,24 +132,36 @@ class TravelProposalViewModel(
     val notifications: StateFlow<List<Notification>>
         get() = _notifications
 
-    private val _snackbarNotification = MutableStateFlow<Notification?>(null)
-    val snackbarNotification: StateFlow<Notification?>
+    val _snackbarNotification = MutableStateFlow<Notification>(Notification())
+    val snackbarNotification: StateFlow<Notification>
         get() = _snackbarNotification
 
+    private val _notificationEvents = MutableSharedFlow<Notification>()
+    val notificationEvents: SharedFlow<Notification> = _notificationEvents.asSharedFlow()
 
     private val _unreadNotificationCount = MutableStateFlow(0)
     val unreadNotificationCount: StateFlow<Int>
         get() = _unreadNotificationCount
 
-    private val alreadyFetchedNotificationIds = mutableSetOf<String>()
+    private val existingNotificationIds = mutableSetOf<String>()
 
     private val sentLastMinuteNotifications = mutableSetOf<String>()
 
 
     init {
+        loadLoggedUser()
         loadAllTravelProposals()
         getNotification()
         pollingNotifications()
+    }
+
+    private fun loadLoggedUser() {
+        viewModelScope.launch {
+            userModel.loggedUser.collect { user ->
+                currentUser.value = user
+                Log.d("TravelProposalViewModel", "Current User updated: ${user.uid}, ${user.name}")
+            }
+        }
     }
 
     private fun loadAllTravelProposals() {
@@ -171,54 +187,46 @@ class TravelProposalViewModel(
                     NotificationType.PARTICIPANT_REJECTED
                 )
             )
-            val excludedNotificationTypes = userModel.loggedUser.value.notificationSettings
-                .filter { !it.enabled }
-                .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
-            Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
 
-            val userId = currentUser.value.uid
-            tripModel.getNotificationsForUserUID(userId, excludedNotificationTypes)
-                .collect { notifications ->
-                    // NOTIFICATION BELL
-                    _notifications.value = notifications
+            currentUser.collect { user ->
+                if (user.uid.isNotEmpty()) {
+                    val excludedNotificationTypes = user.notificationSettings
+                        .filter { !it.enabled }
+                        .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
+                    Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
 
-                    _unreadNotificationCount.value =
-                        notifications.count { !it.isRead(currentUser.value.uid) }
+//                val userId = currentUser.value.uid
+                    tripModel.getNotificationsForUserUID(user.uid, excludedNotificationTypes)
+                        .collect { notifications ->
+                            // Update the main notifications list
+                            _notifications.value = notifications
+                            _unreadNotificationCount.value =
+                                notifications.count { !it.isRead(user.uid) }
 
-                    //SNACKBAR
-                    notifications.forEach { notification ->
-                        Log.d("forEachNotification", "Title: ${notification.title}")
-                        Log.d(
-                            "forEachNotification",
-                            "notification.isRecent(): ${notification.isRecent()}"
-                        )
-                        Log.d(
-                            "forEachNotification",
-                            "!notification.isRead(currentUser.value.uid): ${
-                                !notification.isRead(currentUser.value.uid)
-                            }"
-                        )
-                        Log.d(
-                            "forEachNotification",
-                            "!alreadyFetchedNotificationIds.contains(notification.id): ${
-                                !alreadyFetchedNotificationIds.contains(notification.id)
-                            }"
-                        )
-                        if (notification.isRecent() &&
-                            !notification.isRead(currentUser.value.uid) &&
-                            !alreadyFetchedNotificationIds.contains(notification.id)
-                        ) {
-                            alreadyFetchedNotificationIds.add(notification.id)
-                            _snackbarNotification.value = notification
+                            // Find and emit new notifications
+                            val newNotifications = notifications.filter { notification ->
+                                !existingNotificationIds.contains(notification.id) &&
+                                        !notification.isRead(user.uid) &&
+                                        notification.isRecent()
+                            }
 
-                            Log.d("New Notification", "New notification: ${notification.title}")
-                            Log.d(
-                                "New Notification",
-                                "New notification: ${_snackbarNotification.value}"
-                            )
+                            // Update the set of existing IDs
+                            existingNotificationIds.addAll(notifications.map { it.id })
+
+                            // Emit new notifications as events
+                            newNotifications.forEach { notification ->
+                                Log.d(
+                                    "NewNotificationEvent",
+                                    "Emitting notification event: ${notification.title}"
+                                )
+                                _notificationEvents.emit(notification)
+                            }
                         }
-                    }
+                } else {
+                    _notifications.value = emptyList()
+                    _unreadNotificationCount.value = 0
                 }
+            }
         }
     }
 
@@ -1159,17 +1167,22 @@ class TravelProposalViewModel(
             }
         }
     }
+
     fun acceptSuggestedItinerary(selectedItinerary: Itinerary) {
         tempTravelProposal = tempTravelProposal.copy(
             itinerary = selectedItinerary.stops
         )
-        Log.d("TravelProposalViewModel", "Accepted suggested itinerary with ${selectedItinerary.stops.size} stops")
+        Log.d(
+            "TravelProposalViewModel",
+            "Accepted suggested itinerary with ${selectedItinerary.stops.size} stops"
+        )
     }
 
     fun itinerarySuggestions(tripName: String, tripStartDate: Timestamp, tripEndDate: Timestamp) {
         viewModelScope.launch {
             // Calcola la durata aggiungendo 1 per includere sia il giorno iniziale che finale
-            val userTotalDays = ((tripEndDate.seconds - tripStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
+            val userTotalDays =
+                ((tripEndDate.seconds - tripStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
 
             Log.d("Itinerary", "User trip duration: $userTotalDays days")
 
@@ -1186,7 +1199,8 @@ class TravelProposalViewModel(
                     val sortedStops = itinerary.stops.sortedBy { it.date.seconds }
                     val originalStartDate = sortedStops.first().date
                     val originalEndDate = sortedStops.last().date
-                    val originalDurationDays = ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
+                    val originalDurationDays =
+                        ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
 
                     val updatedStops = itinerary.stops.map { stop ->
                         val newDate = if (originalDurationDays == 1) {
@@ -1194,7 +1208,8 @@ class TravelProposalViewModel(
                             userStartDate
                         } else {
 
-                            val dayOffsetFromOriginalStart = ((stop.date.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
+                            val dayOffsetFromOriginalStart =
+                                ((stop.date.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
 
 
                             Timestamp(Date(userStartDate.toDate().time + (dayOffsetFromOriginalStart * 24 * 60 * 60 * 1000)))
@@ -1207,7 +1222,10 @@ class TravelProposalViewModel(
                 }
 
                 _listOfItinerarySuggestions.value = updatedSuggestions
-                Log.d("Itinerary", "Updated suggestions with user dates maintaining original distances: ${updatedSuggestions.size}")
+                Log.d(
+                    "Itinerary",
+                    "Updated suggestions with user dates maintaining original distances: ${updatedSuggestions.size}"
+                )
             }
         }
     }
