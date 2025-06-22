@@ -48,8 +48,8 @@ fun TravelProposalCard(
     val isPast = tripVm.isTripInPast(travelProposal)
     val numApprovedParticipant = tripVm.getNumApprovedParticipants(travelProposal)
     val image = travelProposal.images.firstOrNull()
-    val backgroundColor = MaterialTheme.colorScheme.tertiaryContainer
-    val textColor = MaterialTheme.colorScheme.onTertiaryContainer
+    val backgroundColor = MaterialTheme.colorScheme.secondaryContainer
+    val textColor = MaterialTheme.colorScheme.onSecondaryContainer
     val notifications by tripVm.notifications.collectAsState()
     val isTripNotified = notifications.any { it.tripId == travelProposal.id }
 

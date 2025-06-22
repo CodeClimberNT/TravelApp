@@ -195,7 +195,6 @@ class TravelProposalViewModel(
                         .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
                     Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
 
-//                val userId = currentUser.value.uid
                     tripModel.getNotificationsForUserUID(user.uid, excludedNotificationTypes)
                         .collect { notifications ->
                             // Update the main notifications list
@@ -203,7 +202,6 @@ class TravelProposalViewModel(
                             _unreadNotificationCount.value =
                                 notifications.count { !it.isRead(user.uid) }
 
-                            // Find and emit new notifications
                             val newNotifications = notifications.filter { notification ->
                                 !existingNotificationIds.contains(notification.id) &&
                                         !notification.isRead(user.uid) &&
