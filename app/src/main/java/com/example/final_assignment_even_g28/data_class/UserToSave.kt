@@ -15,6 +15,7 @@ data class UserToSave(
     var phoneNumber: String,
     val email: String,
     @Contextual var dateOfBirth: Timestamp,
+    var pastExperiences: List<String>,
     var bio: String,
     @get:Exclude
     var badge: Badge?,

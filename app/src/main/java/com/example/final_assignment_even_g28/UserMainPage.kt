@@ -73,6 +73,8 @@ import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.shared.NotificationBell
 import com.example.final_assignment_even_g28.ui.components.badge.BadgeIconWithInfo
+import com.example.final_assignment_even_g28.ui.components.sign_in.FailedLoginForm
+import com.example.final_assignment_even_g28.ui.components.sign_in.UserNotExistForm
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.screens.SignInScreen
 import com.example.final_assignment_even_g28.ui.theme.StarColor
@@ -101,6 +103,8 @@ fun ProfileScreen(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBadgesBottomSheet by remember { mutableStateOf(isOpeningBadge) }
+    val isPasswordError by viewModel.isPasswordError.collectAsState()
+    val isUserError by viewModel.isUserWrong.collectAsState()
 
     fun showBadges() {
         showBadgesBottomSheet = true
@@ -145,11 +149,18 @@ fun ProfileScreen(
         }
         if (leveledUp)
             LevelUpCard(onDismissRequest = { viewModel.editLevelUp() })
-
-        if (showBadgesBottomSheet) {
+                
+        if (showBadgesBottomSheet)
             BadgesBottomSheet(sheetState = sheetState, onDismiss = { hideBadges() })
-        }
+
+        if(isPasswordError)
+            FailedLoginForm(onDismissRequest = {viewModel.setIsPasswordWrong()})
+
+        if(isUserError)
+            UserNotExistForm(onDismissRequest = {viewModel.setAccountWrong()})
+
     }
+
 }
 
 @Composable

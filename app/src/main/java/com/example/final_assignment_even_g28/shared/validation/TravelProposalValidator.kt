@@ -1,10 +1,29 @@
 package com.example.final_assignment_even_g28.shared.validation
 
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
+import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
+import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.ItineraryStop
 import com.example.final_assignment_even_g28.data_class.Price
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.URL
+import java.net.URLEncoder
 import java.util.Date
+import java.util.Locale
+import kotlin.coroutines.resume
+import kotlinx.io.IOException
+
 
 
 data class ItineraryStopError(
@@ -67,10 +86,11 @@ object TravelProposalValidator {
         tripEndDate: Timestamp,
         itinerary: List<ItineraryStop>,
         tripDescription: String,
-        numTripImages: Int
+        numTripImages: Int,
+        context: Context
     ): Pair<TravelProposalFirstScreenError, Boolean> {
         var isValid = true
-        val titleValidation = validateTitle(title)
+        val titleValidation = validateTitle(title, context)
 
         val (itineraryErrors, itineraryIsValid) = validateItinerary(
             itinerary,
@@ -227,11 +247,12 @@ object TravelProposalValidator {
     }
 
     fun validateSecondScreen(
-        title: String, activities: List<ActivityTag>
+        title: String, activities: List<ActivityTag>,
+        context: Context
     ): Pair<TravelProposalSecondScreenError, Boolean> {
         var isValid = true
 
-        val titleValidation = validateTitle(title)
+        val titleValidation = validateTitle(title, context)
 
         val errors = TravelProposalSecondScreenError(
             title = if (titleValidation.isNotBlank()) {
@@ -251,12 +272,64 @@ object TravelProposalValidator {
         return Pair(errors, isValid)
     }
 
-    private fun validateTitle(title: String): String {
+    private fun validateTitle(title: String, context: Context): String {
         return when {
             title.isBlank() -> "The title cannot be empty"
             title.length > 30 -> "The title cannot be longer than 30 characters"
             title.length < 5 -> "The title cannot be shorter than 5 characters"
+            !isTitleAPlace(title, context) -> "The title must be a valid location"
             else -> ""
         }
     }
+
+    private fun isTitleAPlace(title: String, context: Context): Boolean {
+        return runBlocking {
+            resolveLocation(title, context) != null
+        }
+    }
+
+    fun titleFragments(raw: String): List<String> {
+        return listOf(raw) + raw
+            .split(" by ", " to ", " at ", " of ", " near ", ",")
+            .map { it.trim() }
+            .filter { it.length >= 3 }
+    }
+
+
+    suspend fun resolveLocation(
+        title: String,
+        context: Context
+    ): LatLng? {
+        for (fragment in titleFragments(title)) {
+            geocodeWithSdk(context, title)?.let { return it }
+        }
+        return null
+    }
+
+    suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
+        withContext(Dispatchers.IO) {
+            if (!Geocoder.isPresent()) return@withContext null
+            return@withContext try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    suspendCancellableCoroutine<LatLng?> { cont ->
+                        Geocoder(context, Locale.getDefault())
+                            .getFromLocationName(text, 1, object : Geocoder.GeocodeListener {
+                                override fun onGeocode(addresses: List<Address>) {
+                                    cont.resume(addresses.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
+                                }
+                                override fun onError(errorMessage: String?) {
+                                    cont.resume(null)
+                                }
+                            })
+                    }
+                } else {
+                    Geocoder(context, Locale.getDefault())
+                        .getFromLocationName(text, 1)
+                        ?.firstOrNull()
+                        ?.let { LatLng(it.latitude, it.longitude) }
+                }
+            } catch (e: IOException) {
+                null
+            }
+        }
 }

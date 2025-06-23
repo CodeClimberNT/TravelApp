@@ -386,7 +386,7 @@ class TravelProposalViewModel(
         )
     }
 
-    fun validateFirstScreenFields(): Boolean {
+    fun validateFirstScreenFields(context: Context): Boolean {
         val (errors, isValid) = TravelProposalValidator.validateFirstScreen(
             title = tempTravelProposal.title,
             maxParticipant = tempTravelProposal.maxParticipant,
@@ -396,6 +396,7 @@ class TravelProposalViewModel(
             itinerary = tempTravelProposal.itinerary,
             tripDescription = tempTravelProposal.description,
             numTripImages = tempTravelProposal.images.size + tempTravelProposal.tempImages.size,
+            context = context
         )
 
         firstScreenValidationError = errors
@@ -403,10 +404,11 @@ class TravelProposalViewModel(
         return isValid
     }
 
-    fun validateSecondScreenFields(): Boolean {
+    fun validateSecondScreenFields(context: Context): Boolean {
         val (errors, isValid) = TravelProposalValidator.validateSecondScreen(
             title = tempTravelProposal.title,
             activities = tempTravelProposal.activities,
+            context = context
         )
 
         secondScreenValidationError = errors
@@ -438,7 +440,6 @@ class TravelProposalViewModel(
         tempTravelProposal = _travelProposal.value.copy()
         isEditing = true
     }
-
 
     fun clickCloneTrip(userId: String) {
         Log.d(
@@ -1246,6 +1247,11 @@ class TravelProposalViewModel(
             }
         }
     }
+
+    fun removePendingParticipation(travelProposal: TravelProposal, user: UserProfile){
+        tripModel.removePendingParticipations(travelProposal, user)
+    }
+
 //            tripModel.getItinerarySuggestions(""/*tempTravelProposal.title*/).collect { suggestions ->
 //                if (suggestions.isNotEmpty()) {
 //                    _listOfItinerarySuggestions.value = suggestions
