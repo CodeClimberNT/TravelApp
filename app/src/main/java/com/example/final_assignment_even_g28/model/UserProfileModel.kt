@@ -144,17 +144,19 @@ class UserProfileModel() {
                     } else {
                         Log.e("Login", "Authentication failed: ${task.exception?.message}")
                     }
-                }else{
+                } else {
                     val exception = task.exception
                     when (exception) {
                         is FirebaseAuthInvalidUserException -> {
                             _isAccountWrong.value = true
                             Log.e("Login", "Email not exist")
                         }
+
                         is FirebaseAuthInvalidCredentialsException -> {
                             _isPasswordError.value = true
                             Log.e("Login", "Wrong Password")
                         }
+
                         else -> {
                             Log.e("Login", "Error during login: ${exception?.message}")
                         }
@@ -165,11 +167,11 @@ class UserProfileModel() {
             }
     }
 
-    fun setPasswordError(){
+    fun setPasswordError() {
         _isPasswordError.value = false
     }
 
-    fun setAccountWrong(){
+    fun setAccountWrong() {
         _isPasswordError.value = false
     }
 
@@ -371,7 +373,7 @@ class UserProfileModel() {
 
     suspend fun editProfile(userToSave: UserProfile, context: Context) {
         try {
-            val snapshot = Collections.users.document(userToSave.uid).set(
+            Collections.users.document(userToSave.uid).set(
                 UserToSave(
                     name = userToSave.name,
                     surname = userToSave.surname,
@@ -475,8 +477,8 @@ class UserProfileModel() {
     fun fromStringToUri(uriString: String): Uri {
         return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
     }
-     
-    fun getImageFromUser(user: UserProfile): String{
+
+    fun getImageFromUser(user: UserProfile): String {
         val url = Collections.userImagesBucket.publicUrl("${user.uid}/${user.profilePicture}.jpg")
 
         Log.d("Image", "Recovering from url: $url")
@@ -484,11 +486,15 @@ class UserProfileModel() {
         return url
     }
 
-    fun makeImageUri(){
+    fun makeImageUri() {
         _loggedUser.value = _loggedUser.value.copy(isProfileImage = "Uri")
     }
 
-    suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
+    suspend fun uploadUserProfileImage(
+        userUID: String,
+        imageUri: String,
+        context: Context
+    ): Result<String> {
         return try {
             val fileName = generateRandomString(10)
             val filePath = "$userUID/$fileName.jpg"
@@ -535,10 +541,11 @@ class UserProfileModel() {
     suspend fun deleteUserProfileImage() {
         try {
 
-            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
-            Log.e("Delete Image","Try to delete Image from url: $url")
+            val url =
+                Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
+            Log.e("Delete Image", "Try to delete Image from url: $url")
             Collections.userImagesBucket.delete("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
-            Log.e("Delete Image","Image deleted")
+            Log.e("Delete Image", "Image deleted")
 
         } catch (e: Exception) {
             Log.e("Delete Image", "Impossible to delete image: $e")
