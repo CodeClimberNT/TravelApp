@@ -77,7 +77,7 @@ fun MyTravelProposalList(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
 
-        if (loggedUser.uid.isEmpty()) {
+        if (!userVm.isUserLoggedIn()) {
             NeedToLogin(navAction = navActions)
         } else {
             Column(

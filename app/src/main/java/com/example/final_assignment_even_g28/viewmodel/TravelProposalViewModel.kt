@@ -155,7 +155,7 @@ class TravelProposalViewModel(
 
     private fun loadLoggedUser() {
         viewModelScope.launch {
-            userModel.loggedUser.collect { user ->
+            userModel.loadCurrentUser().collect { (user, _) ->
                 currentUser.value = user
                 Log.d("TravelProposalViewModel", "Current User updated: ${user.uid}, ${user.name}")
             }
@@ -173,7 +173,6 @@ class TravelProposalViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getNotification() {
         viewModelScope.launch {
             val toggleToNotificationTypes = mapOf(
@@ -187,58 +186,41 @@ class TravelProposalViewModel(
                 )
             )
 
-            currentUser.flatMapLatest { user ->
+            currentUser.collect { user ->
                 if (user.uid.isNotEmpty()) {
-                    // Use flatMapLatest again to switch notification flows when settings change
-                    val notificationSettings = user.notificationSettings
-                    Log.d(
-                        "Notifications Settings",
-                        "Settings updated: $notificationSettings"
-                    )
-
-                    val excludedNotificationTypes = notificationSettings
+                    val excludedNotificationTypes = user.notificationSettings
                         .filter { !it.enabled }
-                        .flatMap { toggle ->
-                            toggleToNotificationTypes[toggle.type] ?: emptyList()
+                        .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
+                    Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
+
+                    tripModel.getNotificationsForUserUID(user.uid, excludedNotificationTypes)
+                        .collect { notifications ->
+                            // Update the main notifications list
+                            _notifications.value = notifications
+                            _unreadNotificationCount.value =
+                                notifications.count { !it.isRead(user.uid) }
+
+                            val newNotifications = notifications.filter { notification ->
+                                !existingNotificationIds.contains(notification.id) &&
+                                        !notification.isRead(user.uid) &&
+                                        notification.isRecent()
+                            }
+
+                            // Update the set of existing IDs
+                            existingNotificationIds.addAll(notifications.map { it.id })
+
+                            // Emit new notifications as events
+                            newNotifications.forEach { notification ->
+                                Log.d(
+                                    "NewNotificationEvent",
+                                    "Emitting notification event: ${notification.title}"
+                                )
+                                _notificationEvents.emit(notification)
+                            }
                         }
-
-                    Log.d(
-                        "NotificationsExcluded",
-                        "Excluded types: $excludedNotificationTypes"
-                    )
-
-                    tripModel.getNotificationsForUserUID(
-                        user.uid,
-                        excludedNotificationTypes
-                    )
-
                 } else {
-                    flowOf(emptyList())
-                }
-            }.collect { notifications ->
-                Log.d("Notifications", "Loaded ${notifications.size} notifications for user")
-
-                // Update the main notifications list
-                _notifications.value = notifications
-                _unreadNotificationCount.value =
-                    notifications.count { !it.isRead(currentUser.value.uid) }
-
-                val newNotifications = notifications.filter { notification ->
-                    !existingNotificationIds.contains(notification.id) &&
-                            !notification.isRead(currentUser.value.uid) &&
-                            notification.isRecent()
-                }
-
-                // Update the set of existing IDs
-                existingNotificationIds.addAll(notifications.map { it.id })
-
-                // Emit new notifications as events
-                newNotifications.forEach { notification ->
-                    Log.d(
-                        "NewNotificationEvent",
-                        "Emitting notification event: ${notification.title}"
-                    )
-                    _notificationEvents.emit(notification)
+                    _notifications.value = emptyList()
+                    _unreadNotificationCount.value = 0
                 }
             }
         }
@@ -884,72 +866,90 @@ class TravelProposalViewModel(
 
     fun clickTripInfo(travelId: String, isPast: Boolean = false) {
         viewModelScope.launch {
-            Log.d("TravelProposalViewModel", "Fetching travel proposal with ID: $travelId")
-            tripModel.getTravelProposalById(travelId).collect { trip ->
-                if (trip == null) {
-                    Log.w("TravelProposalViewModel", "No trip found with ID: $travelId")
-                    return@collect
-                }
-                _travelProposal.value = trip
-                val tripPlanner = userModel.getUserByUid(trip.tripPlannerId)
-                Log.d(
-                    "TravelProposalViewModel",
-                    "Trip planner ID: ${tripPlanner}"
-                )
-                if (tripPlanner == null) {
-                    Log.w(
-                        "TravelProposalViewModel",
-                        "No user found for trip planner ID: ${trip.tripPlannerId}"
-                    )
-                    _currentTripPlanner.value = UNKNOWN_USER
-                } else {
-                    _currentTripPlanner.value = tripPlanner
-                    Log.d("TravelProposalViewModel", "Trip planner found: ${tripPlanner.name}")
-                }
-                val participants = trip.participants
+            try {
+                Log.d("TravelProposalViewModel", "Fetching travel proposal with ID: $travelId")
+                tripModel.getTravelProposalById(travelId).collect { trip ->
+                    if (trip == null) {
+                        Log.w("TravelProposalViewModel", "No trip found with ID: $travelId")
+                        return@collect
+                    }
+                    _travelProposal.value = trip
 
-                val participantsDetailed = mutableListOf<ParticipantDetailed>()
-                participants.forEach { participant ->
-                    val user = userModel.getUserByUid(participant.id)
-                    if (user != null) {
-                        participantsDetailed.add(
-                            ParticipantDetailed(
-                                user = user,
-                                invitedGuests = participant.invitedGuests,
-                                status = participant.status
-                            )
-                        )
-                    } else {
-                        Log.w(
+                    userModel.getUserByUID(trip.tripPlannerId).collect { tripPlanner ->
+
+                        Log.d(
                             "TravelProposalViewModel",
-                            "No user found for participant ID: ${participant.id}"
+                            "Trip planner ID: ${tripPlanner}"
                         )
+                        if (tripPlanner == null) {
+                            Log.w(
+                                "TravelProposalViewModel",
+                                "No user found for trip planner ID: ${trip.tripPlannerId}"
+                            )
+                            _currentTripPlanner.value = UNKNOWN_USER
+                        } else {
+                            _currentTripPlanner.value = tripPlanner
+                            Log.d(
+                                "TravelProposalViewModel",
+                                "Trip planner found: ${tripPlanner.name}"
+                            )
+                        }
+                        val participants = trip.participants
+                        val participantIds = participants.map { it.id }
+
+                        userModel.getUsersWithUIDs(participantIds).collect { users ->
+                            val participantsDetailed = mutableListOf<ParticipantDetailed>()
+                            participants.forEach { participant ->
+                                val user = users.find { it.uid == participant.id }
+                                if (user == null) {
+                                    return@forEach
+                                }
+
+                                participantsDetailed.add(
+                                    ParticipantDetailed(
+                                        user = user,
+                                        invitedGuests = participant.invitedGuests,
+                                        status = participant.status
+                                    )
+                                )
+                            }
+                            Log.d(
+                                "TravelProposalViewModel",
+                                "Participants loaded: ${participantsDetailed.size}"
+                            )
+                            _currentParticipants.value = participantsDetailed
+                        }
+
                     }
                 }
-                Log.d(
-                    "TravelProposalViewModel",
-                    "Participants loaded: ${participantsDetailed.size}"
-                )
-                _currentParticipants.value = participantsDetailed
-
+            } catch (e: Exception) {
+                Log.e("TravelProposalViewModel", "Error fetching travel proposal: ${e.message}")
             }
         }
 
         if (isPast) {
             viewModelScope.launch {
-                tripModel.getReviewsForProposal(travelId).collect { reviews ->
-                    Log.d(
-                        "TravelProposalViewModel",
-                        "Loaded ${reviews.size} reviews for trip ID: $travelId"
-                    )
-                    reviews.map { review ->
-                        val userName =
-                            userModel.getNameByUID(review.reviewerId)
-                        Log.d("TravelProposalModel", "Reviewer name: $userName")
-                        review.reviewerName = userName
-                    }
+                try {
+                    tripModel.getReviewsForProposal(travelId).collect { reviews ->
+                        Log.d(
+                            "TravelProposalViewModel",
+                            "Loaded ${reviews.size} reviews for trip ID: $travelId"
+                        )
+                        val reviewIds = reviews.map { it.reviewerId }
+                        userModel.getUsersWithUIDs(reviewIds).collect { users ->
+                            reviews.forEach { review ->
+                                val name = users.find { it.uid == review.reviewerId }?.name
+                                if (name == null) {
+                                    return@forEach
+                                }
 
-                    _currentReviews.value = reviews
+                                review.reviewerName = name
+                            }
+                            _currentReviews.value = reviews
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("TravelProposalViewModel", "Error fetching travel proposal: ${e.message}")
                 }
             }
         }

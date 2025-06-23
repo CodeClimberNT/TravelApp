@@ -57,10 +57,6 @@ fun NavGraph(
         LaunchedEffect(Unit) {
             tripVm.notificationEvents.collect { notification ->
                 Log.d("SnackbarDebug", "update for notification")
-//                if (snackbarNotification.type == NotificationType.NULL) {
-//                    Log.d("SnackbarDebug", "No notification to show")
-//                    return@collect
-//                }
                 if (notification.type == NotificationType.NULL) {
                     Log.d("SnackbarDebug", "No notification to show")
                     return@collect
@@ -135,8 +131,6 @@ fun NavGraph(
                     defaultValue = false
                 }),
             ) { backStackEntry ->
-                //TODO: when badge merge is done, verify this navigation works,
-                // manually true already opens the badge
                 val showReviewsTab =
                     backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_BADGE) == true
 

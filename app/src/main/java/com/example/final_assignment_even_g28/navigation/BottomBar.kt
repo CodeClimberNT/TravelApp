@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 fun CustomBottomBar(navActions: Navigation, selectedItem: BottomBarItem) {
     NavigationBar(
         tonalElevation = 16.dp,
-        //containerColor = MaterialTheme.colorScheme.surface,
     ) {
         NavigationBarItem(
             selected = selectedItem == BottomBarItem.Explore,
@@ -44,7 +43,6 @@ fun CustomBottomBar(navActions: Navigation, selectedItem: BottomBarItem) {
             },
             onClick = {
                 navActions.navigateToTravelList()
-                //selectedItem.value = BottomBarItem.Explore
             },
         )
         NavigationBarItem(
@@ -70,7 +68,6 @@ fun CustomBottomBar(navActions: Navigation, selectedItem: BottomBarItem) {
             },
             onClick = {
                 navActions.navigateToMyTravelProposalList()
-                //selectedItem = BottomBarItem.MyTrips
             }
         )
         NavigationBarItem(
@@ -96,7 +93,6 @@ fun CustomBottomBar(navActions: Navigation, selectedItem: BottomBarItem) {
             },
             onClick = {
                 navActions.navigateToUserMainPage()
-                //selectedItem = BottomBarItem.Profile
             }
         )
     }

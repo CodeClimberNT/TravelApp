@@ -97,10 +97,13 @@ fun ProfileScreen(
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState
 ) {
-    val profile by viewModel.editingProfile.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBadgesBottomSheet by remember { mutableStateOf(isOpeningBadge) }
+
+    val profile by viewModel.loggedUser.collectAsState()
+    val isUserLoggedIn =
+        profile.uid.isNotEmpty() && profile.uid != com.example.final_assignment_even_g28.utils.UNKNOWN_USER.uid
 
     fun showBadges() {
         showBadgesBottomSheet = true
@@ -133,7 +136,8 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Log.d("INIT", "User inside Profile Screen: $profile")
-            if (profile.uid.isEmpty()) {
+            if (!isUserLoggedIn) {
+                Log.d("INIT", "User is not logged in, showing SignInScreen")
                 SignInScreen(navActions)
             } else {
                 ProfileHeader(profile, navActions = navActions)
@@ -144,7 +148,7 @@ fun ProfileScreen(
             }
         }
         if (leveledUp)
-            LevelUpCard(onDismissRequest = { viewModel.editLevelUp() })
+            LevelUpCard(onDismissRequest = { viewModel.dismissLevelUpDialog() })
 
         if (showBadgesBottomSheet) {
             BadgesBottomSheet(sheetState = sheetState, onDismiss = { hideBadges() })

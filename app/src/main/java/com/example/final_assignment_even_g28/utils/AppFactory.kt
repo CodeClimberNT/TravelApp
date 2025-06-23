@@ -11,21 +11,41 @@ import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
 
 object AppFactory : ViewModelProvider.Factory {
     val userProfileModel = UserProfileModel()
-
     val travelProposalModel = TravelProposalModel()
     val reviewModel = UserReviewModel()
+
+    private var userProfileViewModel: UserProfileViewModel? = null
+    private var travelProposalViewModel: TravelProposalViewModel? = null
+    private var userReviewViewModel: UserReviewViewModel? = null
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
-            modelClass.isAssignableFrom(UserProfileViewModel::class.java) ->
-                UserProfileViewModel(userProfileModel) as T
+            modelClass.isAssignableFrom(UserProfileViewModel::class.java) -> {
+                // Return singleton instance
+                if (userProfileViewModel == null) {
+                    userProfileViewModel = UserProfileViewModel(userProfileModel)
+                }
+                userProfileViewModel as T
+            }
 
-            modelClass.isAssignableFrom(TravelProposalViewModel::class.java) ->
-                TravelProposalViewModel(travelProposalModel, userProfileModel) as T
+            modelClass.isAssignableFrom(TravelProposalViewModel::class.java) -> {
+                // Return singleton instance
+                if (travelProposalViewModel == null) {
+                    travelProposalViewModel =
+                        TravelProposalViewModel(travelProposalModel, userProfileModel)
+                }
+                travelProposalViewModel as T
+            }
 
-            modelClass.isAssignableFrom(UserReviewViewModel::class.java) ->
-                UserReviewViewModel(reviewModel, userProfileModel, travelProposalModel) as T
+            modelClass.isAssignableFrom(UserReviewViewModel::class.java) -> {
+                // Return singleton instance
+                if (userReviewViewModel == null) {
+                    userReviewViewModel =
+                        UserReviewViewModel(reviewModel, userProfileModel, travelProposalModel)
+                }
+                userReviewViewModel as T
+            }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class")
         }

@@ -101,6 +101,7 @@ fun EditUserProfileInfo(
     var previewCamera by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     val profile by viewModel.editingProfile.collectAsState()
+
     val configuration = LocalConfiguration.current
     val isLandScape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 

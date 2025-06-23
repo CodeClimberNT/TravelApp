@@ -46,6 +46,7 @@ import com.example.final_assignment_even_g28.ui.components.user_profile.ProfileP
 import com.example.final_assignment_even_g28.ui.screens.Tag
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
+import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import java.text.SimpleDateFormat
@@ -67,8 +68,9 @@ fun OtherProfileScreen(
     val travelProposals by tripVm.allTravelProposals.collectAsState(emptyList())
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
     val travelProposal = travelProposals.firstOrNull() ?: TravelProposal()
-    val otherUser = userVm.getUserProfileByUID(userUID)
-
+    val fetchedOtherUser by userVm.getUserProfileByUID(userUID)
+        .collectAsState(initial = UserProfile())
+    val otherUser = fetchedOtherUser ?: UNKNOWN_USER
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },

@@ -118,7 +118,7 @@ fun PastTravelProposalScreen(
         }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
 
-        if (loggedUser.uid.isEmpty()) {
+        if (!userProfileViewModel.isUserLoggedIn()) {
             //need to Login
             NeedToLogin(navAction = navActions)
         } else {

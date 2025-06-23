@@ -22,131 +22,55 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserToSave
 import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
-import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 
 
 class UserProfileModel() {
-    private var _loggedUser = MutableStateFlow<UserProfile>(UserProfile())
-    val loggedUser: StateFlow<UserProfile> get() = _loggedUser
-
-    private val _userProfiles = MutableStateFlow<List<UserProfile>>(emptyList())
-    val userProfiles: StateFlow<List<UserProfile>> = _userProfiles
-
-    private val _userBadges = MutableStateFlow<List<Badge>>(emptyList())
-    val userBadges: StateFlow<List<Badge>> = _userBadges
+//    private var _loggedUser = MutableStateFlow<UserProfile>(UserProfile())
+//    val loggedUser: StateFlow<UserProfile> get() = _loggedUser
 
     private val _isSigningIn = MutableStateFlow(false)
     val isSigningIn: StateFlow<Boolean> = _isSigningIn.asStateFlow()
 
-    private var _leveledUp = MutableStateFlow<Boolean>(false)
-    val leveledUp: StateFlow<Boolean> get() = _leveledUp
 
+//    private suspend fun loadUserWithBadges(userProfile: UserProfile) {
+//        try {
+//            _loggedUser.value = userProfile
+//
+//            // Initialize badges if they don't exist
+//            initializeUserBadgesIfNeeded(userProfile.uid)
+//
+//            // Start listening to badges flow
+//            CoroutineScope(Dispatchers.Main).launch {
+//                getBadgesFlow(userProfile.uid).collect { badges ->
+//                    _userBadges.value = badges
+//                }
+//            }
+//        } catch (e: Exception) {
+//            Log.e("UserProfileModel", "Error loading user with badges: ${e.message}")
+//            _loggedUser.value = userProfile
+//            _userBadges.value = emptyList()
+//        }
+//    }
 
-    init {
-        loadAllUsers()
-    }
-
-    private fun loadAllUsers() {
-
-        try {
-            Collections.users.get().addOnSuccessListener { querySnapshot ->
-                val userList = mutableListOf<UserProfile>()
-                for (document in querySnapshot) {
-                    val user = document.toObject(UserProfile::class.java)
-                    userList.add(user)
-                }
-                _userProfiles.value = userList
-                Log.d("User Profile", "Load correctly ${userList.size} users")
-            }.addOnFailureListener { e ->
-                Log.e("User Profile", "Error retrieving the users: $e")
-            }
-            migrateNotificationSettings(Collections.auth.currentUser?.uid ?: "")
-            Log.d(
-                "UserProfileNotifications",
-                "Current user: ${Collections.auth.currentUser?.uid ?: "No user"}"
-            )
-        } catch (e: Exception) {
-            Log.e("UserProfileModel", "Error loading all users: ${e.message}")
-        }
-
-    }
-
-    private suspend fun loadUserWithBadges(userProfile: UserProfile) {
-        try {
-            _loggedUser.value = userProfile
-
-            // Initialize badges if they don't exist
-            initializeUserBadgesIfNeeded(userProfile.uid)
-
-            // Start listening to badges flow
-            CoroutineScope(Dispatchers.Main).launch {
-                getBadgesFlow(userProfile.uid).collect { badges ->
-                    _userBadges.value = badges
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("UserProfileModel", "Error loading user with badges: ${e.message}")
-            _loggedUser.value = userProfile
-            _userBadges.value = emptyList()
-        }
-    }
-
-    fun login(email: String, password: String) {
-        val auth = Collections.auth
-
-        //login con username and password
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    //Firebase user
-                    val user = auth.currentUser
-
-                    if (user != null) {
-                        Collections.users.document(user.uid).get()
-                            .addOnSuccessListener { documentSnapshot ->
-                                val userProfile = documentSnapshot.toObject(UserProfile::class.java)
-                                if (userProfile != null) {
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        loadUserWithBadges(userProfile)
-                                    }
-                                }
-                            }.addOnFailureListener {
-                                //an user with that UID does not exists
-                                Log.e(
-                                    "Login",
-                                    "Impossible to retrieve a user with this UID: ${user.uid}"
-                                )
-                            }
-                        Log.d("Login", "User logged in successfully: ${user.email}")
-                    } else {
-                        Log.e("Login", "Authentication failed: ${task.exception?.message}")
-                    }
-                }
-            }.addOnFailureListener {
-                Log.e("Login", "Impossible to login with this mail and password")
-            }
-    }
 
     fun deleteAccount() {
         val auth = Collections.auth
         val user = auth.currentUser
-
 
         if (user != null) {
             Collections.getBadgeCollection(user.uid).get()
@@ -167,37 +91,32 @@ class UserProfileModel() {
         }
     }
 
-    fun loadUserByUID(uid: String) {
-        Collections.users.document(uid).get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    Log.d("Load User", "Loading User with UID: $uid")
-                    val userProfile = documentSnapshot.toObject(UserProfile::class.java)
-                    if (userProfile != null) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            loadUserWithBadges(userProfile)
-                        }
-                    }
-                }
-            }.addOnFailureListener {
-                Log.e("Load User", "Failed to load the user with UID: $uid")
-            }
-    }
-
-//    private fun loadUser(user: UserProfile) {
-//        _loggedUser.value = user
+//    fun loadUserByUID(uid: String) {
+//        Collections.users.document(uid).get()
+//            .addOnSuccessListener { documentSnapshot ->
+//                if (documentSnapshot.exists()) {
+//                    Log.d("Load User", "Loading User with UID: $uid")
+//                    val userProfile = documentSnapshot.toObject(UserProfile::class.java)
+//                    if (userProfile != null) {
+//                        CoroutineScope(Dispatchers.Main).launch {
+//                            loadUserWithBadges(userProfile)
+//                        }
+//                    }
+//                }
+//            }.addOnFailureListener {
+//                Log.e("Load User", "Failed to load the user with UID: $uid")
+//            }
 //    }
 
     fun logOut() {
         Collections.auth.signOut()
-        _loggedUser.value = UserProfile()
-        _userBadges.value = emptyList()
     }
 
-    suspend fun signUpWithGoogle(context: Context) {
-        val activity = context as? Activity ?: return
+    suspend fun signUpWithGoogle(context: Context): String {
+        val activity = context as? Activity ?: return ""
         val auth = Collections.auth
         _isSigningIn.value = true
+        var userUID = ""
 
         try {
             Log.d("Sign Up", "Start try")
@@ -226,61 +145,77 @@ class UserProfileModel() {
                 val tokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                 val firebaseCred =
                     GoogleAuthProvider.getCredential(tokenCredential.idToken, null)
-                auth.signInWithCredential(firebaseCred).addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        //Firebase user
-                        val user = auth.currentUser
+                val result = auth.signInWithCredential(firebaseCred).await()
 
-                        if (user != null) {
-                            Collections.users.document(user.uid).get()
-                                .addOnSuccessListener { documentSnapshot ->
-                                    val userProfile =
-                                        documentSnapshot.toObject(UserProfile::class.java)
-                                    Log.d("Login with Google", "User: $userProfile")
-
-                                    if (userProfile != null) {
-                                        CoroutineScope(Dispatchers.Main).launch {
-                                            loadUserWithBadges(userProfile)
-                                        }
-                                    } else {
-                                        val newUserProfile = UserProfile(
-                                            uid = user.uid,
-                                            email = user.email.toString(),
-                                            name = user.displayName.toString(),
-                                        )
-                                        CoroutineScope(Dispatchers.Main).launch {
-                                            createUserWithBadges(newUserProfile)
-                                        }
-//                                        Collections.users.document(user.uid).set(
-//                                            UserProfile(
-//                                                uid = user.uid,
-//                                                email = user.email.toString(),
-//                                                name = user.displayName.toString(),
-//                                            )
-//                                        ).addOnSuccessListener {
-//                                            // Initialize badges for new Google user
-//                                            CoroutineScope(Dispatchers.Main).launch {
-//                                                initializeUserBadges(user.uid)
-//                                            }
-//                                            // load user only after the user is registered and the badges are initialized
-//                                            loadUserByUID(user.uid)
-//                                        }
-                                    }
-                                    Log.d("Login with Google", "User was registered: ${user.email}")
-                                }.addOnFailureListener {
-                                    Log.e(
-                                        "Login with Google",
-                                        "it was not possible to make the sign in"
-                                    )
-                                }
-                        } else {
-                            Log.e(
-                                "Login",
-                                "Authentication failed: ${task.exception?.message}"
+                if (result != null) {
+                    val user = result.user
+                    if (user != null) {
+                        userUID = user.uid
+                        val userDoc = Collections.users.document(userUID).get().await()
+                        if (userDoc == null) {
+                            val userToSave = UserToSave(
+                                uid = user.uid,
+                                name = user.displayName ?: "",
+                                surname = "",
+                                typeOfExperiences = emptyList(),
+                                mostDesiredDestination = "",
+                                phoneNumber = "",
+                                email = user.email ?: "error@email.com",
+                                dateOfBirth = Timestamp.now(),
+                                bio = "",
+                                badge = null,
+                                currentLevel = 1,
+                                rating = 0.0f,
+                                isProfileImage = "Monogram",
+                                profilePicture = "",
+                                exp = 0
                             )
+                            createUserWithBadges(userToSave)
                         }
                     }
                 }
+
+//                    .addOnCompleteListener { task ->
+//                    if (task.isSuccessful) {
+//                        //Firebase user
+//                        val user = auth.currentUser
+//
+//                        if (user != null) {
+//                            Collections.users.document(user.uid).get()
+//                                .addOnSuccessListener { documentSnapshot ->
+//                                    val userProfile =
+//                                        documentSnapshot.toObject(UserProfile::class.java)
+//                                    Log.d("Login with Google", "User: $userProfile")
+//
+//                                    if (userProfile != null) {
+//                                        CoroutineScope(Dispatchers.Main).launch {
+//                                            loadUserWithBadges(userProfile)
+//                                        }
+//                                    } else {
+//                                        val newUserProfile = UserProfile(
+//                                            uid = user.uid,
+//                                            email = user.email.toString(),
+//                                            name = user.displayName.toString(),
+//                                        )
+//                                        CoroutineScope(Dispatchers.Main).launch {
+//                                            createUserWithBadges(newUserProfile)
+//                                        }
+//                                    }
+//                                    Log.d("Login with Google", "User was registered: ${user.email}")
+//                                }.addOnFailureListener {
+//                                    Log.e(
+//                                        "Login with Google",
+//                                        "it was not possible to make the sign in"
+//                                    )
+//                                }
+//                        } else {
+//                            Log.e(
+//                                "Login",
+//                                "Authentication failed: ${task.exception?.message}"
+//                            )
+//                        }
+//                    }
+//                }
             } else {
                 Log.e(
                     "Sign Up",
@@ -292,9 +227,73 @@ class UserProfileModel() {
         } finally {
             _isSigningIn.value = false
         }
+
+        return userUID
     }
 
-    private suspend fun createUserWithBadges(userProfile: UserProfile) {
+    suspend fun signUp(newUser: UserProfile, password: String): String {
+        var userUID = ""
+        try {
+            val auth = Collections.auth
+
+            val result = auth.createUserWithEmailAndPassword(newUser.email, password).await()
+
+            if (result != null) {
+                val user = result.user
+                if (user != null) {
+                    val savingUser = UserToSave(
+                        uid = user.uid,
+                        name = newUser.name,
+                        surname = newUser.surname,
+                        typeOfExperiences = newUser.typeOfExperiences,
+                        mostDesiredDestination = newUser.mostDesiredDestination,
+                        phoneNumber = newUser.phoneNumber,
+                        email = newUser.email,
+                        dateOfBirth = newUser.dateOfBirth,
+                        bio = newUser.bio,
+                        badge = newUser.badge,
+                        currentLevel = 1,
+                        rating = 0.0f,
+                        isProfileImage = "Monogram",
+                        profilePicture = "",
+                        exp = 0
+                    )
+                    createUserWithBadges(savingUser)
+
+                    userUID = user.uid
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Login", "Error during login: ${e.message}")
+            userUID = ""
+        }
+
+        return userUID
+    }
+
+    suspend fun login(email: String, password: String): String {
+        var userUID = ""
+        try {
+            val auth = Collections.auth
+
+            //login con username and password
+            val result = auth.signInWithEmailAndPassword(email, password).await()
+
+            if (result != null) {
+                val user = result.user
+                if (user != null) {
+                    userUID = user.uid
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Login", "Error during login: ${e.message}")
+            userUID = ""
+        }
+
+        return userUID
+    }
+
+    private suspend fun createUserWithBadges(userProfile: UserToSave) {
         try {
             // Create user document
             withContext(Dispatchers.IO) {
@@ -304,10 +303,6 @@ class UserProfileModel() {
 
             // Initialize badges
             initializeUserBadges(userProfile.uid)
-
-            // Load user with badges
-            loadUserWithBadges(userProfile)
-
         } catch (e: Exception) {
             Log.e("UserProfile", "Error creating user with badges: ${e.message}")
         }
@@ -319,29 +314,10 @@ class UserProfileModel() {
         return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 
-    fun signUp(userToSign: UserProfile, password: String) {
-        val auth = Collections.auth
-
-        auth.createUserWithEmailAndPassword(userToSign.email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-
-                    if (user != null) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            val userProfile = userToSign.copy(uid = user.uid)
-                            createUserWithBadges(userProfile)
-                        }
-                    }
-                }
-            }.addOnFailureListener {
-                Log.e("SignUp", "Impossible to SignUp")
-            }
-    }
 
     suspend fun editProfile(userToSave: UserProfile, context: Context) {
         try {
-            val snapshot = Collections.users.document(userToSave.uid).set(
+            Collections.users.document(userToSave.uid).set(
                 UserToSave(
                     name = userToSave.name,
                     surname = userToSave.surname,
@@ -363,13 +339,27 @@ class UserProfileModel() {
             Log.d("Edit User", "User with uid ${userToSave.uid} correctly edited")
             Log.d("Edit User", "changed saved")
 
-            _loggedUser.value = userToSave
-            uploadUserProfileImage(loggedUser.value.uid, userToSave.profilePicture, context)
+            uploadUserProfileImage(userToSave.uid, userToSave.profilePicture, context)
             Log.d(
                 "Edit User",
-                "Try to save uid: ${loggedUser.value.uid}, uri: ${userToSave.profilePicture}"
+                "Try to save uid: ${userToSave.uid}, uri: ${userToSave.profilePicture}"
             )
 
+        } catch (e: Exception) {
+            Log.e("Edit Profile", "Error editing Profile: $e")
+        }
+    }
+
+    suspend fun updateUserLevel(userUID: String, newExp: Int, level: Int) {
+        try {
+            Collections.users.document(userUID).update(
+                mapOf(
+                    "currentLevel" to level,
+                    "exp" to newExp,
+                )
+            ).await()
+
+            Log.d("Edit User", "User uid: ${userUID} level and exp updated")
         } catch (e: Exception) {
             Log.e("Edit Profile", "Error editing Profile: $e")
         }
@@ -381,19 +371,16 @@ class UserProfileModel() {
                 try {
                     Log.d("Edit User", "Updating badge for user with UID: $userUID")
                     Log.d("Edit User", "New badge: $newBadge")
-                    Log.d("Edit User", "Logged user badge updated: ${_loggedUser.value.badge}")
-                    // FIXME: use the commented code when the code is merged with the others
-                    val documentRef = Collections.users.document(userUID)
-                    val userToEdit = _userProfiles.value.firstOrNull { it.uid == userUID }
-                        ?: throw Exception("User with UID $userUID not found")
-                    userToEdit.badge = newBadge
-                    Tasks.await(documentRef.set(userToEdit))
 
-                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
-
-                    loadUserByUID(userToEdit.uid)
-                    _loggedUser.value = _loggedUser.value.copy(badge = newBadge)
-
+                    val userDoc = Collections.users.document(userUID).get().await()
+                    if (userDoc != null) {
+                        userDoc.reference.update("badge", newBadge).await()
+                        Log.d("Edit User", "Edited User with UID: $userUID")
+                    } else {
+                        throw IllegalArgumentException(
+                            "User with UID $userUID does not exist in the database."
+                        )
+                    }
                 } catch (e: Exception) {
                     Log.e("Edit User", "Error editing user: ${e.message}")
                 }
@@ -418,42 +405,287 @@ class UserProfileModel() {
 //            }
 //    }
 
-    fun getUserById(id: String): UserProfile {
-        //get user by id from the list of all users
-        return _userProfiles.value.find { it.uid == id } ?: UserProfile()
-    }
+//    fun getUserById(id: String): UserProfile {
+//        //get user by id from the list of all users
+//        return _userProfiles.value.find { it.uid == id } ?: UserProfile()
+//    }
 
     fun getAvailableIcons(): List<IconType> {
         return IconType.toList()
 
     }
 
-    fun getUserByUid(uid: String): UserProfile? {
-        return _userProfiles.value.firstOrNull { it.uid == uid }
+    //TODO: if possible use this function as wrapper of loadUserWithBadges to avoid redundancy
+    fun loadCurrentUser(): Flow<Pair<UserProfile, List<Badge>>> = callbackFlow {
+        val currUserUID = Collections.auth.currentUser?.uid ?: " "
+        if (currUserUID.isBlank()) {
+            Log.e("UserProfileModel", "Current user UID is null, cannot load user profile")
+            trySend(Pair(UserProfile(), emptyList()))
+        }
+
+
+        val userRef = Collections.users.document(currUserUID)
+
+        var badgesFetched = emptyList<Badge>()
+        var userProfile = UserProfile()
+
+        fun returnTuple() {
+            trySend(Pair(userProfile, badgesFetched))
+        }
+
+        initializeUserBadgesIfNeeded(currUserUID)
+
+        val badgeListener = Collections.getBadgeCollection(currUserUID)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("UserBadges", "Error listening to badges: ${error.message}")
+                    returnTuple()
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val badges = snapshot.documents.mapNotNull { document ->
+                        document.toObject(Badge::class.java)?.apply {
+                            id = document.id
+                        }
+                    }.sorted() // Use the Comparable implementation from Badge
+
+                    badgesFetched = badges
+                    Log.d("UserBadges", "Retrieved ${badges.size} badges for user: $currUserUID")
+                    returnTuple()
+                } else {
+                    returnTuple()
+                }
+            }
+
+        val userListener = userRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("UserProfileModel", "Error fetching user by UID: ${error.message}")
+                returnTuple()
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                val user = snapshot.toObject(UserProfile::class.java)
+                if (user != null) {
+                    Log.d("UserProfileModel", "User fetched by UID: $currUserUID")
+                    userProfile = user
+                    returnTuple()
+
+                } else {
+                    Log.d("UserProfileModel", "No user found with UID: $currUserUID")
+                    returnTuple()
+                }
+            } else {
+                Log.d("UserProfileModel", "Snapshot is null for UID: $currUserUID")
+                returnTuple()
+            }
+        }
+
+        awaitClose {
+            badgeListener.remove()
+            userListener.remove()
+        }
+    }.flowOn(Dispatchers.IO)
+
+    fun loadUserWithBadgesFromDB(userUID: String): Flow<Pair<UserProfile, List<Badge>>> =
+        callbackFlow {
+            if (userUID.isEmpty()) {
+                Log.e("UserProfileModel", "UID is empty, cannot load user profile")
+                trySend(Pair(UserProfile(), emptyList()))
+            }
+
+            val userRef = Collections.users.document(userUID)
+
+            var badgesFetched = emptyList<Badge>()
+            var userProfile = UserProfile()
+
+            fun returnTuple() {
+                trySend(Pair(userProfile, badgesFetched))
+            }
+
+            initializeUserBadgesIfNeeded(userUID)
+
+            val badgeListener = Collections.getBadgeCollection(userUID)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e("UserBadges", "Error listening to badges: ${error.message}")
+                        returnTuple()
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        val badges = snapshot.documents.mapNotNull { document ->
+                            document.toObject(Badge::class.java)?.apply {
+                                id = document.id
+                            }
+                        }.sorted() // Use the Comparable implementation from Badge
+
+                        badgesFetched = badges
+                        Log.d("UserBadges", "Retrieved ${badges.size} badges for user: $userUID")
+                        returnTuple()
+                    } else {
+                        returnTuple()
+                    }
+                }
+
+            val userListener = userRef.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("UserProfileModel", "Error fetching user by UID: ${error.message}")
+                    returnTuple()
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val user = snapshot.toObject(UserProfile::class.java)
+                    if (user != null) {
+                        Log.d("UserProfileModel", "User fetched by UID: $userUID")
+                        userProfile = user
+                        returnTuple()
+
+                    } else {
+                        Log.d("UserProfileModel", "No user found with UID: $userUID")
+                        returnTuple()
+                    }
+                } else {
+                    Log.d("UserProfileModel", "Snapshot is null for UID: $userUID")
+                    returnTuple()
+                }
+            }
+
+            awaitClose {
+                badgeListener.remove()
+                userListener.remove()
+            }
+        }.flowOn(Dispatchers.IO)
+
+    fun getUserByUID(userUID: String): Flow<UserProfile?> = callbackFlow {
+        val userDoc = Collections.users.document(userUID)
+
+        val listener = userDoc.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("UserProfileModel", "Error fetching user name by UID: ${error.message}")
+                trySend(null)
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val user = snapshot.toObject(UserProfile::class.java)
+                if (user != null) {
+                    Log.d("UserProfileModel", "User name fetched by UID: $userUID")
+                    trySend(user)
+                } else {
+                    Log.d("UserProfileModel", "No user found with UID: $userUID")
+                    trySend(null)
+                }
+            } else {
+                Log.d("UserProfileModel", "Snapshot is null for UID: $userUID")
+                trySend(null)
+            }
+        }
+
+        awaitClose { listener.remove() }
+    }.flowOn(Dispatchers.IO)
+
+    fun getUsersWithUIDs(userUIDs: List<String>): Flow<List<UserProfile>> = callbackFlow {
+        val userQuery = Collections.users.whereIn("uid", userUIDs)
+
+        val listener = userQuery.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("UserProfileModel", "Error fetching users by UIDs: ${error.message}")
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val users = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(UserProfile::class.java)
+                }
+                Log.d("UserProfileModel", "Fetched ${users.size} users for UIDs: $userUIDs")
+                trySend(users)
+            } else {
+                Log.d("UserProfileModel", "Snapshot is null for UIDs: $userUIDs")
+                trySend(emptyList())
+            }
+        }
+
+        awaitClose { listener.remove() }
     }
 
-    fun getNameByUID(userUID: String): String {
-        return _userProfiles.value.firstOrNull() { it.uid == userUID }?.name ?: "Unknown"
-    }
+    fun getNameByUID(userUID: String): Flow<String> = callbackFlow {
+        val userDoc = Collections.users.document(userUID)
 
-    fun updateUserProfile(updatedProfile: UserProfile) {
-        _userProfiles.value =
-            _userProfiles.value.map { if (it.uid == updatedProfile.uid) updatedProfile else it }
-    }
+        val listener = userDoc.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("UserProfileModel", "Error fetching user name by UID: ${error.message}")
+                trySend("Unknown")
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val user = snapshot.toObject(UserProfile::class.java)
+                if (user != null) {
+                    Log.d("UserProfileModel", "User name fetched by UID: $userUID")
+                    trySend(user.name)
+                } else {
+                    Log.d("UserProfileModel", "No user found with UID: $userUID")
+                    trySend("Unknown")
+                }
+            } else {
+                Log.d("UserProfileModel", "Snapshot is null for UID: $userUID")
+                trySend("Unknown")
+            }
+        }
+
+        awaitClose { listener.remove() }
+    }.flowOn(Dispatchers.IO)
+
+//    fun getNamesWithUIDs(userUIDs: List<String>): Flow<List<String>> = callbackFlow {
+//        val userDoc = Collections.users.whereIn("uid",userUIDs)
+//
+//        val listener = userDoc.addSnapshotListener { snapshot, error ->
+//            if (error != null) {
+//                Log.e("UserProfileModel", "Error fetching user name by UID: ${error.message}")
+//                trySend("Unknown")
+//                return@addSnapshotListener
+//            }
+//            if (snapshot != null) {
+//                val user = snapshot.toObject(UserProfile::class.java)
+//                if (user != null) {
+//                    Log.d("UserProfileModel", "User name fetched by UID: $userUID")
+//                    trySend(user.name)
+//                } else {
+//                    Log.d("UserProfileModel", "No user found with UID: $userUID")
+//                    trySend("Unknown")
+//                }
+//            } else {
+//                Log.d("UserProfileModel", "Snapshot is null for UID: $userUID")
+//                trySend("Unknown")
+//            }
+//        }
+//
+//        awaitClose { listener.remove() }
+//    }
+//
+//    fun updateUserProfile(updatedProfile: UserProfile) {
+//        _userProfiles.value =
+//            _userProfiles.value.map { if (it.uid == updatedProfile.uid) updatedProfile else it }
+//    }
 
     fun fromStringToUri(uriString: String): Uri {
         return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
     }
-     
-    fun getImageFromUID(userUID: String): String{
+
+    fun getImageFromUID(userUID: String): String {
         val url = Collections.userImagesBucket.publicUrl("$userUID/ProfileImage.jpg")
 
-        Log.d("Image","Recovering from url: $url")
+        Log.d("Image", "Recovering from url: $url")
 
         return url
     }
 
-    suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
+    suspend fun uploadUserProfileImage(
+        userUID: String,
+        imageUri: String,
+        context: Context
+    ): Result<String> {
         return try {
             val fileName =
                 "ProfileImage.jpg"
@@ -491,15 +723,16 @@ class UserProfileModel() {
         return publicUrl
     }
 
-    suspend fun deleteUserProfileImage(){
+    suspend fun deleteUserProfileImage(userUID: String) {
         try {
-            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/ProfileImage.jpg")
-            Log.e("Delete Image","Try to delete Image from url: $url")
-            Collections.userImagesBucket.delete("${loggedUser.value.uid}/ProfileImage.jpg")
-            Log.e("Delete Image","Image deleted")
+            val url =
+                Collections.userImagesBucket.publicUrl("${userUID}/ProfileImage.jpg")
+            Log.e("Delete Image", "Try to delete Image from url: $url")
+            Collections.userImagesBucket.delete("${userUID}/ProfileImage.jpg")
+            Log.e("Delete Image", "Image deleted")
 
-        }catch (e: Exception){
-            Log.e("Delete Image","Impossible to delete image: $e")
+        } catch (e: Exception) {
+            Log.e("Delete Image", "Impossible to delete image: $e")
         }
     }
 
@@ -508,42 +741,71 @@ class UserProfileModel() {
         return url.substringAfter(Collections.USER_IMAGES_BUCKET_PREFIX)
     }
 
-    suspend fun gainExp(expValue: Int, context: Context) {
-        val newExp = loggedUser.value.exp + expValue
-        editLevel(loggedUser.value.exp, newExp)
-        _loggedUser.value = _loggedUser.value.copy(exp = newExp)
-        editProfile(loggedUser.value, context)
-    }
-
-    fun editLevel(oldExp: Int, newExp: Int) {
-        var oldLvl: Int = 0;
-
-        when(oldExp){
-            in 0 .. 20 -> {oldLvl = 1}
-            in 21 .. 50 -> {oldLvl = 2}
-            in 51 .. 100 -> {oldLvl = 3}
-            in 101 .. 200 -> {oldLvl = 4}
-            in 201 .. 400 -> {oldLvl = 5}
-            else -> {oldLvl = 6}
-        }
-
-        when (newExp) {
-            in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
-            in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
-            in 51 .. 100 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 3)}
-            in 101 .. 200 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 4)}
-            in 201 .. 400 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 5)}
-            else -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 6)}
-        }
-
-        if(oldLvl < _loggedUser.value.currentLevel)
-            _leveledUp.value = true
-    }
-
-    fun editLevelUp(){
-        _leveledUp.value = false
-    }
-
+//    suspend fun gainExp(expValue: Int, context: Context) {
+//        val newExp = loggedUser.value.exp + expValue
+//        editLevel(loggedUser.value.exp, newExp)
+//        _loggedUser.value = _loggedUser.value.copy(exp = newExp)
+//        editProfile(loggedUser.value, context)
+//    }
+//
+//    fun editLevel(oldExp: Int, newExp: Int) {
+//        var oldLvl: Int = 0;
+//
+//        when (oldExp) {
+//            in 0..20 -> {
+//                oldLvl = 1
+//            }
+//
+//            in 21..50 -> {
+//                oldLvl = 2
+//            }
+//
+//            in 51..100 -> {
+//                oldLvl = 3
+//            }
+//
+//            in 101..200 -> {
+//                oldLvl = 4
+//            }
+//
+//            in 201..400 -> {
+//                oldLvl = 5
+//            }
+//
+//            else -> {
+//                oldLvl = 6
+//            }
+//        }
+//
+//        when (newExp) {
+//            in 0..20 -> {
+//                _loggedUser.value = _loggedUser.value.copy(currentLevel = 1)
+//            }
+//
+//            in 21..50 -> {
+//                _loggedUser.value = _loggedUser.value.copy(currentLevel = 2)
+//            }
+//
+//            in 51..100 -> {
+//                _loggedUser.value = _loggedUser.value.copy(currentLevel = 3)
+//            }
+//
+//            in 101..200 -> {
+//                _loggedUser.value = _loggedUser.value.copy(currentLevel = 4)
+//            }
+//
+//            in 201..400 -> {
+//                _loggedUser.value = _loggedUser.value.copy(currentLevel = 5)
+//            }
+//
+//            else -> {
+//                _loggedUser.value = _loggedUser.value.copy(currentLevel = 6)
+//            }
+//        }
+//
+//        if (oldLvl < _loggedUser.value.currentLevel)
+//            _leveledUp.value = true
+//    }
 
     private suspend fun initializeUserBadgesIfNeeded(userUID: String) {
         try {
@@ -578,32 +840,6 @@ class UserProfileModel() {
             Log.e("UserBadges", "Error initializing badges for user $userUID: ${e.message}")
         }
     }
-
-    private fun getBadgesFlow(userUID: String) = callbackFlow {
-        val listener = Collections.getBadgeCollection(userUID)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e("UserBadges", "Error listening to badges: ${error.message}")
-                    trySend(emptyList<Badge>())
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    val badges = snapshot.documents.mapNotNull { document ->
-                        document.toObject(Badge::class.java)?.apply {
-                            id = document.id
-                        }
-                    }.sorted() // Use the Comparable implementation from Badge
-
-                    trySend(badges)
-                    Log.d("UserBadges", "Retrieved ${badges.size} badges for user: $userUID")
-                } else {
-                    trySend(emptyList<Badge>())
-                }
-            }
-
-        awaitClose { listener.remove() }
-    }.flowOn(Dispatchers.IO)
 
     suspend fun triggerBadgeProgress(
         targetUserUID: String,
@@ -723,18 +959,8 @@ class UserProfileModel() {
         }
     }
 
-    fun updateNotificationSettings(userId: String, settings: List<NotificationPreference>) {
-        Collections.users.document(userId)
-            .update("notificationSettings", settings)
-            .addOnSuccessListener {
-                Log.d("UserProfileNotifications", "Notification settings updated successfully")
-            }
-            .addOnFailureListener { error ->
-                Log.e(
-                    "UserProfileNotifications",
-                    "Failed to update notification settings: ${error.message}"
-                )
-            }
+    suspend fun updateNotificationSettings(userId: String, settings: List<NotificationPreference>) {
+        Collections.users.document(userId).update("notificationSettings", settings).await()
     }
 
     fun migrateNotificationSettings(userId: String) {

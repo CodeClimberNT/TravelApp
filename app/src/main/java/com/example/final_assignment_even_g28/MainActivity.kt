@@ -14,6 +14,7 @@ class MainActivity : ComponentActivity() {
 //        var deleteAllTravels = false
 //        var deleteAllBadges = false
 //        var initializeAllBadges = false
+//        var testNotification = false
         enableEdgeToEdge()
         setContent {
             MadTheme {
@@ -31,6 +32,11 @@ class MainActivity : ComponentActivity() {
 //                    val viewModel: UserProfileViewModel = viewModel(factory = AppFactory)
 //                    viewModel.initializeBadgesToAllUsers()
 //                    initializeAllBadges = true
+//                }
+//                 if (!testNotification) {
+//                    val viewModel: TravelProposalViewModel = viewModel(factory = AppFactory)
+//                    viewModel.testNotificationApply()
+//                     testNotification = true
 //                }
                 NavGraph()
             }

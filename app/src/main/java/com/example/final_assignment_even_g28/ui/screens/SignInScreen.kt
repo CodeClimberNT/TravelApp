@@ -56,9 +56,9 @@ fun SignInScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.AccountCircle,
-                contentDescription = null,
+                contentDescription = "Default profile icon",
                 modifier = Modifier.size(96.dp),
-                tint = MaterialTheme.colorScheme.outline
+                tint = MaterialTheme.colorScheme.secondary
             )
             Text(
                 stringResource(id = R.string.login_prompt),

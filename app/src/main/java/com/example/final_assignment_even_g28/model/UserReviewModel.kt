@@ -12,7 +12,12 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 
 class UserReviewModel {
-    fun getMyReviews(userUID: String): Flow<List<UserReview>> = callbackFlow {
+    fun getMyReviews(): Flow<List<UserReview>> = callbackFlow {
+        val userUID = Collections.auth.currentUser?.uid
+        if (userUID == null) {
+            trySend(emptyList())
+        }
+
         val collection = Collections.userReview.whereEqualTo("reviewerUID", userUID)
 
         val listener = collection.addSnapshotListener { querySnapshot, error ->
@@ -34,7 +39,12 @@ class UserReviewModel {
         awaitClose { listener.remove() }
     }.flowOn(Dispatchers.IO)
 
-    fun getOtherReviews(userUID: String): Flow<List<UserReview>> = callbackFlow {
+    fun getOtherReviews(): Flow<List<UserReview>> = callbackFlow {
+        val userUID = Collections.auth.currentUser?.uid
+        if (userUID == null) {
+            trySend(emptyList())
+        }
+
         val collection = Collections.userReview.whereEqualTo("reviewedUserUID", userUID)
 
         val listener = collection.addSnapshotListener { querySnapshot, error ->

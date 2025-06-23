@@ -21,8 +21,6 @@ class UserReviewViewModel(
     private val travelProposalModel: TravelProposalModel,
 ) : ViewModel() {
 
-    private val loggedUser = userModel.loggedUser
-
     private val _myReviews = MutableStateFlow<List<UserReview>>(emptyList())
     val myReviews: StateFlow<List<UserReview>>
         get() = _myReviews
@@ -33,27 +31,27 @@ class UserReviewViewModel(
 
     init {
         // Observe user changes and manage review data accordingly
-        observeUserAndLoadReviews()
+        loadReviewsForUser()
     }
 
-    private fun observeUserAndLoadReviews() {
-        viewModelScope.launch {
-            userModel.loggedUser.collect { user ->
-                if (user.uid.isNotEmpty()) {
-                    Log.d("UserReviewViewModel", "User logged in: ${user.uid}, loading reviews")
-                    loadReviewsForUser(user.uid)
-                } else {
-                    Log.d("UserReviewViewModel", "User logged out, clearing reviews")
-                    clearReviews()
-                }
-            }
-        }
-    }
+//    private fun observeUserAndLoadReviews() {
+//        viewModelScope.launch {
+//            userModel.loggedUser.collect { user ->
+//                if (user.uid.isNotEmpty()) {
+//                    Log.d("UserReviewViewModel", "User logged in: ${user.uid}, loading reviews")
+//                    loadReviewsForUser(user.uid)
+//                } else {
+//                    Log.d("UserReviewViewModel", "User logged out, clearing reviews")
+//                    clearReviews()
+//                }
+//            }
+//        }
+//    }
 
-    private fun loadReviewsForUser(userUID: String) {
+    private fun loadReviewsForUser() {
         // Load reviews written by user
         viewModelScope.launch {
-            reviewModel.getMyReviews(userUID).collect { reviews ->
+            reviewModel.getMyReviews().collect { reviews ->
                 _myReviews.value = reviews
                 Log.d("UserReviewViewModel", "Updated my reviews: ${reviews.size}")
             }
@@ -61,7 +59,7 @@ class UserReviewViewModel(
 
         // Load reviews about user
         viewModelScope.launch {
-            reviewModel.getOtherReviews(userUID).collect { reviews ->
+            reviewModel.getOtherReviews().collect { reviews ->
                 _othersReviews.value = reviews
                 Log.d("UserReviewViewModel", "Updated reviews about user: ${reviews.size}")
             }
@@ -90,7 +88,7 @@ class UserReviewViewModel(
                     )
                     if (review.rating >= 5) {
                         userModel.triggerBadgeProgress(
-                            targetUserUID = loggedUser.value.uid,
+                            targetUserUID = review.reviewerUID,
                             badgeType = BadgeType.YOU_KNOW_IT,
                             incrementBy = 1
                         )
