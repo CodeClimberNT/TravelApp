@@ -72,7 +72,7 @@ class TravelProposalViewModel(
 
     var groupSizeOptions = (1..15).toList()
 
-    private val currentUser = MutableStateFlow<UserProfile>(UserProfile())
+    private val currentUser = userModel.loggedUser
 //    private val currentUser: StateFlow<UserProfile>
 //        get() = _currentUser
 
@@ -149,20 +149,20 @@ class TravelProposalViewModel(
 
 
     init {
-        loadLoggedUser()
+//        loadLoggedUser()
         loadAllTravelProposals()
         getNotification()
         pollingNotifications()
     }
 
-    private fun loadLoggedUser() {
-        viewModelScope.launch {
-            userModel.loggedUser.collect { user ->
-                currentUser.value = user
-                Log.d("TravelProposalViewModel", "Current User updated: ${user.uid}, ${user.name}")
-            }
-        }
-    }
+//    private fun loadLoggedUser() {
+//        viewModelScope.launch {
+//            userModel.loggedUser.collect { user ->
+//                currentUser.value = user
+//                Log.d("TravelProposalViewModel", "Current User updated: ${user.uid}, ${user.name}")
+//            }
+//        }
+//    }
 
     private fun loadAllTravelProposals() {
         viewModelScope.launch {
@@ -175,6 +175,7 @@ class TravelProposalViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getNotification() {
         viewModelScope.launch {
             val toggleToNotificationTypes = mapOf(
@@ -182,47 +183,65 @@ class TravelProposalViewModel(
                 NotificationPreferenceType.NEW_APPLICATION to listOf(NotificationType.NEW_APPLICATION),
                 NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP to listOf(NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP),
                 NotificationPreferenceType.CHECK_RECOMMENDED to listOf(NotificationType.CHECK_RECOMMENDED),
+                NotificationPreferenceType.BADGE_UNLOCKED to listOf(NotificationType.BADGE_UNLOCKED),
                 NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION to listOf(
                     NotificationType.PARTICIPANT_APPROVED,
                     NotificationType.PARTICIPANT_REJECTED
                 )
             )
 
-            currentUser.collect { user ->
+            currentUser.flatMapLatest { user ->
                 if (user.uid.isNotEmpty()) {
-                    val excludedNotificationTypes = user.notificationSettings
+                    // Use flatMapLatest again to switch notification flows when settings change
+                    val notificationSettings = user.notificationSettings
+                    Log.d(
+                        "Notifications Settings",
+                        "Settings updated: $notificationSettings"
+                    )
+
+                    val excludedNotificationTypes = notificationSettings
                         .filter { !it.enabled }
-                        .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
-                    Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
-
-                    tripModel.getNotificationsForUserUID(user.uid, excludedNotificationTypes)
-                        .collect { notifications ->
-                            // Update the main notifications list
-                            _notifications.value = notifications
-                            _unreadNotificationCount.value =
-                                notifications.count { !it.isRead(user.uid) }
-
-                            val newNotifications = notifications.filter { notification ->
-                                !existingNotificationIds.contains(notification.id) &&
-                                        !notification.isRead(user.uid) &&
-                                        notification.isRecent()
-                            }
-
-                            // Update the set of existing IDs
-                            existingNotificationIds.addAll(notifications.map { it.id })
-
-                            // Emit new notifications as events
-                            newNotifications.forEach { notification ->
-                                Log.d(
-                                    "NewNotificationEvent",
-                                    "Emitting notification event: ${notification.title}"
-                                )
-                                _notificationEvents.emit(notification)
-                            }
+                        .flatMap { toggle ->
+                            toggleToNotificationTypes[toggle.type] ?: emptyList()
                         }
+
+                    Log.d(
+                        "NotificationsExcluded",
+                        "Excluded types: $excludedNotificationTypes"
+                    )
+
+                    tripModel.getNotificationsForUserUID(
+                        user,
+                        excludedNotificationTypes
+                    )
+
                 } else {
-                    _notifications.value = emptyList()
-                    _unreadNotificationCount.value = 0
+                    flowOf(emptyList())
+                }
+            }.collect { notifications ->
+                Log.d("Notifications", "Loaded ${notifications.size} notifications for user")
+
+                // Update the main notifications list
+                _notifications.value = notifications
+                _unreadNotificationCount.value =
+                    notifications.count { !it.isRead(currentUser.value.uid) }
+
+                val newNotifications = notifications.filter { notification ->
+                    !existingNotificationIds.contains(notification.id) &&
+                            !notification.isRead(currentUser.value.uid) &&
+                            notification.isRecent()
+                }
+
+                // Update the set of existing IDs
+                existingNotificationIds.addAll(notifications.map { it.id })
+
+                // Emit new notifications as events
+                newNotifications.forEach { notification ->
+                    Log.d(
+                        "NewNotificationEvent",
+                        "Emitting notification event: ${notification.title}"
+                    )
+                    _notificationEvents.emit(notification)
                 }
             }
         }

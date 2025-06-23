@@ -388,7 +388,8 @@ class UserProfileModel() {
                     badge = userToSave.badge,
                     currentLevel = userToSave.currentLevel,
                     rating = userToSave.rating,
-                    exp = userToSave.exp
+                    exp = userToSave.exp,
+                    notificationSettings = userToSave.notificationSettings
                 ),
             ).await()
             Log.d("Edit User", "User with uid ${userToSave.uid} correctly edited")
@@ -405,13 +406,12 @@ class UserProfileModel() {
         }
     }
 
-    suspend fun updateUserProfileBadge(userUID: String, newBadge: Badge, context: Context) {
+    suspend fun updateUserProfileBadge(userUID: String, newBadge: Badge?) {
         try {
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.IO) {
                 try {
                     Log.d("Edit User", "Updating badge for user with UID: $userUID")
                     Log.d("Edit User", "New badge: $newBadge")
-//                    _loggedUser.value.badge = newBadge
                     Log.d("Edit User", "Logged user badge updated: ${_loggedUser.value.badge}")
                     // FIXME: use the commented code when the code is merged with the others
                     val documentRef = Collections.users.document(userUID)
@@ -423,6 +423,7 @@ class UserProfileModel() {
                     Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
 
                     loadUserByUID(userToEdit.uid)
+                    _loggedUser.value = _loggedUser.value.copy(badge = newBadge)
 
                 } catch (e: Exception) {
                     Log.e("Edit User", "Error editing user: ${e.message}")
@@ -478,7 +479,7 @@ class UserProfileModel() {
     fun getImageFromUser(user: UserProfile): String{
         val url = Collections.userImagesBucket.publicUrl("${user.uid}/${user.profilePicture}.jpg")
 
-        Log.d("Image","Recovering from url: $url")
+        Log.d("Image", "Recovering from url: $url")
 
         return url
     }
@@ -531,15 +532,16 @@ class UserProfileModel() {
         return publicUrl
     }
 
-    suspend fun deleteUserProfileImage(){
+    suspend fun deleteUserProfileImage() {
         try {
+
             val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
             Log.e("Delete Image","Try to delete Image from url: $url")
             Collections.userImagesBucket.delete("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
             Log.e("Delete Image","Image deleted")
 
-        }catch (e: Exception){
-            Log.e("Delete Image","Impossible to delete image: $e")
+        } catch (e: Exception) {
+            Log.e("Delete Image", "Impossible to delete image: $e")
         }
     }
 
@@ -558,29 +560,63 @@ class UserProfileModel() {
     fun editLevel(oldExp: Int, newExp: Int) {
         var oldLvl: Int = 0;
 
-        when(oldExp){
-            in 0 .. 20 -> {oldLvl = 1}
-            in 21 .. 50 -> {oldLvl = 2}
-            in 51 .. 100 -> {oldLvl = 3}
-            in 101 .. 200 -> {oldLvl = 4}
-            in 201 .. 400 -> {oldLvl = 5}
-            else -> {oldLvl = 6}
+        when (oldExp) {
+            in 0..20 -> {
+                oldLvl = 1
+            }
+
+            in 21..50 -> {
+                oldLvl = 2
+            }
+
+            in 51..100 -> {
+                oldLvl = 3
+            }
+
+            in 101..200 -> {
+                oldLvl = 4
+            }
+
+            in 201..400 -> {
+                oldLvl = 5
+            }
+
+            else -> {
+                oldLvl = 6
+            }
         }
 
         when (newExp) {
-            in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
-            in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
-            in 51 .. 100 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 3)}
-            in 101 .. 200 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 4)}
-            in 201 .. 400 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 5)}
-            else -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 6)}
+            in 0..20 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 1)
+            }
+
+            in 21..50 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 2)
+            }
+
+            in 51..100 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 3)
+            }
+
+            in 101..200 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 4)
+            }
+
+            in 201..400 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 5)
+            }
+
+            else -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 6)
+            }
         }
 
-        if(oldLvl < _loggedUser.value.currentLevel)
+        if (oldLvl < _loggedUser.value.currentLevel)
             _leveledUp.value = true
     }
 
-    fun editLevelUp(){
+    fun editLevelUp() {
         _leveledUp.value = false
     }
 
@@ -768,6 +804,7 @@ class UserProfileModel() {
             .update("notificationSettings", settings)
             .addOnSuccessListener {
                 Log.d("UserProfileNotifications", "Notification settings updated successfully")
+                _loggedUser.value = _loggedUser.value.copy(notificationSettings = settings)
             }
             .addOnFailureListener { error ->
                 Log.e(
@@ -792,7 +829,8 @@ class UserProfileModel() {
                     NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
                     true
                 ),
-                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true),
+                NotificationPreference(NotificationPreferenceType.BADGE_UNLOCKED, true)
             )
 
             Collections.users.document(userId).get()

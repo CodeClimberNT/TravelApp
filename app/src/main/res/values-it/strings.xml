@@ -6,6 +6,7 @@
     <string name="your_badges">I Tuoi Badge</string>
     <string name="equip_this_badge">Applicalo al tuo Profilo</string>
     <string name="to_unlock">per Completare</string>
-    <string name="completed">Completato!</string>
+    <string name="completed">Completato</string>
     <string name="close">Chiudi</string>
+    <string name="unequip_this_badge">Rimuovilo dal tuo Profilo</string>
 </resources>

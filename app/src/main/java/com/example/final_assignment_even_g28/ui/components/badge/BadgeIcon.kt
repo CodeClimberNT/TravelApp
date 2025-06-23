@@ -1,6 +1,5 @@
 package com.example.final_assignment_even_g28.ui.components.badge
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -88,7 +86,6 @@ fun BadgeIconWithInfo(
     isMiniBadge: Boolean = true
 ) {
     var showInfoBadge by remember { mutableStateOf(false) }
-    val ctx = LocalContext.current
     if (isMiniBadge) {
         IconButton(
             onClick = { showInfoBadge = true }, modifier = modifier.size(
@@ -109,12 +106,12 @@ fun BadgeIconWithInfo(
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = badge.title,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 Text(
                     "Info",
                     textDecoration = TextDecoration.Underline,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
@@ -125,7 +122,6 @@ fun BadgeIconWithInfo(
         InfoBadge(
             badge = badge,
             isMiniBadge = isMiniBadge,
-            context = ctx,
             onDismiss = { showInfoBadge = false })
     }
 }
@@ -135,7 +131,6 @@ fun InfoBadge(
     badge: Badge,
     isMiniBadge: Boolean = true,
     userVm: UserProfileViewModel = viewModel(factory = AppFactory),
-    context: Context,
     onDismiss: () -> Unit
 ) {
     val isCompleted = badge.isCompleted()
@@ -184,7 +179,7 @@ fun InfoBadge(
                     if (!isMiniBadge) {
                         TextButton(
                             onClick = {
-                                userVm.updateBadge(badge, context)
+                                userVm.updateBadge(badge)
                                 onDismiss()
                             },
                             enabled = isCompleted

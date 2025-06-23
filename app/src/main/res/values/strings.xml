@@ -11,6 +11,7 @@
     <string name="your_badges">Your Badges</string>
     <string name="equip_this_badge">Equip this Badge</string>
     <string name="to_unlock">to unlock</string>
-    <string name="completed">Completed!</string>
+    <string name="completed">Completed</string>
     <string name="close">Close</string>
+    <string name="unequip_this_badge">Unequip This Badge</string>
 </resources>

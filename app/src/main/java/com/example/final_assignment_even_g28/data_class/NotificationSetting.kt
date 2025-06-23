@@ -25,6 +25,10 @@ val notificationItems = listOf(
     NotificationItem(
         title = "Recommended trips",
         description = "Trip recommendations based on your interests."
+    ),
+    NotificationItem(
+        title = "Badge unlocked",
+        description = "Get notified when you unlock a new badge for your profile."
     )
 )
 
