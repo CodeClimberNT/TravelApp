@@ -784,7 +784,10 @@ class TravelProposalModel(
             }
     }
 
-    fun getItinerarySuggestions(travelName: String, userTripDurationDays: Int): Flow<List<Itinerary>> = callbackFlow {
+    fun getItinerarySuggestions(
+        travelName: String,
+        userTripDurationDays: Int
+    ): Flow<List<Itinerary>> = callbackFlow {
         Log.d("getItinerarySuggestions", "Fetching itinerary suggestions for: $travelName")
         Log.d("getItinerarySuggestions", "User trip duration: $userTripDurationDays days")
 
@@ -792,7 +795,10 @@ class TravelProposalModel(
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.e("getItinerarySuggestions", "Error fetching itinerary suggestions: ${error.message}")
+                Log.e(
+                    "getItinerarySuggestions",
+                    "Error fetching itinerary suggestions: ${error.message}"
+                )
                 trySend(emptyList())
                 return@addSnapshotListener
             }
@@ -808,17 +814,24 @@ class TravelProposalModel(
                     val originalStartDate = sortedStops.first().date
                     val originalEndDate = sortedStops.last().date
 
-                    val originalDurationDays = ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
+                    val originalDurationDays =
+                        ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
 
-                    Log.d("getItinerarySuggestions", "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days")
+                    Log.d(
+                        "getItinerarySuggestions",
+                        "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days"
+                    )
 
                     //TODO: TO DECIDE IF <= OR ==
                     originalDurationDays <= userTripDurationDays
                 }.filter { itinerary ->
-                    itinerary.title.contains(travelName)
+                    (itinerary.title.lowercase()).contains(travelName.lowercase())
                 }
 
-                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} compatible itineraries")
+                Log.d(
+                    "getItinerarySuggestions",
+                    "Fetched ${itineraries.size} compatible itineraries"
+                )
                 trySend(itineraries)
             } else {
                 trySend(emptyList())

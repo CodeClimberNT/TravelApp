@@ -6,7 +6,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class NotificationPreferenceType {
-    NEW_APPLICATION, STATUS_UPDATE_ON_PENDING_APPLICATION, REVIEW_RECEIVED_FOR_PAST_TRIP, LAST_MINUTE, CHECK_RECOMMENDED, NULL
+    NEW_APPLICATION,
+    STATUS_UPDATE_ON_PENDING_APPLICATION,
+    REVIEW_RECEIVED_FOR_PAST_TRIP,
+    LAST_MINUTE,
+    CHECK_RECOMMENDED,
+    BADGE_UNLOCKED,
+    NULL
 }
 
 @Serializable
@@ -47,7 +53,8 @@ data class UserProfile(
         NotificationPreference(
             NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION, true
         ),
-        NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+        NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true),
+        NotificationPreference(NotificationPreferenceType.BADGE_UNLOCKED, true)
     ),
     var profilePicture: String = "",
     var exp: Int = 0
@@ -70,7 +77,8 @@ data class UserProfile(
             NotificationPreference(
                 NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION, true
             ),
-            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+            NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true),
+            NotificationPreference(NotificationPreferenceType.BADGE_UNLOCKED, true),
         ),
         profilePicture = "",
         exp = 0,
