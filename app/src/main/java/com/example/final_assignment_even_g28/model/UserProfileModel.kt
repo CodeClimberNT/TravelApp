@@ -476,7 +476,7 @@ class UserProfileModel() {
     }
      
     fun getImageFromUser(user: UserProfile): String{
-        val url = Collections.userImagesBucket.publicUrl("${user.uid}/${user.profilePicture}")
+        val url = Collections.userImagesBucket.publicUrl("${user.uid}/${user.profilePicture}.jpg")
 
         Log.d("Image","Recovering from url: $url")
 
@@ -490,7 +490,7 @@ class UserProfileModel() {
     suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
         return try {
             val fileName = generateRandomString(10)
-            val filePath = "$userUID/$fileName"
+            val filePath = "$userUID/$fileName.jpg"
 
             Log.d("Edit User", "Uploading image to path: $filePath")
 
@@ -526,7 +526,7 @@ class UserProfileModel() {
         val storage = Collections.storage
 
         val publicUrl = storage.from(Collections.userImagesBucket.toString())
-            .publicUrl("${user.uid}/${user.profilePicture}")
+            .publicUrl("${user.uid}/${user.profilePicture}.jpg")
 
         return publicUrl
     }

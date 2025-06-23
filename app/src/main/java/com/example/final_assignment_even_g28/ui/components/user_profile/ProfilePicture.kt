@@ -173,10 +173,12 @@ fun ProfilePicture(
         } else {
             // Editing Profile Picture
             when (userProfile.isProfileImage) {
-                "Icon", "Monogram" -> {
+                "Icon" -> {
                     IconCarousel(userProfileViewModel, isLandScape = isLandScape, user = userProfile, startingIndex = userProfileViewModel.getIconIndex(userProfile.profilePicture))
                 }
-
+                "Monogram" -> {
+                    IconCarousel(userProfileViewModel, isLandScape = isLandScape, user = userProfile, startingIndex = 0)
+                }
                 "Uri" -> {
                     Image(
                         painter =
