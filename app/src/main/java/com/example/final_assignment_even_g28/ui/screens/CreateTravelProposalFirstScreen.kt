@@ -61,6 +61,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -106,6 +107,7 @@ fun CreateTravelProposalFirstScreen(
         navActions.back()
     }
     val suggestion by tripVm.listOfItinerarySuggestions.collectAsState()
+    val ctx = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -537,7 +539,7 @@ fun CreateTravelProposalFirstScreen(
                 ItineraryWithStops(tripVm = tripVm)
                 Button(
                     onClick = {
-                        if (tripVm.validateFirstScreenFields()) {
+                        if (tripVm.validateFirstScreenFields(context = ctx)) {
                             navActions.navigateToSecondScreen()
                         }
                     },
