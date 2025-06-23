@@ -793,7 +793,8 @@ class UserProfileModel() {
                     NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
                     true
                 ),
-                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true),
+                NotificationPreference(NotificationPreferenceType.BADGE_UNLOCKED, true)
             )
 
             Collections.users.document(userId).get()

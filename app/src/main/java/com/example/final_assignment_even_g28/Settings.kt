@@ -56,6 +56,7 @@ fun NotificationSettingsScreen(
                             "Own Trips Reviews" -> NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP
                             "Status update on pending application" -> NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION
                             "Recommended trips" -> NotificationPreferenceType.CHECK_RECOMMENDED
+                            "Badge unlocked" -> NotificationPreferenceType.BADGE_UNLOCKED
                             else -> NotificationPreferenceType.NULL
                         }
                     )
@@ -92,6 +93,7 @@ fun NotificationSettingsScreen(
                             "Own Trips Reviews" -> NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP
                             "Status update on pending application" -> NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION
                             "Recommended trips" -> NotificationPreferenceType.CHECK_RECOMMENDED
+                            "Badge unlocked" -> NotificationPreferenceType.BADGE_UNLOCKED
                             else -> NotificationPreferenceType.NULL
                         }
 

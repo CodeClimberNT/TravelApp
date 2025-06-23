@@ -183,6 +183,7 @@ class TravelProposalViewModel(
                 NotificationPreferenceType.NEW_APPLICATION to listOf(NotificationType.NEW_APPLICATION),
                 NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP to listOf(NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP),
                 NotificationPreferenceType.CHECK_RECOMMENDED to listOf(NotificationType.CHECK_RECOMMENDED),
+                NotificationPreferenceType.BADGE_UNLOCKED to listOf(NotificationType.BADGE_UNLOCKED),
                 NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION to listOf(
                     NotificationType.PARTICIPANT_APPROVED,
                     NotificationType.PARTICIPANT_REJECTED
