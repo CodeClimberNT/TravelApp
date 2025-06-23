@@ -44,8 +44,8 @@ fun TravelProposalCard(
     tripVm: TravelProposalViewModel,
     travelProposal: TravelProposal,
     navActions: Navigation,
-//TODO: enable to remove notification from explore tab
-//    fromExplore: Boolean,
+//TODO: remove the default value and de-comment the other caller to remove notification from explore tab
+    fromExplore: Boolean = false,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedVisibilityScope,
 ) {

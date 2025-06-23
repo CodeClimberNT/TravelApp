@@ -32,8 +32,6 @@ import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.utils.UNKNOWN_USER
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.auth.User
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -171,23 +169,28 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getIcon(iconName: String): ImageVector{
-        when (iconName){
+    fun getIcon(iconName: String): ImageVector {
+        when (iconName) {
             "DIRECTIONS_WALK" -> {
                 return Icons.AutoMirrored.Default.DirectionsWalk
             }
+
             "HOUSE" -> {
                 return Icons.Default.House
             }
+
             "ACCOUNT_CIRCLE" -> {
                 return Icons.Default.AccountCircle
             }
+
             "TRAIN" -> {
                 return Icons.Default.Train
             }
+
             "TRAM" -> {
                 return Icons.Default.Tram
             }
+
             "AIRPLANE" -> {
                 return Icons.Default.AirplanemodeActive
             }
@@ -284,9 +287,15 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun updateBadge(newBadge: Badge, context: Context) {
+    fun updateBadge(newBadge: Badge?) {
         viewModelScope.launch {
-            model.updateUserProfileBadge(loggedUser.value.uid, newBadge, context)
+            model.updateUserProfileBadge(loggedUser.value.uid, newBadge)
+        }
+    }
+
+    fun removeBadge() {
+        viewModelScope.launch {
+            updateBadge(null)
         }
     }
 
@@ -449,22 +458,39 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getLevelRange(): Pair<Float, Float>{
-        when (loggedUser.value.currentLevel){
-            1 -> {return Pair(loggedUser.value.exp.toFloat(), 20f)}
-            2 -> {return Pair((loggedUser.value.exp.toFloat()-20), 30f)}
-            3 -> {return Pair(loggedUser.value.exp.toFloat()-50, 50f)}
-            4-> {return Pair(loggedUser.value.exp.toFloat()-100f, 100f)}
-            5-> {return Pair(loggedUser.value.exp.toFloat()-200f, 200f)}
-            else -> {return Pair(1f, 1f)}
+    fun getLevelRange(): Pair<Float, Float> {
+        when (loggedUser.value.currentLevel) {
+            1 -> {
+                return Pair(loggedUser.value.exp.toFloat(), 20f)
+            }
+
+            2 -> {
+                return Pair((loggedUser.value.exp.toFloat() - 20), 30f)
+            }
+
+            3 -> {
+                return Pair(loggedUser.value.exp.toFloat() - 50, 50f)
+            }
+
+            4 -> {
+                return Pair(loggedUser.value.exp.toFloat() - 100f, 100f)
+            }
+
+            5 -> {
+                return Pair(loggedUser.value.exp.toFloat() - 200f, 200f)
+            }
+
+            else -> {
+                return Pair(1f, 1f)
+            }
         }
     }
 
-    fun getImageFromUID(user: UserProfile): String{
+    fun getImageFromUID(user: UserProfile): String {
         return model.getImageFromUID(user.uid)
     }
 
-    fun editLevelUp(){
+    fun editLevelUp() {
         model.editLevelUp()
     }
 

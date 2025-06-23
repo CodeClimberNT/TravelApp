@@ -146,6 +146,7 @@ fun Badge.isCompleted(): Boolean {
 
 fun Badge.getProgressPercentage(): Float {
     return if (this.progress.total > 0) {
+        // Limit percentage to 100%
         (this.progress.current.toFloat() / this.progress.total.toFloat()).coerceIn(0.0f, 1.0f)
     } else {
         Log.e(

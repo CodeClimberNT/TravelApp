@@ -375,13 +375,12 @@ class UserProfileModel() {
         }
     }
 
-    suspend fun updateUserProfileBadge(userUID: String, newBadge: Badge, context: Context) {
+    suspend fun updateUserProfileBadge(userUID: String, newBadge: Badge?) {
         try {
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.IO) {
                 try {
                     Log.d("Edit User", "Updating badge for user with UID: $userUID")
                     Log.d("Edit User", "New badge: $newBadge")
-//                    _loggedUser.value.badge = newBadge
                     Log.d("Edit User", "Logged user badge updated: ${_loggedUser.value.badge}")
                     // FIXME: use the commented code when the code is merged with the others
                     val documentRef = Collections.users.document(userUID)
@@ -393,6 +392,7 @@ class UserProfileModel() {
                     Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
 
                     loadUserByUID(userToEdit.uid)
+                    _loggedUser.value = _loggedUser.value.copy(badge = newBadge)
 
                 } catch (e: Exception) {
                     Log.e("Edit User", "Error editing user: ${e.message}")

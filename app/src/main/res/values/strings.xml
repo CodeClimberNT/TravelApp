@@ -3,7 +3,7 @@
     <string name="default_web_client_id" translatable="false">
     1081929835859-5v1b2gj70emstdlsn86igtsrafpbt3o2.apps.googleusercontent.com
     </string>
-    <string name="google_maps_api">
+    <string name="google_maps_api" translatable="false">
         REMOVED_API_KEY
     </string>
     <string name="participants">Participants</string>
@@ -11,6 +11,7 @@
     <string name="your_badges">Your Badges</string>
     <string name="equip_this_badge">Equip this Badge</string>
     <string name="to_unlock">to unlock</string>
-    <string name="completed">Completed!</string>
+    <string name="completed">Completed</string>
     <string name="close">Close</string>
+    <string name="unequip_this_badge">Unequip This Badge</string>
 </resources>

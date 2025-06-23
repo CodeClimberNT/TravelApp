@@ -1,11 +1,10 @@
 package com.example.final_assignment_even_g28
 
-import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,9 +31,7 @@ import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,9 +51,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,8 +59,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,7 +66,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.UserProfile
-import com.example.final_assignment_even_g28.model.UserProfileModel
 import com.example.final_assignment_even_g28.data_class.getProgressPercentage
 import com.example.final_assignment_even_g28.data_class.isCompleted
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
@@ -124,6 +115,7 @@ fun ProfileScreen(
             }
         }
     }
+
     val leveledUp by viewModel.leveledUp.collectAsState()
 
     Scaffold(
@@ -151,9 +143,9 @@ fun ProfileScreen(
                 )
             }
         }
-        if(leveledUp)
-                        LevelUpCard(onDismissRequest = { viewModel.editLevelUp() })
-                
+        if (leveledUp)
+            LevelUpCard(onDismissRequest = { viewModel.editLevelUp() })
+
         if (showBadgesBottomSheet) {
             BadgesBottomSheet(sheetState = sheetState, onDismiss = { hideBadges() })
         }
@@ -164,7 +156,7 @@ fun ProfileScreen(
 fun ProfileHeader(
     profile: UserProfile, navActions: Navigation,
     userProfileModel: UserProfileViewModel = viewModel(factory = AppFactory)
-    ) {
+) {
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -364,14 +356,13 @@ fun BadgesBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
-    val ctx = LocalContext.current
-
-    // Limit percentage to 100%
     val progressPercentage = badge.getProgressPercentage()
     val isCompleted = badge.isCompleted()
+    val loggedUser by userVm.loggedUser.collectAsState()
+
     Card(
         elevation = CardDefaults.cardElevation(6.dp), colors = CardDefaults.cardColors(
-            MaterialTheme.colorScheme.secondaryContainer
+            MaterialTheme.colorScheme.primaryContainer
         ), modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -403,7 +394,7 @@ fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = Ap
                 Text(
                     text = badge.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Box {
                     LinearProgressIndicator(
@@ -413,31 +404,55 @@ fun RowBadge(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = Ap
                             .height(48.dp)
                             // background color as the trackColor to fill the gap
                             .background(
-                                MaterialTheme.colorScheme.tertiary, RoundedCornerShape(36.dp)
+                                MaterialTheme.colorScheme.surface, RoundedCornerShape(36.dp)
+                            )
+                            .border(
+                                (0.5).dp,
+                                MaterialTheme.colorScheme.outline,
+                                RoundedCornerShape(36.dp)
                             ),
-                        color = StarColor,
-                        trackColor = MaterialTheme.colorScheme.tertiary,
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        trackColor = MaterialTheme.colorScheme.surface,
                         strokeCap = StrokeCap.Round,
                     )
                     if (isCompleted) {
                         Text(
-                            text = stringResource(R.string.completed),
+                            text = stringResource(R.string.completed) + "!",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.align(Alignment.Center),
                             fontWeight = FontWeight.Bold
                         )
-
-                    }
-                }
-
-                Button(onClick = { userVm.updateBadge(badge, ctx) }, enabled = isCompleted) {
-                    if (isCompleted) {
-                        Text(stringResource(R.string.equip_this_badge))
                     } else {
-                        Text("${badge.progress.current}/${badge.progress.total} ${stringResource(R.string.to_unlock)}")
+                        Text(
+                            text = "${(progressPercentage * 100).toInt()}% ${stringResource(R.string.completed)}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.align(Alignment.Center),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
+                if (loggedUser.badge?.title?.contains(badge.title) == true) {
+                    Button(onClick = { userVm.removeBadge() }, enabled = isCompleted) {
+                        Text(stringResource(R.string.unequip_this_badge))
+                    }
+                } else {
+                    Button(onClick = { userVm.updateBadge(badge) }, enabled = isCompleted) {
+                        Text(
+                            if (isCompleted) {
+                                stringResource(R.string.equip_this_badge)
+                            } else {
+                                "${badge.progress.current}/${badge.progress.total} ${
+                                    stringResource(
+                                        R.string.to_unlock
+                                    )
+                                }"
+                            }
+                        )
+                    }
+                }
+
             }
         }
     }
@@ -488,7 +503,10 @@ fun LevelProgressBar(
 }
 
 @Composable
-fun LevelUpCard(userProfileModel: UserProfileViewModel = viewModel(factory = AppFactory), onDismissRequest: () -> Unit){
+fun LevelUpCard(
+    userProfileModel: UserProfileViewModel = viewModel(factory = AppFactory),
+    onDismissRequest: () -> Unit
+) {
     val lvl = userProfileModel.loggedUser.collectAsState().value.currentLevel
 
     Dialog(
@@ -517,7 +535,7 @@ fun LevelUpCard(userProfileModel: UserProfileViewModel = viewModel(factory = App
                 Spacer(modifier = Modifier.size(20.dp))
 
                 Text(
-                    text = "${lvl-1} -> $lvl",
+                    text = "${lvl - 1} -> $lvl",
                     style = MaterialTheme.typography.displayLarge
                 )
 

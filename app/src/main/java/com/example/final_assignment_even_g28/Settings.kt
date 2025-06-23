@@ -62,7 +62,7 @@ fun NotificationSettingsScreen(
         }
     }
     var showDeleteCompletion by remember { mutableStateOf(false) }
-    Scaffold() { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
