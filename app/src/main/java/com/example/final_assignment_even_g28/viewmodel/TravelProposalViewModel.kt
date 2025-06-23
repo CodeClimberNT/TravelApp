@@ -73,8 +73,6 @@ class TravelProposalViewModel(
     var groupSizeOptions = (1..15).toList()
 
     private val currentUser = MutableStateFlow<UserProfile>(UserProfile())
-//    private val currentUser: StateFlow<UserProfile>
-//        get() = _currentUser
 
     var filterErrors by mutableStateOf(FilterError())
         private set
@@ -132,7 +130,7 @@ class TravelProposalViewModel(
     val notifications: StateFlow<List<Notification>>
         get() = _notifications
 
-    val _snackbarNotification = MutableStateFlow<Notification>(Notification())
+    private val _snackbarNotification = MutableStateFlow<Notification>(Notification())
     val snackbarNotification: StateFlow<Notification>
         get() = _snackbarNotification
 
@@ -175,6 +173,7 @@ class TravelProposalViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getNotification() {
         viewModelScope.launch {
             val toggleToNotificationTypes = mapOf(
@@ -188,41 +187,58 @@ class TravelProposalViewModel(
                 )
             )
 
-            currentUser.collect { user ->
+            currentUser.flatMapLatest { user ->
                 if (user.uid.isNotEmpty()) {
-                    val excludedNotificationTypes = user.notificationSettings
+                    // Use flatMapLatest again to switch notification flows when settings change
+                    val notificationSettings = user.notificationSettings
+                    Log.d(
+                        "Notifications Settings",
+                        "Settings updated: $notificationSettings"
+                    )
+
+                    val excludedNotificationTypes = notificationSettings
                         .filter { !it.enabled }
-                        .flatMap { toggle -> toggleToNotificationTypes[toggle.type] ?: emptyList() }
-                    Log.d("NotificationsExcluded", "Out: $excludedNotificationTypes")
-
-                    tripModel.getNotificationsForUserUID(user.uid, excludedNotificationTypes)
-                        .collect { notifications ->
-                            // Update the main notifications list
-                            _notifications.value = notifications
-                            _unreadNotificationCount.value =
-                                notifications.count { !it.isRead(user.uid) }
-
-                            val newNotifications = notifications.filter { notification ->
-                                !existingNotificationIds.contains(notification.id) &&
-                                        !notification.isRead(user.uid) &&
-                                        notification.isRecent()
-                            }
-
-                            // Update the set of existing IDs
-                            existingNotificationIds.addAll(notifications.map { it.id })
-
-                            // Emit new notifications as events
-                            newNotifications.forEach { notification ->
-                                Log.d(
-                                    "NewNotificationEvent",
-                                    "Emitting notification event: ${notification.title}"
-                                )
-                                _notificationEvents.emit(notification)
-                            }
+                        .flatMap { toggle ->
+                            toggleToNotificationTypes[toggle.type] ?: emptyList()
                         }
+
+                    Log.d(
+                        "NotificationsExcluded",
+                        "Excluded types: $excludedNotificationTypes"
+                    )
+
+                    tripModel.getNotificationsForUserUID(
+                        user.uid,
+                        excludedNotificationTypes
+                    )
+
                 } else {
-                    _notifications.value = emptyList()
-                    _unreadNotificationCount.value = 0
+                    flowOf(emptyList())
+                }
+            }.collect { notifications ->
+                Log.d("Notifications", "Loaded ${notifications.size} notifications for user")
+
+                // Update the main notifications list
+                _notifications.value = notifications
+                _unreadNotificationCount.value =
+                    notifications.count { !it.isRead(currentUser.value.uid) }
+
+                val newNotifications = notifications.filter { notification ->
+                    !existingNotificationIds.contains(notification.id) &&
+                            !notification.isRead(currentUser.value.uid) &&
+                            notification.isRecent()
+                }
+
+                // Update the set of existing IDs
+                existingNotificationIds.addAll(notifications.map { it.id })
+
+                // Emit new notifications as events
+                newNotifications.forEach { notification ->
+                    Log.d(
+                        "NewNotificationEvent",
+                        "Emitting notification event: ${notification.title}"
+                    )
+                    _notificationEvents.emit(notification)
                 }
             }
         }
@@ -1227,21 +1243,23 @@ class TravelProposalViewModel(
             }
         }
     }
-//            tripModel.getItinerarySuggestions(""/*tempTravelProposal.title*/).collect { suggestions ->
-//                if (suggestions.isNotEmpty()) {
-//                    _listOfItinerarySuggestions.value = suggestions
-//                    Log.d("Itinerary", "Itinerary suggestions received: $suggestions")
-//                    Log.d("Itinerary", "List: ${_listOfItinerarySuggestions.value}")
-//                } else {
-//                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
-//                }
-//            }
 
     //-------------🚨EMERGENCY ONLY🚨-------------//
     fun deleteAllProposals() {
         viewModelScope.launch {
             tripModel.deleteAllTravelProposal()
         }
+    }
+
+    fun testNotificationApply() {
+        tripModel.addNotification(
+            "1fa6677b-03c8-49bd-ae67-b9fe8e82c25e",
+            "Test New Proposal",
+            NotificationType.NEW_APPLICATION,
+            "lH0K8nElFfeQt0bD9D7o4EA0eOn2",
+            "lH0K8nElFfeQt0bD9D7o4EA0eOn2",
+            tripPlannerId = "o0pE0v73rgh5gJT23jHei4VHR1x1"
+        )
     }
     //-------------🚨EMERGENCY ONLY🚨-------------//
 }

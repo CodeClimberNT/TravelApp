@@ -644,60 +644,63 @@ class TravelProposalModel(
     fun getNotificationsForUserUID(
         userId: String,
         excludedNotificationTypes: List<NotificationType>
-    ): Flow<List<Notification>> =
-        callbackFlow {
-            Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $userId")
-            val listener = Collections.notifications
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        Log.e("Notifications", error.toString())
-                        trySend(emptyList())
-                        return@addSnapshotListener
-                    }
-
-                    if (snapshot != null) {
-                        try {
-                            val notifications = snapshot.documents.mapNotNull { document ->
-                                Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
-                                val notification = document.toObject(Notification::class.java)
-                                Log.d("CurrentUser", "User ID: $userId")
-                                notification?.copy(id = document.id)
-
-
-                            }.filter { notification ->
-                                !excludedNotificationTypes.contains(notification.type)
-                            }.filter { notification ->
-                                // Filter notifications based on user ID and type
-                                when (notification.type) {
-                                    NotificationType.NEW_PROPOSAL -> {
-                                        notification.notificationOwnerId != userId
-                                    }
-
-                                    NotificationType.NEW_APPLICATION -> notification.tripPlannerId == userId
-                                    NotificationType.PARTICIPANT_APPROVED, NotificationType.PARTICIPANT_REJECTED -> notification.applicantId == userId
-                                    NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
-                                        notification.tripPlannerId == userId && notification.reviewedUser != userId
-                                    }
-
-                                    NotificationType.USER_REVIEW_RECEIVED -> notification.reviewedUser == userId
-                                    NotificationType.LAST_MINUTE -> notification.applicantId != userId
-                                    NotificationType.LAST_MINUTE_AUTOMATIC -> notification.applicantId == userId
-                                    NotificationType.CHECK_RECOMMENDED -> notification.applicantId == userId
-                                    NotificationType.BADGE_UNLOCKED -> notification.notificationOwnerId == userId
-                                    else -> false
-                                }
-                            }
-                            trySend(notifications)
-                        } catch (e: Exception) {
-                            Log.e("Notifications", "Error parsing notification: ${e.message}")
-                            trySend(emptyList())
-                        }
-                    } else {
-                        trySend(emptyList())
-                    }
+    ): Flow<List<Notification>> = callbackFlow {
+        Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $userId")
+        val listener = Collections.notifications
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("Notifications", error.toString())
+                    trySend(emptyList())
+                    return@addSnapshotListener
                 }
-            awaitClose { listener.remove() }
-        }.flowOn(Dispatchers.IO)
+
+                if (snapshot != null) {
+                    try {
+                        val notifications = snapshot.documents.mapNotNull { document ->
+                            Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
+                            val notification = document.toObject(Notification::class.java)
+                            Log.d("CurrentUser", "User ID: $userId")
+                            notification?.copy(id = document.id)
+
+                        }.filter { notification ->
+                            Log.d(
+                                "Notifications",
+                                "Notification to be filtered: ${notification.title}, Type: ${notification.type}"
+                            )
+                            !excludedNotificationTypes.contains(notification.type)
+                        }.filter { notification ->
+                            // Filter notifications based on user ID and type
+                            when (notification.type) {
+                                NotificationType.NEW_PROPOSAL -> {
+                                    notification.notificationOwnerId != userId
+                                }
+
+                                NotificationType.NEW_APPLICATION -> notification.tripPlannerId == userId
+                                NotificationType.PARTICIPANT_APPROVED, NotificationType.PARTICIPANT_REJECTED -> notification.applicantId == userId
+                                NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
+                                    notification.tripPlannerId == userId && notification.reviewedUser != userId
+                                }
+
+                                NotificationType.USER_REVIEW_RECEIVED -> notification.reviewedUser == userId
+                                NotificationType.LAST_MINUTE -> notification.applicantId != userId
+                                NotificationType.LAST_MINUTE_AUTOMATIC -> notification.applicantId == userId
+                                NotificationType.CHECK_RECOMMENDED -> notification.applicantId == userId
+                                NotificationType.BADGE_UNLOCKED -> notification.notificationOwnerId == userId
+                                else -> false
+                            }
+                        }
+                        Log.d("Notifications", "Filtered notifications: $notifications")
+                        trySend(notifications)
+                    } catch (e: Exception) {
+                        Log.e("Notifications", "Error parsing notification: ${e.message}")
+                        trySend(emptyList())
+                    }
+                } else {
+                    trySend(emptyList())
+                }
+            }
+        awaitClose { listener.remove() }
+    }.flowOn(Dispatchers.IO)
 
     fun markNotificationAsRead(notificationId: String, userId: String) {
         Collections.notifications.document(notificationId)
@@ -783,7 +786,10 @@ class TravelProposalModel(
             }
     }
 
-    fun getItinerarySuggestions(travelName: String, userTripDurationDays: Int): Flow<List<Itinerary>> = callbackFlow {
+    fun getItinerarySuggestions(
+        travelName: String,
+        userTripDurationDays: Int
+    ): Flow<List<Itinerary>> = callbackFlow {
         Log.d("getItinerarySuggestions", "Fetching itinerary suggestions for: $travelName")
         Log.d("getItinerarySuggestions", "User trip duration: $userTripDurationDays days")
 
@@ -791,7 +797,10 @@ class TravelProposalModel(
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Log.e("getItinerarySuggestions", "Error fetching itinerary suggestions: ${error.message}")
+                Log.e(
+                    "getItinerarySuggestions",
+                    "Error fetching itinerary suggestions: ${error.message}"
+                )
                 trySend(emptyList())
                 return@addSnapshotListener
             }
@@ -807,17 +816,23 @@ class TravelProposalModel(
                     val originalStartDate = sortedStops.first().date
                     val originalEndDate = sortedStops.last().date
 
-                    val originalDurationDays = ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
+                    val originalDurationDays =
+                        ((originalEndDate.seconds - originalStartDate.seconds) / (24 * 60 * 60)).toInt()
 
-                    Log.d("getItinerarySuggestions", "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days")
+                    Log.d(
+                        "getItinerarySuggestions",
+                        "Itinerary duration: $originalDurationDays days, User duration: $userTripDurationDays days"
+                    )
 
-                    //TODO: TO DECIDE IF <= OR ==
                     originalDurationDays <= userTripDurationDays
                 }.filter { itinerary ->
                     itinerary.title.contains(travelName)
                 }
 
-                Log.d("getItinerarySuggestions", "Fetched ${itineraries.size} compatible itineraries")
+                Log.d(
+                    "getItinerarySuggestions",
+                    "Fetched ${itineraries.size} compatible itineraries"
+                )
                 trySend(itineraries)
             } else {
                 trySend(emptyList())
