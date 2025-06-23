@@ -48,6 +48,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val leveledUp: StateFlow<Boolean> = model.leveledUp
 
+    val isPasswordError: StateFlow<Boolean> = model.isPasswordError
+
+    val isUserWrong: StateFlow<Boolean> = model.isAccountWrong
+
     val userBadges: StateFlow<List<Badge>> = model.userBadges
 
     private var _editingProfile = MutableStateFlow<UserProfile>(UserProfile())
@@ -97,6 +101,14 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun deleteAccount() {
         model.deleteAccount()
+    }
+
+    fun setAccountWrong(){
+        model.setAccountWrong()
+    }
+
+    fun setIsPasswordWrong(){
+        model.setPasswordError()
     }
 
 
@@ -198,6 +210,32 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
+    fun getIconIndex(iconName: String): Int{
+        when (iconName){
+            "DIRECTIONS_WALK" -> {
+                return 3
+            }
+            "HOUSE" -> {
+                return 1
+            }
+            "ACCOUNT_CIRCLE" -> {
+                return 2
+            }
+            "TRAIN" -> {
+                return 4
+            }
+            "TRAM" -> {
+                return 5
+            }
+            "AIRPLANE" -> {
+                return 6
+            }
+            else -> {
+                return 0
+            }
+        }
+    }
+
     fun getIconNameFromString(iconString: String): String? {
         val regex = """Icon\(icon=([A-Z_]+)\)""".toRegex()
         val matchResult = regex.find(iconString)
@@ -263,6 +301,19 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         _editingProfile.value = _editingProfile.value.copy(mostDesiredDestination = newDestination)
     }
 
+    fun updatePastExperiences(newExperiences: String) {
+        val experienceList = newExperiences.split(",").map{it.trim()}
+        _editingProfile.value = _editingProfile.value.copy(pastExperiences = experienceList)
+    }
+
+    fun getPastExperiences(): String{
+        if(_editingProfile.value.pastExperiences.isEmpty()){
+            return ""
+        }else{
+            return _editingProfile.value.pastExperiences.joinToString(", ")
+        }
+    }
+
     fun updateBio(newBio: String) {
         _editingProfile.value = _editingProfile.value.copy(bio = newBio)
     }
@@ -300,19 +351,16 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun updateProfilePicture(imageUri: String, context: Context) {
+     fun updateProfilePicture(imageUri: String, context: Context) {
+         model.makeImageUri()
         viewModelScope.launch {
             model.uploadUserProfileImage(loggedUser.value.uid, imageUri, context)
-
         }
-        _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = imageUri,
-            isProfileImage = "Uri"
-        )
+
     }
 
-    fun getImageProfile(userUID: String): String {
-        return model.getImageUrlFromSupabase(userUID)
+    fun getImageProfile(user: UserProfile): String {
+        return model.getImageUrlFromSupabase(user)
     }
 
     fun getUriImage(imageUri: String): Uri {
@@ -380,6 +428,12 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 onValueChange = { updateMostDesiredDestination(it) }
             ),
             EditableFieldDefinition(
+                label = "Past Experiences Destinations",
+                value = getPastExperiences(),
+                errorMessage = validationErrors.pastExperiences,
+                onValueChange = { updatePastExperiences(it) }
+            ),
+            EditableFieldDefinition(
                 label = "Bio",
                 value = editingProfile.value.bio,
                 onValueChange = { updateBio(it) }
@@ -411,6 +465,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             InfoFieldDefinition(
                 label = "Desired Destination",
                 value = profile.mostDesiredDestination,
+            ),
+            InfoFieldDefinition(
+                label = "Past Experiences Destination",
+                value = getPastExperiences(),
             ),
             InfoFieldDefinition(
                 label = "Bio",
@@ -460,8 +518,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getImageFromUID(user: UserProfile): String{
-        return model.getImageFromUID(user.uid)
+    fun getImageFromUser(user: UserProfile): String{
+        return model.getImageFromUser(user)
     }
 
     fun editLevelUp(){

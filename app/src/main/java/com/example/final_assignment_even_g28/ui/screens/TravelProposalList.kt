@@ -232,6 +232,7 @@ fun TravelProposalListColumn(
 }
 
 
+//TODO() Modified -> tell the others
 @Composable
 fun Tag(tagsList: List<ActivityTag>) {
     LazyRow(

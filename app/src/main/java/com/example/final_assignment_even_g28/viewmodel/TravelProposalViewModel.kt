@@ -422,7 +422,6 @@ class TravelProposalViewModel(
         isEditing = true
     }
 
-
     fun clickCloneTrip(userId: String) {
         Log.d(
             "TravelProposalViewModel",
@@ -1229,6 +1228,11 @@ class TravelProposalViewModel(
             }
         }
     }
+
+    fun removePendingParticipation(travelProposal: TravelProposal, user: UserProfile){
+        tripModel.removePendingParticipations(travelProposal, user)
+    }
+
 //            tripModel.getItinerarySuggestions(""/*tempTravelProposal.title*/).collect { suggestions ->
 //                if (suggestions.isNotEmpty()) {
 //                    _listOfItinerarySuggestions.value = suggestions
