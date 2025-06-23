@@ -198,6 +198,32 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
+    fun getIconIndex(iconName: String): Int{
+        when (iconName){
+            "DIRECTIONS_WALK" -> {
+                return 3
+            }
+            "HOUSE" -> {
+                return 1
+            }
+            "ACCOUNT_CIRCLE" -> {
+                return 2
+            }
+            "TRAIN" -> {
+                return 4
+            }
+            "TRAM" -> {
+                return 5
+            }
+            "AIRPLANE" -> {
+                return 6
+            }
+            else -> {
+                return 0
+            }
+        }
+    }
+
     fun getIconNameFromString(iconString: String): String? {
         val regex = """Icon\(icon=([A-Z_]+)\)""".toRegex()
         val matchResult = regex.find(iconString)
@@ -300,19 +326,16 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun updateProfilePicture(imageUri: String, context: Context) {
+     fun updateProfilePicture(imageUri: String, context: Context) {
+         model.makeImageUri()
         viewModelScope.launch {
             model.uploadUserProfileImage(loggedUser.value.uid, imageUri, context)
-
         }
-        _editingProfile.value = _editingProfile.value.copy(
-            profilePicture = imageUri,
-            isProfileImage = "Uri"
-        )
+
     }
 
-    fun getImageProfile(userUID: String): String {
-        return model.getImageUrlFromSupabase(userUID)
+    fun getImageProfile(user: UserProfile): String {
+        return model.getImageUrlFromSupabase(user)
     }
 
     fun getUriImage(imageUri: String): Uri {
@@ -460,8 +483,8 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getImageFromUID(user: UserProfile): String{
-        return model.getImageFromUID(user.uid)
+    fun getImageFromUser(user: UserProfile): String{
+        return model.getImageFromUser(user)
     }
 
     fun editLevelUp(){

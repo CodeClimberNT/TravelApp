@@ -1006,15 +1006,15 @@ fun TravelActionBar(
             })
     }
     if(showAcceptedDialog){
-        AcceptedDialog(onDismissRequest = { showAcceptedDialog = false }, travelProposalVM = tripVm)
+        AcceptedDialog(onDismissRequest = { showAcceptedDialog = false }, travelProposalVM = tripVm, travelProposal = proposal)
     }
     if (showPendingDialog){
-        PendingDialog(onDismissRequest = { showPendingDialog = false }, travelProposalVM = tripVm)
+        PendingDialog(onDismissRequest = { showPendingDialog = false }, travelProposalVM = tripVm, travelProposal = proposal)
     }
 }
 
 @Composable
-fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel) {
+fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel, travelProposal: TravelProposal, userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)){
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -1037,8 +1037,8 @@ fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposa
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onClick = {
-                        //TODO()
-                        //travelProposalVM.rejectParticipant()
+                        travelProposalVM.removePendingParticipation(travelProposal, userProfileViewModel.loggedUser.value)
+                        onDismissRequest()
                     },
                     modifier = Modifier.size(height = 50.dp, width = 200.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -1064,7 +1064,7 @@ fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposa
 }
 
 @Composable
-fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel){
+fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel, travelProposal: TravelProposal, userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)){
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -1087,19 +1087,8 @@ fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposal
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onClick = {
-                        //TODO()
-                    },
-                    modifier = Modifier.size(height = 50.dp, width = 200.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text("Add/Remove Guest")
-                }
-                Spacer(modifier = Modifier.size(12.dp))
-                Button(
-                    onClick = {
-                        //TODO()
+                        travelProposalVM.removePendingParticipation(travelProposal, userProfileViewModel.loggedUser.value)
+                        onDismissRequest()
                     },
                     modifier = Modifier.size(height = 50.dp, width = 200.dp),
                     colors = ButtonDefaults.buttonColors(

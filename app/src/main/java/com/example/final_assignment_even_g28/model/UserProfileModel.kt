@@ -352,7 +352,7 @@ class UserProfileModel() {
                     phoneNumber = userToSave.phoneNumber,
                     mostDesiredDestination = userToSave.mostDesiredDestination,
                     typeOfExperiences = userToSave.typeOfExperiences,
-                    profilePicture = userToSave.profilePicture.toString(),
+                    profilePicture = userToSave.profilePicture,
                     isProfileImage = userToSave.isProfileImage,
                     badge = userToSave.badge,
                     currentLevel = userToSave.currentLevel,
@@ -364,7 +364,6 @@ class UserProfileModel() {
             Log.d("Edit User", "changed saved")
 
             _loggedUser.value = userToSave
-            uploadUserProfileImage(loggedUser.value.uid, userToSave.profilePicture, context)
             Log.d(
                 "Edit User",
                 "Try to save uid: ${loggedUser.value.uid}, uri: ${userToSave.profilePicture}"
@@ -445,57 +444,67 @@ class UserProfileModel() {
         return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
     }
      
-    fun getImageFromUID(userUID: String): String{
-        val url = Collections.userImagesBucket.publicUrl("$userUID/ProfileImage.jpg")
+    fun getImageFromUser(user: UserProfile): String{
+        val url = Collections.userImagesBucket.publicUrl("${user.uid}/${user.profilePicture}")
 
         Log.d("Image","Recovering from url: $url")
 
         return url
     }
 
+    fun makeImageUri(){
+        _loggedUser.value = _loggedUser.value.copy(isProfileImage = "Uri")
+    }
+
     suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
         return try {
-            val fileName =
-                "ProfileImage.jpg"
+            val fileName = generateRandomString(10)
             val filePath = "$userUID/$fileName"
 
             Log.d("Edit User", "Uploading image to path: $filePath")
 
-            val inputStream = context.contentResolver.openInputStream(fromStringToUri(imageUri))
+            val inputStream = context.contentResolver.openInputStream(imageUri.toUri())
             val bytes = inputStream?.readBytes() ?: throw Exception("Failed to read image")
             inputStream.close()
 
             // Upload to Supabase
-            if (Collections.userImagesBucket.exists(filePath)) {
-                Collections.userImagesBucket.update(filePath, bytes)
-            } else {
-                Collections.userImagesBucket.upload(filePath, bytes)
-            }
+            Collections.userImagesBucket.upload(filePath, bytes)
 
             val publicUrl = Collections.userImagesBucket.publicUrl(filePath)
 
             Log.d("Edit User", "Image uploaded successfully to \"$publicUrl\"")
-            Result.success(publicUrl)
+
+            _loggedUser.value = _loggedUser.value.copy(profilePicture = fileName)
+            _loggedUser.value = _loggedUser.value.copy(isProfileImage = "Uri")
+
+            Result.success(fileName)
         } catch (e: Exception) {
             Log.e("Edit User", "Upload failed: ${e.message}")
             Result.failure(e)
         }
     }
 
-    fun getImageUrlFromSupabase(userUID: String): String {
+    fun generateRandomString(length: Int): String {
+        val charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..length)
+            .map { charset.random() }
+            .joinToString("")
+    }
+
+    fun getImageUrlFromSupabase(user: UserProfile): String {
         val storage = Collections.storage
 
         val publicUrl = storage.from(Collections.userImagesBucket.toString())
-            .publicUrl("$userUID/ProfileImage.jpg")
+            .publicUrl("${user.uid}/${user.profilePicture}")
 
         return publicUrl
     }
 
     suspend fun deleteUserProfileImage(){
         try {
-            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/ProfileImage.jpg")
+            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
             Log.e("Delete Image","Try to delete Image from url: $url")
-            Collections.userImagesBucket.delete("${loggedUser.value.uid}/ProfileImage.jpg")
+            Collections.userImagesBucket.delete("${loggedUser.value.uid}/${loggedUser.value.profilePicture}")
             Log.e("Delete Image","Image deleted")
 
         }catch (e: Exception){
