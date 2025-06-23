@@ -14,6 +14,7 @@ import com.example.final_assignment_even_g28.data_class.Participant
 import com.example.final_assignment_even_g28.data_class.ParticipantStatus
 import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.data_class.TravelReview
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.utils.MAX
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
@@ -28,9 +29,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-class TravelProposalModel(
-//    private val userModel: UserProfileModel
-) {
+class TravelProposalModel() {
 
     fun getFilteredTravelProposals(
         filters: Filters
@@ -1018,6 +1017,15 @@ class TravelProposalModel(
     ): Boolean {
         return userId.isNotBlank() && tripId.isNotBlank() && reviewId.isNotBlank() &&
                 !userId.contains("/") && !tripId.contains("/") && !reviewId.contains("/")
+    }
+
+    fun removePendingParticipations(travelProposal: TravelProposal, user: UserProfile){
+        val newList = travelProposal.participants.filter { participant -> participant.id != user.uid  }
+        Collections.travelProposals.document(travelProposal.id).update("participants", newList).addOnSuccessListener { 
+            Log.d("Edit Participation","You successfully removed your partecipation from trip: ${travelProposal.id}")
+        }.addOnFailureListener { e ->
+            Log.e("Edit Participation","Error Modifying you participation status: $e")
+        }
     }
 }
 

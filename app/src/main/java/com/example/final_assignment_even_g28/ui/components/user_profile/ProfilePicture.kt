@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -141,7 +142,7 @@ fun ProfilePicture(
                     Image(
                         painter =
                             rememberAsyncImagePainter(
-                                userProfileViewModel.getImageFromUID(
+                                userProfileViewModel.getImageFromUser(
                                     userProfile
                                 )
                             ),
@@ -172,15 +173,17 @@ fun ProfilePicture(
         } else {
             // Editing Profile Picture
             when (userProfile.isProfileImage) {
-                "Icon", "Monogram" -> {
-                    IconCarousel(userProfileViewModel, isLandScape = isLandScape)
+                "Icon" -> {
+                    IconCarousel(userProfileViewModel, isLandScape = isLandScape, user = userProfile, startingIndex = userProfileViewModel.getIconIndex(userProfile.profilePicture))
                 }
-
+                "Monogram" -> {
+                    IconCarousel(userProfileViewModel, isLandScape = isLandScape, user = userProfile, startingIndex = 0)
+                }
                 "Uri" -> {
                     Image(
                         painter =
                             rememberAsyncImagePainter(
-                                userProfileViewModel.getImageFromUID(
+                                userProfileViewModel.getImageFromUser(
                                     userProfile
                                 )
                             ),
@@ -269,10 +272,9 @@ fun ProfilePicture(
 
 
 @Composable
-fun IconCarousel(viewModel: UserProfileViewModel, isLandScape: Boolean) {
+fun IconCarousel(viewModel: UserProfileViewModel, isLandScape: Boolean, user: UserProfile, startingIndex: Int) {
     val icons = remember { mutableStateOf(viewModel.getIconsList()) }
-
-    var selectedIndex by remember { mutableIntStateOf(0) }
+    var selectedIndex by remember { mutableIntStateOf(startingIndex) }
 
     if (!isLandScape) {
         Row(

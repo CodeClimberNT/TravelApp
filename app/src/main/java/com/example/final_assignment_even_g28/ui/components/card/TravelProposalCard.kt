@@ -56,7 +56,8 @@ fun TravelProposalCard(
     val textColor = MaterialTheme.colorScheme.onSecondaryContainer
     val notifications by tripVm.notifications.collectAsState()
     val isTripNotified = notifications.any { it.tripId == travelProposal.id }
-
+    val fromExplore = false
+    
     with(sharedTransitionScope) {
         Card(
             modifier = Modifier
