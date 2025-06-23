@@ -367,7 +367,7 @@ class TravelProposalViewModel(
         )
     }
 
-    fun validateFirstScreenFields(): Boolean {
+    fun validateFirstScreenFields(context: Context): Boolean {
         val (errors, isValid) = TravelProposalValidator.validateFirstScreen(
             title = tempTravelProposal.title,
             maxParticipant = tempTravelProposal.maxParticipant,
@@ -377,6 +377,7 @@ class TravelProposalViewModel(
             itinerary = tempTravelProposal.itinerary,
             tripDescription = tempTravelProposal.description,
             numTripImages = tempTravelProposal.images.size + tempTravelProposal.tempImages.size,
+            context = context
         )
 
         firstScreenValidationError = errors
@@ -384,10 +385,11 @@ class TravelProposalViewModel(
         return isValid
     }
 
-    fun validateSecondScreenFields(): Boolean {
+    fun validateSecondScreenFields(context: Context): Boolean {
         val (errors, isValid) = TravelProposalValidator.validateSecondScreen(
             title = tempTravelProposal.title,
             activities = tempTravelProposal.activities,
+            context = context
         )
 
         secondScreenValidationError = errors

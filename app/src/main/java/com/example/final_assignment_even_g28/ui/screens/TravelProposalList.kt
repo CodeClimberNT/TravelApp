@@ -238,10 +238,10 @@ fun Tag(tagsList: List<ActivityTag>) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
     ) {
-        items(tagsList) {
+        items(tagsList.size) { tag ->
             AssistChip(
                 onClick = {},
-                label = { Text(it.value) },
+                label = { Text(tagsList[tag].value) },
                 enabled = false,
                 shape = RoundedCornerShape(50),
             )

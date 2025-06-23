@@ -185,11 +185,11 @@ fun PastTravelProposalScreen(
                                                 .padding(
                                                     start = 8.dp
                                                 )
-                                        ) { TripMap(travelProposal.itinerary) }
+                                        ) { TripMap(travelProposal.itinerary, travelProposal.title) }
                                     }
                                 } else {
                                     ItinerarySection(travelProposal.itinerary)
-                                    TripMap(travelProposal.itinerary)
+                                    TripMap(travelProposal.itinerary, travelProposal.title)
                                 }
                             }
 

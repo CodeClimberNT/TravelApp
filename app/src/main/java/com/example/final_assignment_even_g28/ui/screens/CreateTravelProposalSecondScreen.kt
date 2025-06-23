@@ -266,7 +266,7 @@ fun CreateTravelProposalSecondScreen(
                     }
                 }
                 Button(onClick = {
-                    if (tripVm.validateSecondScreenFields()) {
+                    if (tripVm.validateSecondScreenFields(context = ctx)) {
                         if (tripVm.isEditing) {
                             tripVm.updateTravelProposal(ctx)
                         } else {

@@ -242,12 +242,12 @@ fun TravelProposalScreen(
                                     .weight(1f)
                                     .padding(start = 8.dp)
                             ) {
-                                TripMap(travelProposal.itinerary)
+                                TripMap(travelProposal.itinerary, travelProposal.title)
                             }
                         }
                     } else {
                         ItinerarySection(travelProposal.itinerary)
-                        TripMap(travelProposal.itinerary)
+                        TripMap(travelProposal.itinerary, travelProposal.title)
                     }
                 }
             }
@@ -477,13 +477,21 @@ fun TripOverview(
 }
 
 fun openWhatsAppChat(context: Context, phoneNumber: String, message: String? = null) {
-    val baseUrl = "https://wa.me/39$phoneNumber"
-    val url = message
-        ?.let { baseUrl + "?text=" + URLEncoder.encode(it, "UTF-8") }
-        ?: baseUrl
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, message)
+        putExtra("jid", "39$phoneNumber@s.whatsapp.net")
+        `package` = "com.whatsapp"
+    }
 
-    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-    context.startActivity(intent)
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        val url = "https://api.whatsapp.com/send?phone=39$phoneNumber&text=" +
+                URLEncoder.encode(message, "UTF-8")
+        Log.d("URL", url)
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    }
 }
 
 @Composable
@@ -646,33 +654,33 @@ fun ItineraryItem(stop: ItineraryStop, isLastItem: Boolean) {
 @OptIn(FlowPreview::class)
 //@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun TripMap(itinerary: List<ItineraryStop>) {
+fun TripMap(itinerary: List<ItineraryStop>, tripName: String) {
     val defaultLocation = LatLng(45.438, 10.992) // Verona, e.g.
     val context = LocalContext.current
     var locations by remember { mutableStateOf<List<LatLng?>>(emptyList()) }
+    var location_title by remember { mutableStateOf<LatLng?>(null) }
     val cameraPositionState = rememberCameraPositionState()
 
-    /*LaunchedEffect(itinerary) {
-        locations = itinerary.map { name ->
-            suspendCancellableCoroutine { cont ->
-                geocodeAddresses(context, name.title) { cont.resume(it) }
-            }
-        }
-        locations.firstOrNull { it != null }?.let {
+    LaunchedEffect(tripName) {
+        location_title = resolveLocation(tripName, context)
+        location_title?.let {
             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 8f), 1000)
         }
-    }*/
+    }
 
     LaunchedEffect(itinerary) {
         locations = itinerary.map { stop ->
-            resolveLocation(stop.title, context, R.string.google_maps_api.toString())
+            resolveLocation(stop.title, context)
         }
         locations.filterNotNull().let { pts ->
             if (pts.isNotEmpty()) {
                 val bounds = LatLngBounds.builder().apply {
                     pts.forEach(::include)
                 }.build()
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 60), 1000)
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngBounds(bounds, 60),
+                    1000
+                )
             }
         }
     }
@@ -739,12 +747,10 @@ fun titleFragments(raw: String): List<String> {
 
 suspend fun resolveLocation(
     title: String,
-    context: Context,
-    apiKey: String
+    context: Context
 ): LatLng? {
     for (fragment in titleFragments(title)) {
         geocodeWithSdk(context, fragment)?.let { return it }
-        fetchViaWebGeocode(fragment, apiKey)?.let { return it }
     }
     return null
 }
@@ -775,22 +781,6 @@ suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
             null
         }
     }
-
-
-suspend fun fetchViaWebGeocode(text: String, apiKey: String): LatLng? {
-    return withContext(Dispatchers.IO) {
-        val urlText = URLEncoder.encode(text, "UTF-8")
-        val url = "https://maps.googleapis.com/maps/api/geocode/json?address=$urlText&key=$apiKey"
-        val json = URL(url).readText()
-        val results = JSONObject(json).getJSONArray("results")
-        if (results.length() > 0) {
-            val loc = results.getJSONObject(0)
-                .getJSONObject("geometry")
-                .getJSONObject("location")
-            LatLng(loc.getDouble("lat"), loc.getDouble("lng"))
-        } else null
-    }
-}
 
 
 
