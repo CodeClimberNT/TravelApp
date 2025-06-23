@@ -402,7 +402,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }*/
 
     fun validateFields(): Boolean {
-        val errors = UserProfileValidator().validate(_editingProfile.value)
+        val errors = UserProfileValidator.validate(_editingProfile.value)
         _validationErrors = errors
         val isValid = errors.asList().all { it.isEmpty() }
 

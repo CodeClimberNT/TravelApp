@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -48,6 +49,7 @@ fun NavGraph(
         val navActions: Navigation = remember(navController) {
             Navigation(navController)
         }
+        val context = LocalContext.current
         val bottomBarItemSelected = remember { mutableStateOf(BottomBarItem.Explore) }
         val snackbarHostState = remember { SnackbarHostState() }
 //        val snackbarNotification = tripVm.snackbarNotification.collectAsState()
@@ -135,8 +137,6 @@ fun NavGraph(
                     defaultValue = false
                 }),
             ) { backStackEntry ->
-                //TODO: when badge merge is done, verify this navigation works,
-                // manually true already opens the badge
                 val showReviewsTab =
                     backStackEntry.arguments?.getBoolean(DestinationsArgs.SHOW_BADGE) == true
 

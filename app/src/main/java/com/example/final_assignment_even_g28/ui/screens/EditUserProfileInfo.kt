@@ -86,15 +86,12 @@ enum class CameraPopupState {
 
 // The design was changed from the first laboratory
 // to better adhere both to the M3 guidelines and to the Lab2 specifications
-
-//UserProfileViewModel
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun EditUserProfileInfo(
     viewModel: UserProfileViewModel = viewModel(factory = AppFactory),
     onBackClick: () -> Unit
 ) {
-
     val scrollable = rememberScrollState()
     var showCameraPopup by remember { mutableStateOf(false) }
     var popupSelectionState by remember { mutableStateOf(CameraPopupState.GALLERY) }
@@ -138,6 +135,7 @@ fun EditUserProfileInfo(
 
     // For system back navigation (e.g., swiping from the edge of the screen)
     BackHandler {
+        viewModel.saveAndExitEditing(ctx)
         onBackClick()
     }
 
@@ -154,6 +152,7 @@ fun EditUserProfileInfo(
                     },
                     navigationIcon = {
                         IconButton(onClick = {
+                            viewModel.saveAndExitEditing(ctx)
                             onBackClick()
                         }) {
                             Icon(

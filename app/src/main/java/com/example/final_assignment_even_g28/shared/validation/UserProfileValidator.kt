@@ -22,7 +22,7 @@ fun UserProfileError.asList(): List<String> = listOf(
     pastExperiences
 )
 
-class UserProfileValidator {
+object UserProfileValidator {
     fun validate(target: UserProfile): UserProfileError {
         return UserProfileError(
             name = if (target.name.isBlank()) {
