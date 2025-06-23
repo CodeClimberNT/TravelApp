@@ -19,6 +19,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.final_assignment_even_g28.data_class.Badge
 import com.example.final_assignment_even_g28.data_class.BadgeType
+import com.example.final_assignment_even_g28.data_class.NOTIFICATION_ITEMS
+import com.example.final_assignment_even_g28.data_class.NotificationItem
 import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.model.UserProfileModel
@@ -33,7 +35,10 @@ import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
@@ -58,6 +63,18 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     private var _leveledUp = MutableStateFlow<Boolean>(false)
     val leveledUp: StateFlow<Boolean>
         get() = _leveledUp
+
+    val notificationItems: StateFlow<List<NotificationItem>> = loggedUser.map { user ->
+        NOTIFICATION_ITEMS.map { item ->
+            val isEnabled =
+                user.notificationSettings.find { it.type == item.type }?.enabled ?: false
+            item.copy(status = isEnabled)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = NOTIFICATION_ITEMS.map { it.copy(status = false) }
+    )
 
     var isEditing by mutableStateOf(false)
 
@@ -184,17 +201,39 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun updateNotificationSetting(type: NotificationPreferenceType, enabled: Boolean) {
+        Log.d(
+            "Notification Settings",
+            "outside"
+        )
         viewModelScope.launch {
-            val currentUserUid = loggedUser.value.uid
-            val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
-                if (pref.type == type) pref.copy(enabled = enabled) else pref
-            }
-            model.updateNotificationSettings(currentUserUid, updatedSettings)
-        }
-    }
+            try {
+                Log.d(
+                    "Notification Settings",
+                    "inside"
+                )
+                if (!isUserLoggedIn()) {
+                    Log.w("Notification Settings", "User is not logged in, cannot update settings.")
+                    return@launch
+                }
 
-    fun getNotificationSetting(type: NotificationPreferenceType): Boolean {
-        return loggedUser.value.notificationSettings.find { it.type == type }?.enabled == true
+                val currentUserUid = loggedUser.value.uid
+                val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
+                    if (pref.type == type) pref.copy(enabled = enabled) else pref
+                }
+
+
+                model.updateNotificationSettings(currentUserUid, updatedSettings)
+                Log.d(
+                    "Notification Settings",
+                    "Updated settings for $currentUserUid: $updatedSettings"
+                )
+                _loggedUser.value = _loggedUser.value.copy(notificationSettings = updatedSettings)
+                _editingProfile.value =
+                    _editingProfile.value.copy(notificationSettings = updatedSettings)
+            } catch (e: Exception) {
+                Log.e("Notification Settings", "Error updating settings: ${e.message}")
+            }
+        }
     }
 
     fun startEditing() {

@@ -21,46 +21,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
-import com.example.final_assignment_even_g28.data_class.notificationItems
 import com.example.final_assignment_even_g28.ui.theme.DimColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 @Composable
 fun NotificationSettingsScreen(
-    userModel: UserProfileViewModel = viewModel(factory = AppFactory)
+    userVM: UserProfileViewModel = viewModel(factory = AppFactory),
 ) {
-    val toggleStates = remember {
-        mutableStateMapOf<String, Boolean>().apply {
-            notificationItems.forEach {
-                put(
-                    it.title, userModel.getNotificationSetting(
-                        when (it.title) {
-                            "Last-minute travel proposal" -> NotificationPreferenceType.LAST_MINUTE
-                            "New Applicant" -> NotificationPreferenceType.NEW_APPLICATION
-                            "Own Trips Reviews" -> NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP
-                            "Status update on pending application" -> NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION
-                            "Recommended trips" -> NotificationPreferenceType.CHECK_RECOMMENDED
-                            else -> NotificationPreferenceType.NULL
-                        }
-                    )
-                )
-            }
-        }
-    }
+    val notificationItems by userVM.notificationItems.collectAsState()
+
     var showDeleteCompletion by remember { mutableStateOf(false) }
     Scaffold { innerPadding ->
         Column(
@@ -78,24 +59,9 @@ fun NotificationSettingsScreen(
                 NotificationToggle(
                     title = item.title,
                     description = item.description,
-                    isChecked = toggleStates[item.title] == true,
+                    isChecked = item.status,
                     onCheckedChange = { isEnabled ->
-
-                        toggleStates[item.title] = isEnabled
-
-
-                        val key = when (item.title) {
-                            "Last-minute travel proposal" -> NotificationPreferenceType.LAST_MINUTE
-                            "New Applicant" -> NotificationPreferenceType.NEW_APPLICATION
-                            "Own Trips Reviews" -> NotificationPreferenceType.REVIEW_RECEIVED_FOR_PAST_TRIP
-                            "Status update on pending application" -> NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION
-                            "Recommended trips" -> NotificationPreferenceType.CHECK_RECOMMENDED
-                            else -> NotificationPreferenceType.NULL
-                        }
-
-                        key.let {
-                            userModel.updateNotificationSetting(it, isEnabled)
-                        }
+                        userVM.updateNotificationSetting(item.type, isEnabled)
                     }
                 )
             }
@@ -153,7 +119,7 @@ fun NotificationSettingsScreen(
                         Button(
                             onClick = {
                                 showDeleteCompletion = false
-                                userModel.deleteAccount()
+                                userVM.deleteAccount()
                             },
                             enabled = true,
                             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
@@ -218,10 +184,10 @@ fun NotificationToggle(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun NotificationSettingsScreenPreview() {
-    MaterialTheme {
-        NotificationSettingsScreen()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun NotificationSettingsScreenPreview() {
+//    MaterialTheme {
+//        NotificationSettingsScreen()
+//    }
+//}

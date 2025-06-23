@@ -960,7 +960,20 @@ class UserProfileModel() {
     }
 
     suspend fun updateNotificationSettings(userId: String, settings: List<NotificationPreference>) {
-        Collections.users.document(userId).update("notificationSettings", settings).await()
+        try {
+            Log.d("UserProfileModel", "Updating notification settings for user: $userId")
+            Log.d("UserProfileModel", "New settings: $settings")
+
+            val userDoc = Collections.users.document(userId)
+            val updates = mapOf("notificationSettings" to settings)
+
+            userDoc.update(updates).await()
+
+            Log.d("UserProfileModel", "Successfully updated notification settings in Firestore")
+        } catch (e: Exception) {
+            Log.e("UserProfileModel", "Error updating notification settings: ${e.message}", e)
+            throw e
+        }
     }
 
     fun migrateNotificationSettings(userId: String) {
@@ -978,7 +991,8 @@ class UserProfileModel() {
                     NotificationPreferenceType.STATUS_UPDATE_ON_PENDING_APPLICATION,
                     true
                 ),
-                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true)
+                NotificationPreference(NotificationPreferenceType.CHECK_RECOMMENDED, true),
+                NotificationPreference(NotificationPreferenceType.BADGE_UNLOCKED, true)
             )
 
             Collections.users.document(userId).get()
