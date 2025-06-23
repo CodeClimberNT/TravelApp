@@ -26,6 +26,8 @@ import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +59,11 @@ class UserProfileModel() {
     private var _leveledUp = MutableStateFlow<Boolean>(false)
     val leveledUp: StateFlow<Boolean> get() = _leveledUp
 
+    private var _isPasswordError = MutableStateFlow<Boolean>(false)
+    val isPasswordError: StateFlow<Boolean> get() = _isPasswordError
+
+    private var _isAccountWrong = MutableStateFlow<Boolean>(false)
+    val isAccountWrong: StateFlow<Boolean> get() = _isAccountWrong
 
     init {
         loadAllUsers()
@@ -137,10 +144,33 @@ class UserProfileModel() {
                     } else {
                         Log.e("Login", "Authentication failed: ${task.exception?.message}")
                     }
+                }else{
+                    val exception = task.exception
+                    when (exception) {
+                        is FirebaseAuthInvalidUserException -> {
+                            _isAccountWrong.value = true
+                            Log.e("Login", "Email not exist")
+                        }
+                        is FirebaseAuthInvalidCredentialsException -> {
+                            _isPasswordError.value = true
+                            Log.e("Login", "Wrong Password")
+                        }
+                        else -> {
+                            Log.e("Login", "Error during login: ${exception?.message}")
+                        }
+                    }
                 }
             }.addOnFailureListener {
                 Log.e("Login", "Impossible to login with this mail and password")
             }
+    }
+
+    fun setPasswordError(){
+        _isPasswordError.value = false
+    }
+
+    fun setAccountWrong(){
+        _isPasswordError.value = false
     }
 
     fun deleteAccount() {
@@ -348,6 +378,7 @@ class UserProfileModel() {
                     uid = userToSave.uid,
                     email = userToSave.email,
                     dateOfBirth = userToSave.dateOfBirth,
+                    pastExperiences = userToSave.pastExperiences,
                     bio = userToSave.bio,
                     phoneNumber = userToSave.phoneNumber,
                     mostDesiredDestination = userToSave.mostDesiredDestination,

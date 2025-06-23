@@ -58,12 +58,11 @@ class UserProfileValidator {
             } else {
                 ""
             },
-            /*
             pastExperiences = if (target.pastExperiences.isEmpty()) {
                 "Past experiences cannot be empty"
             } else {
                 ""
-            },*/
+            },
         )
     }
 }

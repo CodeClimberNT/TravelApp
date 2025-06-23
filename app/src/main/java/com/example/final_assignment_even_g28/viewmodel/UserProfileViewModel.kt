@@ -48,6 +48,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     val leveledUp: StateFlow<Boolean> = model.leveledUp
 
+    val isPasswordError: StateFlow<Boolean> = model.isPasswordError
+
+    val isUserWrong: StateFlow<Boolean> = model.isAccountWrong
+
     val userBadges: StateFlow<List<Badge>> = model.userBadges
 
     private var _editingProfile = MutableStateFlow<UserProfile>(UserProfile())
@@ -97,6 +101,14 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun deleteAccount() {
         model.deleteAccount()
+    }
+
+    fun setAccountWrong(){
+        model.setAccountWrong()
+    }
+
+    fun setIsPasswordWrong(){
+        model.setPasswordError()
     }
 
 
@@ -289,6 +301,19 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         _editingProfile.value = _editingProfile.value.copy(mostDesiredDestination = newDestination)
     }
 
+    fun updatePastExperiences(newExperiences: String) {
+        val experienceList = newExperiences.split(",").map{it.trim()}
+        _editingProfile.value = _editingProfile.value.copy(pastExperiences = experienceList)
+    }
+
+    fun getPastExperiences(): String{
+        if(_editingProfile.value.pastExperiences.isEmpty()){
+            return ""
+        }else{
+            return _editingProfile.value.pastExperiences.joinToString(", ")
+        }
+    }
+
     fun updateBio(newBio: String) {
         _editingProfile.value = _editingProfile.value.copy(bio = newBio)
     }
@@ -403,6 +428,12 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 onValueChange = { updateMostDesiredDestination(it) }
             ),
             EditableFieldDefinition(
+                label = "Past Experiences Destinations",
+                value = getPastExperiences(),
+                errorMessage = validationErrors.pastExperiences,
+                onValueChange = { updatePastExperiences(it) }
+            ),
+            EditableFieldDefinition(
                 label = "Bio",
                 value = editingProfile.value.bio,
                 onValueChange = { updateBio(it) }
@@ -434,6 +465,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             InfoFieldDefinition(
                 label = "Desired Destination",
                 value = profile.mostDesiredDestination,
+            ),
+            InfoFieldDefinition(
+                label = "Past Experiences Destination",
+                value = getPastExperiences(),
             ),
             InfoFieldDefinition(
                 label = "Bio",
