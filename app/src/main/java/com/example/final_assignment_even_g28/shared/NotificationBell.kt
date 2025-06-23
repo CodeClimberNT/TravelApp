@@ -45,7 +45,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.navigation.handleNotificationNavigation
+import com.example.final_assignment_even_g28.ui.theme.LocalNotificationBellColors
+import com.example.final_assignment_even_g28.ui.theme.MadTheme
+import com.example.final_assignment_even_g28.ui.theme.NewNotificationBackgroundReadColor
+import com.example.final_assignment_even_g28.ui.theme.NewNotificationBackgroundUnReadColor
+import com.example.final_assignment_even_g28.ui.theme.NewNotificationBorderReadColor
+import com.example.final_assignment_even_g28.ui.theme.NewNotificationBorderUnReadColor
+import com.example.final_assignment_even_g28.ui.theme.OldNotificationBackgroundColor
+import com.example.final_assignment_even_g28.ui.theme.OldNotificationBorderColor
 import com.example.final_assignment_even_g28.utils.AppFactory
+import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
 
@@ -164,18 +173,18 @@ fun NotificationItem(
     val isRecent = notification.isRecent()
     val isReadFromDB = notification.isRead(currentUserId)
 
-
+    val notificationColors = LocalNotificationBellColors.current
 
     val backgroundColor = when {
-        isRecent && !isReadFromDB -> Color(0xFFFFF8E1)
-        !isRecent && !isReadFromDB -> Color(0xFFE8F5E8)
-        else -> Color(0xFFF5F5F5)
+        isRecent && !isReadFromDB -> notificationColors.backgroundColor.unRead
+        !isRecent && !isReadFromDB -> notificationColors.backgroundColor.read
+        else -> notificationColors.backgroundColor.old
     }
 
     val borderColor = when {
-        isRecent && !isReadFromDB -> Color(0xFFFFC107)
-        !isRecent && !isReadFromDB -> Color(0xFF4CAF50)
-        else -> Color(0xFFE0E0E0)
+        isRecent && !isReadFromDB -> notificationColors.borderColor.unRead
+        !isRecent && !isReadFromDB -> notificationColors.borderColor.read
+        else -> notificationColors.borderColor.old
     }
 
     Column(
@@ -190,13 +199,13 @@ fun NotificationItem(
                 handleNotificationNavigation(notification, navActions)
             })
             .background(color = backgroundColor, shape = MaterialTheme.shapes.small)
-            .border(1.dp, borderColor, MaterialTheme.shapes.small)
+            .border(2.dp, borderColor, MaterialTheme.shapes.small)
             .padding(12.dp)
     ) {
         Text(
             text = tripVm.getNotificationMessage(notification.type,notification.title, false),
             fontWeight = if (!isReadFromDB) FontWeight.Bold else FontWeight.Normal
         )
-        //Text("${notification["timestamp"]}", fontSize = 12.sp, color = Color.Gray)
+        Text(if( isRecent ) "Now" else notification.timestamp.toDateFormat(), fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
