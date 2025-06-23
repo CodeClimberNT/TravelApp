@@ -357,7 +357,8 @@ class UserProfileModel() {
                     badge = userToSave.badge,
                     currentLevel = userToSave.currentLevel,
                     rating = userToSave.rating,
-                    exp = userToSave.exp
+                    exp = userToSave.exp,
+                    notificationSettings = userToSave.notificationSettings
                 ),
             ).await()
             Log.d("Edit User", "User with uid ${userToSave.uid} correctly edited")
@@ -444,16 +445,20 @@ class UserProfileModel() {
     fun fromStringToUri(uriString: String): Uri {
         return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
     }
-     
-    fun getImageFromUID(userUID: String): String{
+
+    fun getImageFromUID(userUID: String): String {
         val url = Collections.userImagesBucket.publicUrl("$userUID/ProfileImage.jpg")
 
-        Log.d("Image","Recovering from url: $url")
+        Log.d("Image", "Recovering from url: $url")
 
         return url
     }
 
-    suspend fun uploadUserProfileImage(userUID: String, imageUri: String, context: Context) : Result<String> {
+    suspend fun uploadUserProfileImage(
+        userUID: String,
+        imageUri: String,
+        context: Context
+    ): Result<String> {
         return try {
             val fileName =
                 "ProfileImage.jpg"
@@ -491,15 +496,16 @@ class UserProfileModel() {
         return publicUrl
     }
 
-    suspend fun deleteUserProfileImage(){
+    suspend fun deleteUserProfileImage() {
         try {
-            val url = Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/ProfileImage.jpg")
-            Log.e("Delete Image","Try to delete Image from url: $url")
+            val url =
+                Collections.userImagesBucket.publicUrl("${loggedUser.value.uid}/ProfileImage.jpg")
+            Log.e("Delete Image", "Try to delete Image from url: $url")
             Collections.userImagesBucket.delete("${loggedUser.value.uid}/ProfileImage.jpg")
-            Log.e("Delete Image","Image deleted")
+            Log.e("Delete Image", "Image deleted")
 
-        }catch (e: Exception){
-            Log.e("Delete Image","Impossible to delete image: $e")
+        } catch (e: Exception) {
+            Log.e("Delete Image", "Impossible to delete image: $e")
         }
     }
 
@@ -518,29 +524,63 @@ class UserProfileModel() {
     fun editLevel(oldExp: Int, newExp: Int) {
         var oldLvl: Int = 0;
 
-        when(oldExp){
-            in 0 .. 20 -> {oldLvl = 1}
-            in 21 .. 50 -> {oldLvl = 2}
-            in 51 .. 100 -> {oldLvl = 3}
-            in 101 .. 200 -> {oldLvl = 4}
-            in 201 .. 400 -> {oldLvl = 5}
-            else -> {oldLvl = 6}
+        when (oldExp) {
+            in 0..20 -> {
+                oldLvl = 1
+            }
+
+            in 21..50 -> {
+                oldLvl = 2
+            }
+
+            in 51..100 -> {
+                oldLvl = 3
+            }
+
+            in 101..200 -> {
+                oldLvl = 4
+            }
+
+            in 201..400 -> {
+                oldLvl = 5
+            }
+
+            else -> {
+                oldLvl = 6
+            }
         }
 
         when (newExp) {
-            in 0 .. 20 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 1)}
-            in 21 .. 50 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 2)}
-            in 51 .. 100 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 3)}
-            in 101 .. 200 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 4)}
-            in 201 .. 400 -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 5)}
-            else -> {_loggedUser.value = _loggedUser.value.copy(currentLevel = 6)}
+            in 0..20 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 1)
+            }
+
+            in 21..50 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 2)
+            }
+
+            in 51..100 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 3)
+            }
+
+            in 101..200 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 4)
+            }
+
+            in 201..400 -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 5)
+            }
+
+            else -> {
+                _loggedUser.value = _loggedUser.value.copy(currentLevel = 6)
+            }
         }
 
-        if(oldLvl < _loggedUser.value.currentLevel)
+        if (oldLvl < _loggedUser.value.currentLevel)
             _leveledUp.value = true
     }
 
-    fun editLevelUp(){
+    fun editLevelUp() {
         _leveledUp.value = false
     }
 
@@ -728,6 +768,7 @@ class UserProfileModel() {
             .update("notificationSettings", settings)
             .addOnSuccessListener {
                 Log.d("UserProfileNotifications", "Notification settings updated successfully")
+                _loggedUser.value = _loggedUser.value.copy(notificationSettings = settings)
             }
             .addOnFailureListener { error ->
                 Log.e(

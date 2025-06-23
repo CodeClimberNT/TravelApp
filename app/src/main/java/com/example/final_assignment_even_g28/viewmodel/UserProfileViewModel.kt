@@ -118,15 +118,19 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 //        }
 //    }
 
-    fun updateNotificationSetting(type: NotificationPreferenceType, enabled: Boolean) {
+    fun updateNotificationSetting(
+        type: NotificationPreferenceType,
+        enabled: Boolean,
+        ctx: Context
+    ) {
         viewModelScope.launch {
             val currentUserUid = loggedUser.value.uid
             val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
                 if (pref.type == type) pref.copy(enabled = enabled) else pref
             }
-            model.updateNotificationSettings(currentUserUid, updatedSettings)
-            (model.loggedUser as MutableStateFlow).value =
-                loggedUser.value.copy(notificationSettings = updatedSettings)
+//            model.updateNotificationSettings(currentUserUid, updatedSettings)
+            val newProfile = loggedUser.value.copy(notificationSettings = updatedSettings)
+            model.editProfile(newProfile, ctx)
         }
     }
 

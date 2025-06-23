@@ -14,6 +14,7 @@ import com.example.final_assignment_even_g28.data_class.Participant
 import com.example.final_assignment_even_g28.data_class.ParticipantStatus
 import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.data_class.TravelReview
+import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.utils.MAX
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
@@ -642,11 +643,11 @@ class TravelProposalModel(
 
 
     fun getNotificationsForUserUID(
-        userId: String,
+        user: UserProfile,
         excludedNotificationTypes: List<NotificationType>
     ): Flow<List<Notification>> =
         callbackFlow {
-            Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $userId")
+            Log.d("NotificationsExcluded2", "In: $excludedNotificationTypes, User ID: $user.uid")
             val listener = Collections.notifications
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
@@ -660,7 +661,7 @@ class TravelProposalModel(
                             val notifications = snapshot.documents.mapNotNull { document ->
                                 Log.d("Notifications", "Exclude types: $excludedNotificationTypes")
                                 val notification = document.toObject(Notification::class.java)
-                                Log.d("CurrentUser", "User ID: $userId")
+                                Log.d("CurrentUser", "User ID: $user.uid")
                                 notification?.copy(id = document.id)
 
 
@@ -670,20 +671,20 @@ class TravelProposalModel(
                                 // Filter notifications based on user ID and type
                                 when (notification.type) {
                                     NotificationType.NEW_PROPOSAL -> {
-                                        notification.notificationOwnerId != userId
+                                        notification.notificationOwnerId != user.uid
                                     }
 
-                                    NotificationType.NEW_APPLICATION -> notification.tripPlannerId == userId
-                                    NotificationType.PARTICIPANT_APPROVED, NotificationType.PARTICIPANT_REJECTED -> notification.applicantId == userId
+                                    NotificationType.NEW_APPLICATION -> notification.tripPlannerId == user.uid
+                                    NotificationType.PARTICIPANT_APPROVED, NotificationType.PARTICIPANT_REJECTED -> notification.applicantId == user.uid
                                     NotificationType.REVIEW_RECEIVED_FOR_PAST_TRIP -> {
-                                        notification.tripPlannerId == userId && notification.reviewedUser != userId
+                                        notification.tripPlannerId == user.uid && notification.reviewedUser != user.uid
                                     }
 
-                                    NotificationType.USER_REVIEW_RECEIVED -> notification.reviewedUser == userId
-                                    NotificationType.LAST_MINUTE -> notification.applicantId != userId
-                                    NotificationType.LAST_MINUTE_AUTOMATIC -> notification.applicantId == userId
-                                    NotificationType.CHECK_RECOMMENDED -> notification.applicantId == userId
-                                    NotificationType.BADGE_UNLOCKED -> notification.notificationOwnerId == userId
+                                    NotificationType.USER_REVIEW_RECEIVED -> notification.reviewedUser == user.uid
+                                    NotificationType.LAST_MINUTE -> notification.applicantId != user.uid
+                                    NotificationType.LAST_MINUTE_AUTOMATIC -> notification.applicantId == user.uid
+                                    NotificationType.CHECK_RECOMMENDED -> notification.applicantId == user.uid
+                                    NotificationType.BADGE_UNLOCKED -> notification.notificationOwnerId == user.uid
                                     else -> false
                                 }
                             }

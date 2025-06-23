@@ -22,5 +22,6 @@ data class UserToSave(
     var rating: Float,
     var isProfileImage: String,
     var profilePicture: String,
-    var exp: Int
+    var exp: Int,
+    var notificationSettings: List<NotificationPreference>,
 )

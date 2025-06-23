@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,7 @@ import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 fun NotificationSettingsScreen(
     userModel: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
+    val ctx = LocalContext.current
     val toggleStates = remember {
         mutableStateMapOf<String, Boolean>().apply {
             notificationItems.forEach {
@@ -94,7 +96,7 @@ fun NotificationSettingsScreen(
                         }
 
                         key.let {
-                            userModel.updateNotificationSetting(it, isEnabled)
+                            userModel.updateNotificationSetting(it, isEnabled, ctx)
                         }
                     }
                 )
