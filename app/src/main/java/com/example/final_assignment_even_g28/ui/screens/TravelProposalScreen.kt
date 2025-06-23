@@ -92,6 +92,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -1232,43 +1233,50 @@ fun CandidateProfile(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        //horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
-            .padding(16.dp)
+            .padding(8.dp)
             .fillMaxWidth()
     ) {
         Column {
             ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
 
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
                 text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .padding(start = 4.dp)
                     .clickable {
                         showMiniProfile = true
                     })
-            Text(
-                text = candidate.bio,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
+            Row {
+                Text(
+                    text = candidate.bio,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(start = 8.dp, end = 6.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(text = "%.2f".format(candidate.rating),
+                    modifier = Modifier.padding(start = 6.dp, end = 12.dp),
+                    maxLines = 1
+                )
 
+            }
+
+        }
         //Spacer(Modifier.weight(1f))
-
         Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
-        ) {
-            Text(text = " % .2f".format(candidate.rating), modifier = Modifier.padding(6.dp))
-        }
-        Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.Center
         ) {
             TriStateCheckbox(
-                modifier = Modifier.padding(end = 8.dp, start = 6.dp), state = when (isChecked) {
+                modifier = Modifier.padding(end = 12.dp, start = 6.dp), state = when (isChecked) {
                     true -> ToggleableState.On
                     false -> ToggleableState.Off
                     null -> ToggleableState.Indeterminate
@@ -1293,6 +1301,7 @@ fun CandidateProfile(
                         rejectedDialog = true
                     }
                 })
+
         }
 
     }
