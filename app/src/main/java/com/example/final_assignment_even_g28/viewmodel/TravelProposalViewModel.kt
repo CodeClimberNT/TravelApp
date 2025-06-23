@@ -115,6 +115,10 @@ class TravelProposalViewModel(
         }
 
 
+    private val _otherPastExperiences = MutableStateFlow<List<TravelProposal>>(emptyList())
+    val otherPastExperiences: StateFlow<List<TravelProposal>>
+        get() = _otherPastExperiences
+
     private val _currentReviews = MutableStateFlow<List<TravelReview>>(emptyList())
     val currentReviews: StateFlow<List<TravelReview>>
         get() = _currentReviews
@@ -171,6 +175,17 @@ class TravelProposalViewModel(
                     "TravelProposalViewModel", "Filtered Proposals: ${proposals.map { it.id }}"
                 )
                 _allTravelProposals.value = proposals
+            }
+        }
+    }
+
+    fun loadOtherTravelProposal(userUID: String) {
+        viewModelScope.launch {
+            tripModel.getPastTravelProposals(userUID).collect { proposals ->
+                Log.d(
+                    "TravelProposalViewModel", "Other Proposals: ${proposals.map { it.id }}"
+                )
+                _otherPastExperiences.value = proposals
             }
         }
     }
@@ -1248,7 +1263,7 @@ class TravelProposalViewModel(
         }
     }
 
-    fun removePendingParticipation(travelProposal: TravelProposal, user: UserProfile){
+    fun removePendingParticipation(travelProposal: TravelProposal, user: UserProfile) {
         tripModel.removePendingParticipations(travelProposal, user)
     }
 

@@ -18,9 +18,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.final_assignment_even_g28.NotificationSettingsScreen
-import com.example.final_assignment_even_g28.OtherProfileScreen
-import com.example.final_assignment_even_g28.ProfileScreen
 import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.data_class.NotificationType
 import com.example.final_assignment_even_g28.ui.screens.CreateTravelProposalFirstScreen
@@ -28,7 +25,10 @@ import com.example.final_assignment_even_g28.ui.screens.CreateTravelProposalSeco
 import com.example.final_assignment_even_g28.ui.screens.EditUserProfileInfo
 import com.example.final_assignment_even_g28.ui.screens.MyTravelProposalList
 import com.example.final_assignment_even_g28.ui.screens.MyUserReviewsList
+import com.example.final_assignment_even_g28.ui.screens.NotificationSettingsScreen
+import com.example.final_assignment_even_g28.ui.screens.OtherProfileScreen
 import com.example.final_assignment_even_g28.ui.screens.PastTravelProposalScreen
+import com.example.final_assignment_even_g28.ui.screens.ProfileScreen
 import com.example.final_assignment_even_g28.ui.screens.ShowUserProfileInfo
 import com.example.final_assignment_even_g28.ui.screens.TravelProposalList
 import com.example.final_assignment_even_g28.ui.screens.TravelProposalScreen

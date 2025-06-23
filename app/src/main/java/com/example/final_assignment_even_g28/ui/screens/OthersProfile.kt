@@ -1,5 +1,7 @@
-package com.example.final_assignment_even_g28
+package com.example.final_assignment_even_g28.ui.screens
 
+import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
@@ -36,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
+import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data_class.ActivityTag
 import com.example.final_assignment_even_g28.data_class.TravelProposal
 import com.example.final_assignment_even_g28.data_class.UserProfile
@@ -43,7 +47,6 @@ import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
-import com.example.final_assignment_even_g28.ui.screens.Tag
 import com.example.final_assignment_even_g28.ui.theme.StarColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
@@ -60,13 +63,17 @@ fun OtherProfileScreen(
     bottomBarItem: BottomBarItem,
     snackBarHostState: SnackbarHostState,
 ) {
+    tripVm.loadOtherTravelProposal(userUID)
+
     val configuration = LocalConfiguration.current
     val isLandscape =
-        configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val travelProposals by tripVm.allTravelProposals.collectAsState(emptyList())
+
+    val travelProposals by tripVm.otherPastExperiences.collectAsState()
+    Log.d("OtherProfileScreen", "Travel Proposals: ${travelProposals.size}")
+
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
-    val travelProposal = travelProposals.firstOrNull() ?: TravelProposal()
     val otherUser = userVm.getUserProfileByUID(userUID)
 
 
@@ -82,7 +89,8 @@ fun OtherProfileScreen(
                     .padding(innerPadding)
             ) {
                 ProfileColumn(otherUser)
-                PastExperiencesHorizontal(travelProposals, tripPlanner)
+                if (!travelProposals.isEmpty())
+                    PastExperiencesHorizontal(travelProposals, tripPlanner)
             }
         } else {
             Column(
@@ -91,7 +99,8 @@ fun OtherProfileScreen(
                     .padding(innerPadding)
             ) {
                 ProfileRow(otherUser)
-                PastExperiencesColumn(travelProposal, tripPlanner)
+                if (!travelProposals.isEmpty())
+                    PastExperiencesColumn(travelProposals, tripPlanner)
             }
         }
     }
@@ -109,7 +118,7 @@ fun ProfileColumn(user: UserProfile) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             ProfilePicture(
                 userProfile = user,
-                isLandScape = false,
+                isLandScape = true,
                 isDashboard = true,
             )
         }
@@ -146,7 +155,11 @@ fun PastExperiencesHorizontal(travelProposals: List<TravelProposal>, tripPlanner
         )
         LazyColumn(
             modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) { items(3) { index -> PastExperienceBlock(travelProposals[index], tripPlanner) } }
+        ) {
+            items(travelProposals) { trip ->
+                PastExperienceBlock(trip, tripPlanner)
+            }
+        }
     }
 }
 
@@ -164,10 +177,10 @@ fun ImageColumn(user: UserProfile) {
         verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row {
-            Image(
-                painter = painterResource(id = R.drawable.account_image),
-                contentDescription = null,
-                modifier = Modifier.size(130.dp)
+            ProfilePicture(
+                userProfile = user,
+                isLandScape = false,
+                isDashboard = true,
             )
         }
         Row {
@@ -222,20 +235,21 @@ fun InterestList(user: UserProfile) {
 }
 
 @Composable
-fun PastExperiencesColumn(trip: TravelProposal, tripPlanner: UserProfile) {
+fun PastExperiencesColumn(trips: List<TravelProposal>, tripPlanner: UserProfile) {
     Column {
         LazyColumn(
             modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            items(1) { index ->
-                if (index == 0) {
-                    Text(
-                        text = "Trips Taken", modifier = Modifier.padding(
-                            top = 20.dp, start = 4.dp, bottom = 20.dp, end = 20.dp
-                        ), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold
-                    )
-                }
+            item {
+                Text(
+                    text = "Trips Taken", modifier = Modifier.padding(
+                        top = 20.dp, start = 4.dp, bottom = 20.dp, end = 20.dp
+                    ), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold
+                )
+
+            }
+            items(trips) { trip ->
                 PastExperienceBlock(trip, tripPlanner)
             }
         }

@@ -1,4 +1,4 @@
-package com.example.final_assignment_even_g28
+package com.example.final_assignment_even_g28.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

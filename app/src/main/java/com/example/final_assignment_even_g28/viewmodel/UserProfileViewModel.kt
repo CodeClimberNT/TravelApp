@@ -548,10 +548,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         }
     }
 
-    fun getImageFromUID(user: UserProfile): String {
-        return model.getImageFromUID(user.uid)
-    }
-
     fun getImageFromUser(user: UserProfile): String{
         return model.getImageFromUser(user)
     }
