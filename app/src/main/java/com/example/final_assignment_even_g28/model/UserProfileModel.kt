@@ -409,16 +409,13 @@ class UserProfileModel() {
                     Log.d("Edit User", "Updating badge for user with UID: $userUID")
                     Log.d("Edit User", "New badge: $newBadge")
                     Log.d("Edit User", "Logged user badge updated: ${_loggedUser.value.badge}")
-                    // FIXME: use the commented code when the code is merged with the others
                     val documentRef = Collections.users.document(userUID)
-                    val userToEdit = _userProfiles.value.firstOrNull { it.uid == userUID }
-                        ?: throw Exception("User with UID $userUID not found")
-                    userToEdit.badge = newBadge
-                    Tasks.await(documentRef.set(userToEdit))
+                    val updates = mapOf("badge" to newBadge)
+                    Tasks.await(documentRef.update(updates))
 
-                    Log.d("Edit User", "Edited User with UID: ${userToEdit.uid}")
+                    Log.d("Edit User", "Edited User with UID: $userUID")
 
-                    loadUserByUID(userToEdit.uid)
+                    loadUserByUID(userUID)
                     _loggedUser.value = _loggedUser.value.copy(badge = newBadge)
 
                 } catch (e: Exception) {
