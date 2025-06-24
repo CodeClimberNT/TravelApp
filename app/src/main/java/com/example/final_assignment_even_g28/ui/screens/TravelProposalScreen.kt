@@ -15,6 +15,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -84,6 +85,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -652,14 +654,14 @@ fun ItineraryItem(stop: ItineraryStop, isLastItem: Boolean) {
 }
 
 @OptIn(FlowPreview::class)
-//@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun TripMap(itinerary: List<ItineraryStop>, tripName: String) {
-    val defaultLocation = LatLng(45.438, 10.992) // Verona, e.g.
+    val defaultLocation = LatLng(45.438, 10.992)
     val context = LocalContext.current
     var locations by remember { mutableStateOf<List<LatLng?>>(emptyList()) }
     var location_title by remember { mutableStateOf<LatLng?>(null) }
     val cameraPositionState = rememberCameraPositionState()
+    var isMapInteracting by remember { mutableStateOf(false) }
 
     LaunchedEffect(tripName) {
         location_title = resolveLocation(tripName, context)
@@ -685,12 +687,6 @@ fun TripMap(itinerary: List<ItineraryStop>, tripName: String) {
         }
     }
 
-    LaunchedEffect(cameraPositionState) {
-        snapshotFlow { cameraPositionState.position.target }
-            .debounce(200)
-            .collect { /* optional actions */ }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -702,10 +698,21 @@ fun TripMap(itinerary: List<ItineraryStop>, tripName: String) {
                 .height(350.dp)
                 .fillMaxWidth()
                 .shadow(8.dp, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp)),
+                .clip(RoundedCornerShape(16.dp))
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { isMapInteracting = true },
+                        onDragEnd = { isMapInteracting = false }
+                    ) { _, _ -> }
+                },
             cameraPositionState = cameraPositionState,
             properties = MapProperties(mapType = MapType.NORMAL),
-            uiSettings = MapUiSettings(zoomControlsEnabled = true),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = true,
+                scrollGesturesEnabled = true,
+                zoomGesturesEnabled = true
+            ),
+            onMapClick = { isMapInteracting = !isMapInteracting }
         ) {
             locations.forEachIndexed { i, latLng ->
                 latLng?.let {
@@ -1039,7 +1046,7 @@ fun AcceptedDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(400.dp)
+                .height(250.dp)
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
 
@@ -1068,7 +1075,7 @@ fun AcceptedDialog(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Remove your Participation")
+                    Text("Remove Participation")
                 }
                 Spacer(modifier = Modifier.size(16.dp))
                 Button(
@@ -1097,7 +1104,7 @@ fun PendingDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(400.dp)
+                .height(250.dp)
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
 
