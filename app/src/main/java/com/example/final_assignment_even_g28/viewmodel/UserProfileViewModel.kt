@@ -1,7 +1,6 @@
 package com.example.final_assignment_even_g28.viewmodel
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
@@ -37,8 +36,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
-    private var _userProfile by mutableStateOf(UserProfile())
-    val userProfile: UserProfile get() = _userProfile
 
     val isLoading: StateFlow<Boolean> = model.isSigningIn
 
@@ -136,11 +133,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         ctx: Context
     ) {
         viewModelScope.launch {
-            val currentUserUid = loggedUser.value.uid
             val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
                 if (pref.type == type) pref.copy(enabled = enabled) else pref
             }
-//            model.updateNotificationSettings(currentUserUid, updatedSettings)
             val newProfile = loggedUser.value.copy(notificationSettings = updatedSettings)
             model.editProfile(newProfile, ctx)
         }
@@ -251,15 +246,12 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun getIconsList(): List<Any> {
-        // Temporary add the initials to the list
         val initials = getInitials()
         val iconsList = model.getAvailableIcons() + initials
-        val profilePicture = _userProfile.profilePicture
 
-        return when (_userProfile.isProfileImage) {
+        return when (loggedUser.value.isProfileImage) {
             "Monogram" -> {
                 iconsList.toMutableList().apply {
-                    // I hope the compiler optimize this
                     val target = initials
                     remove(target)
                     add(0, target)
@@ -268,7 +260,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
             "Icon" -> {
                 iconsList.toMutableList().apply {
-                    val target = getIconNameFromString(_userProfile.profilePicture)
+                    val target = getIconNameFromString(loggedUser.value.isProfileImage)
                     if (target?.isNotEmpty() == true) {
                         remove(target)
                         add(0, target)
@@ -375,14 +367,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     }
 
-    fun getImageProfile(user: UserProfile): String {
-        return model.getImageUrlFromSupabase(user)
-    }
-
-    fun getUriImage(imageUri: String): Uri {
-        return model.fromStringToUri(imageUri)
-    }
-
     fun updateAddTypeOfExperiences(experience: String) {
         var experienceList = _editingProfile.value.typeOfExperiences.toMutableList()
         experienceList.add(experience)
@@ -396,13 +380,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
         _editingProfile.value = _editingProfile.value.copy(typeOfExperiences = experienceList)
     }
-
-    /*
-    fun getAllActivityTags(): List<Pair<ActivityTag, Boolean>> {
-        return ActivityTag.entries.map {
-            it to _editingProfile.value.typeOfExperiences.contains(it)
-        }
-    }*/
 
     fun validateFields(): Boolean {
         val errors = UserProfileValidator.validate(_editingProfile.value)
@@ -559,6 +536,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         model.editLevelUp()
     }
 
+
     //---- Badge Progress Utility Functions ----//
     fun updateBadgeTravelInPackProgress() {
         viewModelScope.launch {
@@ -569,7 +547,6 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
             )
         }
     }
-
 
     //-------------🚨EMERGENCY ONLY🚨-------------//
     fun deleteAllBadges() {
