@@ -152,7 +152,7 @@ fun InfoBadge(
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         text = badge.title,
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }

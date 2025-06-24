@@ -291,20 +291,6 @@ class UserProfileModel() {
                                         CoroutineScope(Dispatchers.Main).launch {
                                             createUserWithBadges(newUserProfile)
                                         }
-//                                        Collections.users.document(user.uid).set(
-//                                            UserProfile(
-//                                                uid = user.uid,
-//                                                email = user.email.toString(),
-//                                                name = user.displayName.toString(),
-//                                            )
-//                                        ).addOnSuccessListener {
-//                                            // Initialize badges for new Google user
-//                                            CoroutineScope(Dispatchers.Main).launch {
-//                                                initializeUserBadges(user.uid)
-//                                            }
-//                                            // load user only after the user is registered and the badges are initialized
-//                                            loadUserByUID(user.uid)
-//                                        }
                                     }
                                     Log.d("Login with Google", "User was registered: ${user.email}")
                                 }.addOnFailureListener {

@@ -508,9 +508,13 @@ fun CreateTravelProposalFirstScreen(
                         modifier = Modifier
                             .size(32.dp)
                             .clickable {
-                                tripVm.itinerarySuggestions(tripVm.tempTravelProposal.title, tripVm.tempTravelProposal.tripStartDate, tripVm.tempTravelProposal.tripEndDate)
+                                tripVm.itinerarySuggestions(
+                                    tripVm.tempTravelProposal.title,
+                                    tripVm.tempTravelProposal.tripStartDate,
+                                    tripVm.tempTravelProposal.tripEndDate
+                                )
                                 showItineraryCard.value = true
-                                },
+                            },
                         tonalElevation = 0.dp,
                         shadowElevation = 0.dp
                     ) {
@@ -872,7 +876,7 @@ fun ItineraryWithStops(
 
                                 Checkbox(
                                     checked = stop.mandatory,
-                                    onCheckedChange = { tripVm.updateStopMandatory(index, it) },
+                                    onCheckedChange = { tripVm.updateStopMandatory(index) },
 
                                     )
                             }

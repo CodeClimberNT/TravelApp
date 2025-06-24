@@ -34,8 +34,8 @@ enum class BadgeIconType {
             return when (iconType) {
                 PEOPLE -> Icons.Default.People
                 TRAIN -> Icons.Default.Train
-                COMMENT -> Icons.Default.Recommend
                 CAMERA -> Icons.Default.CameraAlt
+                COMMENT -> Icons.Default.Recommend
                 ERROR -> Icons.Default.Error
             }
         }

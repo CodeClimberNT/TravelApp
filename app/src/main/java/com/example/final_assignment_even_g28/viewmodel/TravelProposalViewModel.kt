@@ -73,8 +73,6 @@ class TravelProposalViewModel(
     var groupSizeOptions = (1..15).toList()
 
     private val currentUser = userModel.loggedUser
-//    private val currentUser: StateFlow<UserProfile>
-//        get() = _currentUser
 
     var filterErrors by mutableStateOf(FilterError())
         private set
@@ -136,10 +134,6 @@ class TravelProposalViewModel(
     val notifications: StateFlow<List<Notification>>
         get() = _notifications
 
-    val _snackbarNotification = MutableStateFlow<Notification>(Notification())
-    val snackbarNotification: StateFlow<Notification>
-        get() = _snackbarNotification
-
     private val _notificationEvents = MutableSharedFlow<Notification>()
     val notificationEvents: SharedFlow<Notification> = _notificationEvents.asSharedFlow()
 
@@ -153,20 +147,10 @@ class TravelProposalViewModel(
 
 
     init {
-//        loadLoggedUser()
         loadAllTravelProposals()
         getNotification()
         pollingNotifications()
     }
-
-//    private fun loadLoggedUser() {
-//        viewModelScope.launch {
-//            userModel.loggedUser.collect { user ->
-//                currentUser.value = user
-//                Log.d("TravelProposalViewModel", "Current User updated: ${user.uid}, ${user.name}")
-//            }
-//        }
-//    }
 
     private fun loadAllTravelProposals() {
         viewModelScope.launch {
@@ -320,7 +304,7 @@ class TravelProposalViewModel(
         return tempTravelProposal.tempImages.mapNotNull {
             try {
                 it.toUri()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
         }
@@ -439,7 +423,7 @@ class TravelProposalViewModel(
     fun clickPlanNewOwnTrip(userId: String) {
         Log.d(
             "TravelProposalViewModel",
-            "creating trip with ID: ${userId}"
+            "creating trip with ID: $userId"
         )
         tempTravelProposal = TravelProposal(
             tripPlannerId = userId,
@@ -459,7 +443,7 @@ class TravelProposalViewModel(
     fun clickCloneTrip(userId: String) {
         Log.d(
             "TravelProposalViewModel",
-            "cloning trip with ID: ${userId}"
+            "cloning trip with ID: $userId"
         )
         resetTravelProposalScreenErrors()
         val originalTrip = _travelProposal.value
@@ -555,7 +539,7 @@ class TravelProposalViewModel(
         }
     }
 
-    fun updateTravelProposal(context: Context, replaceExisting: Boolean = false) {
+    fun updateTravelProposal(context: Context) {
         viewModelScope.launch {
             try {
                 val pendingImageUris = getPendingImageUris()
@@ -686,7 +670,7 @@ class TravelProposalViewModel(
             })
     }
 
-    fun updateStopMandatory(index: Int, isMandatory: Boolean) {
+    fun updateStopMandatory(index: Int) {
         tempTravelProposal = tempTravelProposal.copy(
             itinerary = tempTravelProposal.itinerary.mapIndexed { i, stop ->
                 if (i == index) {
@@ -770,7 +754,6 @@ class TravelProposalViewModel(
                 val tripId = _travelProposal.value.id
                 val plannerId = _travelProposal.value.tripPlannerId
                 val imageUris = tempReview.tempImages.map { it.toUri() }
-                val numOfImages = imageUris.size
                 val tripTitle: String = _travelProposal.value.title
                 // Submit review
                 val result = tripModel.submitReview(
@@ -913,7 +896,7 @@ class TravelProposalViewModel(
                 val tripPlanner = userModel.getUserByUid(trip.tripPlannerId)
                 Log.d(
                     "TravelProposalViewModel",
-                    "Trip planner ID: ${tripPlanner}"
+                    "Trip planner ID: $tripPlanner"
                 )
                 if (tripPlanner == null) {
                     Log.w(
@@ -1020,10 +1003,6 @@ class TravelProposalViewModel(
         tripModel.rejectParticipant(userId = user.uid, trip = trip)
     }
 
-    fun isUserParticipant(userId: String = currentUser.value.uid): Boolean {
-        return _travelProposal.value.participants.any { it.id == userId }
-    }
-
     fun getUserParticipantStatus(userId: String = currentUser.value.uid): ParticipantStatus? {
         return _travelProposal.value.participants.find { it.id == userId }?.status
     }
@@ -1117,7 +1096,7 @@ class TravelProposalViewModel(
             val startDateConversion = proposal.tripStartDate.toDate().time
             val isLastMinute = (startDateConversion - timeNow) <= 24 * 60 * 60 * 1000
 
-            Log.d("controllo", "Proposal: ${sentLastMinuteNotifications} = (${proposal.id})")
+            Log.d("LAST_MINUTE", "Proposal: $sentLastMinuteNotifications = (${proposal.id})")
             if (isLastMinute && !hasExistingLastMinuteNotification) {
                 tripModel.addNotification(
                     tripId = proposal.id,
@@ -1213,7 +1192,7 @@ class TravelProposalViewModel(
 
     fun itinerarySuggestions(tripName: String, tripStartDate: Timestamp, tripEndDate: Timestamp) {
         viewModelScope.launch {
-            // Calcola la durata aggiungendo 1 per includere sia il giorno iniziale che finale
+            // Calclulate the number of days for the trip
             val userTotalDays =
                 ((tripEndDate.seconds - tripStartDate.seconds) / (24 * 60 * 60)).toInt() + 1
 
@@ -1222,7 +1201,6 @@ class TravelProposalViewModel(
             tripModel.getItinerarySuggestions(tripName, userTotalDays).collect { suggestions ->
                 val updatedSuggestions = suggestions.map { itinerary ->
                     val userStartDate = tripStartDate
-                    val userEndDate = tripEndDate
 
                     if (itinerary.stops.isEmpty()) {
                         return@map itinerary
@@ -1267,15 +1245,6 @@ class TravelProposalViewModel(
         tripModel.removePendingParticipations(travelProposal, user)
     }
 
-//            tripModel.getItinerarySuggestions(""/*tempTravelProposal.title*/).collect { suggestions ->
-//                if (suggestions.isNotEmpty()) {
-//                    _listOfItinerarySuggestions.value = suggestions
-//                    Log.d("Itinerary", "Itinerary suggestions received: $suggestions")
-//                    Log.d("Itinerary", "List: ${_listOfItinerarySuggestions.value}")
-//                } else {
-//                    Log.d("TravelProposalViewModel", "No itinerary suggestions available")
-//                }
-//            }
 
     //-------------🚨EMERGENCY ONLY🚨-------------//
     fun deleteAllProposals() {
@@ -1285,6 +1254,5 @@ class TravelProposalViewModel(
     }
     //-------------🚨EMERGENCY ONLY🚨-------------//
 }
-
 
 
