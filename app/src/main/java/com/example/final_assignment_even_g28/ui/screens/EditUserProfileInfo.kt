@@ -135,7 +135,7 @@ fun EditUserProfileInfo(
 
     // For system back navigation (e.g., swiping from the edge of the screen)
     BackHandler {
-        viewModel.saveAndExitEditing(ctx)
+        viewModel.handleBackNavigation(ctx)
         onBackClick()
     }
 
@@ -152,7 +152,7 @@ fun EditUserProfileInfo(
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-                            viewModel.saveAndExitEditing(ctx)
+                            viewModel.handleBackNavigation(ctx)
                             onBackClick()
                         }) {
                             Icon(
@@ -223,7 +223,7 @@ fun EditUserProfileInfo(
 
                         Button(onClick = {
                             if (viewModel.validateFields()) {
-                                viewModel.saveAndExitEditing(ctx)
+                                viewModel.handleBackNavigation(ctx)
                                 onBackClick()
                             }
                         }) {
@@ -283,7 +283,7 @@ fun EditUserProfileInfo(
 
                             Button(onClick = {
                                 if (viewModel.validateFields()) {
-                                    viewModel.saveAndExitEditing(ctx)
+                                    viewModel.handleBackNavigation(ctx)
                                     onBackClick()
                                 }
                             }) {

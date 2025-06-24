@@ -172,7 +172,8 @@ fun NavGraph(
             composable(Destinations.EDIT_PROFILE_ROUTE) {
                 EditUserProfileInfo(
                     onBackClick = {
-                        navActions.navigateToProfile()
+                        navActions.back()
+                        //navActions.navigateToProfile()
                     }
                 )
             }
