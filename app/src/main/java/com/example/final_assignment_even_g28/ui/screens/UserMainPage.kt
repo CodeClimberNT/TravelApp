@@ -9,11 +9,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -24,6 +28,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,7 +57,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
@@ -110,11 +114,13 @@ import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+
 sealed interface ProfileEvent {
     object ProfileInfo : ProfileEvent
     object BadgesClicked : ProfileEvent
     object ReviewsClicked : ProfileEvent
     object SettingsClicked : ProfileEvent
+    object LogOut : ProfileEvent
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -305,6 +311,7 @@ fun ProfileHeader(
                             } else {
                                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
                             },
+                            modifier = Modifier.shadow(2.dp, RoundedCornerShape(12.dp))
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -333,8 +340,8 @@ fun ProfileHeader(
                             } else {
                                 ProfileAccentLight.copy(alpha = 0.15f)
                             },
-
-                            ) {
+                            modifier = Modifier.shadow(2.dp, RoundedCornerShape(12.dp))
+                        ) {
                             Text(
                                 text = "Level ${profile.currentLevel}",
                                 style = MaterialTheme.typography.labelLarge,
@@ -423,6 +430,7 @@ fun EnhancedLevelProgressBar(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
         }
+
         ProfilePicture(
             userProfile = userProfile,
             isLandScape = false,
@@ -457,9 +465,7 @@ fun InterestChips(interests: List<String>) {
                         MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     ),
                     colors = AssistChipDefaults.assistChipColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(
-                            alpha = 0.4f
-                        ),
+                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
                         disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 )
@@ -494,7 +500,8 @@ fun ProfileActions(
         Triple("Personal Info", Icons.Outlined.Info, ProfileEvent.ProfileInfo),
         Triple("Your Badges", Icons.Outlined.BookmarkBorder, ProfileEvent.BadgesClicked),
         Triple("Reviews", Icons.Outlined.Mail, ProfileEvent.ReviewsClicked),
-        Triple("Settings", Icons.Filled.Settings, ProfileEvent.SettingsClicked)
+        Triple("Settings", Icons.Filled.Settings, ProfileEvent.SettingsClicked),
+        Triple("Log Out", Icons.AutoMirrored.Filled.Logout, ProfileEvent.LogOut)
     )
 
     var isVisible by remember { mutableStateOf(false) }
@@ -504,84 +511,50 @@ fun ProfileActions(
         isVisible = true
     }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(tween(600)) + slideInVertically(
+            animationSpec = tween(600),
+            initialOffsetY = { it / 4 }
+        )
     ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(tween(600)) + slideInVertically(
-                animationSpec = tween(600),
-                initialOffsetY = { it / 4 }
-            )
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(6.dp, RoundedCornerShape(16.dp)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSystemInDarkTheme()) {
+                    MaterialTheme.colorScheme.surface
+                } else {
+                    ProfileCardLight
+                }
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(6.dp, RoundedCornerShape(16.dp)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSystemInDarkTheme()) {
-                        MaterialTheme.colorScheme.surface
-                    } else {
-                        ProfileCardLight
-                    }
-                ),
-                shape = RoundedCornerShape(16.dp)
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    actions.forEach { (label, icon, evt) ->
-                        ActionButton(
-                            label = label,
-                            icon = icon,
-                            onClick = {
-                                when (evt) {
-                                    ProfileEvent.ProfileInfo -> navActions.navigateToProfile()
-                                    ProfileEvent.BadgesClicked -> showBadges()
-                                    ProfileEvent.ReviewsClicked -> navActions.navigateToUserReview()
-                                    ProfileEvent.SettingsClicked -> navActions.navigateToSettings()
+                actions.forEach { (label, icon, evt) ->
+                    ActionButton(
+                        label = label,
+                        icon = icon,
+                        isLogout = evt == ProfileEvent.LogOut,
+                        onClick = {
+                            when (evt) {
+                                ProfileEvent.ProfileInfo -> navActions.navigateToProfile()
+                                ProfileEvent.BadgesClicked -> showBadges()
+                                ProfileEvent.ReviewsClicked -> navActions.navigateToUserReview()
+                                ProfileEvent.SettingsClicked -> navActions.navigateToSettings()
+                                ProfileEvent.LogOut -> {
+                                    viewModel.logOut()
+                                    navActions.navigateToTravelList()
                                 }
                             }
-                        )
-                    }
+                        }
+                    )
                 }
-            }
-        }
-
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(tween(600, delayMillis = 300)) + slideInVertically(
-                animationSpec = tween(600, delayMillis = 300),
-                initialOffsetY = { it / 4 }
-            )
-        ) {
-            OutlinedButton(
-                onClick = {
-                    viewModel.logOut()
-                    navActions.navigateToTravelList()
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "Log Out",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
             }
         }
     }
@@ -591,6 +564,7 @@ fun ProfileActions(
 fun ActionButton(
     label: String,
     icon: ImageVector,
+    isLogout: Boolean = false,
     onClick: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -624,7 +598,9 @@ fun ActionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSystemInDarkTheme()) {
+                tint = if (isLogout) {
+                    MaterialTheme.colorScheme.error
+                } else if (isSystemInDarkTheme()) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     ProfileAccentLight
@@ -635,13 +611,21 @@ fun ActionButton(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (isLogout) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                tint = if (isLogout) {
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                },
                 modifier = Modifier.size(18.dp)
             )
         }
