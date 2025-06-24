@@ -185,7 +185,12 @@ fun PastTravelProposalScreen(
                                                 .padding(
                                                     start = 8.dp
                                                 )
-                                        ) { TripMap(travelProposal.itinerary, travelProposal.title) }
+                                        ) {
+                                            TripMap(
+                                                travelProposal.itinerary,
+                                                travelProposal.title
+                                            )
+                                        }
                                     }
                                 } else {
                                     ItinerarySection(travelProposal.itinerary)
@@ -215,7 +220,11 @@ fun PastTravelProposalScreen(
         }
 
         if (showUserReviewDialog) {
-            UserReviewDialog(participants) { showUserReviewDialog = false }
+            UserReviewDialog(
+                participants = participants,
+                navActions = navActions,
+                bottomBarItem = bottomBarItem
+            ) { showUserReviewDialog = false }
         }
     }
 }
