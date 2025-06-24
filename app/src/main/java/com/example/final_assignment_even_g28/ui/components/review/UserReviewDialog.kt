@@ -48,8 +48,11 @@ import com.example.final_assignment_even_g28.R
 import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserReview
+import com.example.final_assignment_even_g28.navigation.BottomBarItem
+import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.ui.components.RatingStar
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
+import com.example.final_assignment_even_g28.ui.screens.MiniProfileDialog
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
@@ -59,7 +62,9 @@ import com.google.firebase.Timestamp
 @Composable
 fun UserReviewDialog(
     participants: List<ParticipantDetailed>,
-    onDismiss: () -> Unit
+    navActions: Navigation,
+    bottomBarItem: BottomBarItem,
+    onDismiss: () -> Unit,
 ) {
 
     Log.d("REVIEW DIALOG", "PARTICIPANTS: $participants")
@@ -99,7 +104,7 @@ fun UserReviewDialog(
                 ) {
                     for (participant in participants) {
                         ProfileRow(
-                            participant.user,
+                            participant.user, navActions = navActions, bottomBarItem = bottomBarItem
                         )
                     }
 
@@ -126,8 +131,9 @@ fun UserReviewDialog(
 
 
 @Composable
-fun ProfileRow(user: UserProfile) {
+fun ProfileRow(user: UserProfile, navActions: Navigation, bottomBarItem: BottomBarItem) {
     var showReview by remember { mutableStateOf(false) }
+    var showMiniProfile by remember { mutableStateOf(false) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -135,19 +141,20 @@ fun ProfileRow(user: UserProfile) {
             .padding(8.dp)
             .fillMaxWidth()
     ) {
-        Column {
+        Column(modifier = Modifier.clickable { showMiniProfile = true }) {
             ProfilePicture(user, true, isCandidate = true)
         }
 
         Column(
-            modifier = Modifier.weight(2f)
+            modifier = Modifier
+                .weight(2f)
+                .clickable { showMiniProfile = true }
         ) {
             Text(
                 text = user.name,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .clickable { }
             )
             Text(
                 text = user.bio,
@@ -184,6 +191,13 @@ fun ProfileRow(user: UserProfile) {
 
     if (showReview) {
         SingleUserReviewCard(user) { newState -> showReview = newState }
+    }
+    if (showMiniProfile) {
+        MiniProfileDialog(
+            user, navActions = navActions, bottomBarItem = bottomBarItem
+        ) { newState ->
+            showMiniProfile = newState
+        }
     }
 }
 
