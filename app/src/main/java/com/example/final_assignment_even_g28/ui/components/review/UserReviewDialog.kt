@@ -37,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -212,7 +211,6 @@ fun SingleUserReviewCard(
     val textTitle = remember { mutableStateOf("") }
     var reviewValue by remember { mutableFloatStateOf(0.0f) }
 
-    val ctx = LocalContext.current
     val loggedUser by userVM.loggedUser.collectAsState()
 
     Dialog(onDismissRequest = { onDismiss(false) }) {
@@ -310,7 +308,7 @@ fun SingleUserReviewCard(
                                     timestamp = Timestamp.now(),
                                 )
                             )
-                            userVM.gainExp(5, ctx)
+                            userVM.gainExp(5)
                             onDismiss(false)
                         },
                         colors = ButtonDefaults.buttonColors(

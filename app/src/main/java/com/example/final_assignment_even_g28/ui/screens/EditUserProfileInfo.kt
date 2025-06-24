@@ -12,11 +12,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -42,7 +39,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
@@ -59,7 +55,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -71,7 +66,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -79,7 +73,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.ActivityTag
@@ -88,17 +81,13 @@ import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.ui.components.modal.DatePickerModal
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
-import com.example.final_assignment_even_g28.ui.screens.CameraPreview
 import com.example.final_assignment_even_g28.ui.theme.ProfileAccentLight
 import com.example.final_assignment_even_g28.ui.theme.ProfileBackgroundLightPrimary
 import com.example.final_assignment_even_g28.ui.theme.ProfileBackgroundLightSecondary
 import com.example.final_assignment_even_g28.ui.theme.ProfileBackgroundLightTertiary
 import com.example.final_assignment_even_g28.ui.theme.ProfileBorderLight
 import com.example.final_assignment_even_g28.ui.theme.ProfileCardLight
-import com.example.final_assignment_even_g28.ui.theme.ProfileSurfaceLight
-import com.example.final_assignment_even_g28.ui.theme.ProfileSurfaceBorderLight
 import com.example.final_assignment_even_g28.ui.theme.ProfileTextPrimaryLight
-import com.example.final_assignment_even_g28.ui.theme.ProfileTextSecondaryLight
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.utils.toMillis
@@ -107,7 +96,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.delay
 
 enum class CameraPopupState {
     GALLERY,
@@ -166,7 +154,7 @@ fun EditUserProfileInfo(
     }
 
     BackHandler {
-        viewModel.handleBackNavigation(ctx)
+        viewModel.handleBackNavigation()
         onBackClick()
     }
 
@@ -181,7 +169,7 @@ fun EditUserProfileInfo(
                     TopAppBar(
                         navigationIcon = {
                             IconButton(onClick = {
-                                viewModel.handleBackNavigation(ctx)
+                                viewModel.handleBackNavigation()
                                 onBackClick()
                             }) {
                                 Icon(
@@ -313,7 +301,7 @@ fun EditUserProfileInfo(
                                 Button(
                                     onClick = {
                                         if (viewModel.validateFields()) {
-                                            viewModel.saveAndExitEditing(ctx)
+                                            viewModel.saveAndExitEditing()
                                             onBackClick()
                                         }
                                     },
@@ -409,7 +397,7 @@ fun EditUserProfileInfo(
                                     Button(
                                         onClick = {
                                             if (viewModel.validateFields()) {
-                                                viewModel.handleBackNavigation(ctx)
+                                                viewModel.handleBackNavigation()
                                                 onBackClick()
                                             }
                                         },
@@ -495,7 +483,7 @@ fun ProfileEditCard(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top= 16.dp, bottom = 0.dp, start = 0.dp, end = 0.dp)
+                .padding(top = 16.dp, bottom = 0.dp, start = 0.dp, end = 0.dp)
         ) {
 
             ProfilePicture(

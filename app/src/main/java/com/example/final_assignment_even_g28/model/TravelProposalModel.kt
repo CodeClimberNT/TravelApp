@@ -1045,8 +1045,11 @@ class TravelProposalModel() {
 
     fun removePendingParticipations(travelProposal: TravelProposal, user: UserProfile){
         val newList = travelProposal.participants.filter { participant -> participant.id != user.uid  }
-        Collections.travelProposals.document(travelProposal.id).update("participants", newList).addOnSuccessListener { 
-            Log.d("Edit Participation","You successfully removed your partecipation from trip: ${travelProposal.id}")
+        Collections.travelProposals.document(travelProposal.id).update("participants", newList).addOnSuccessListener {
+            Log.d(
+                "Edit Participation",
+                "You successfully removed your participation from trip: ${travelProposal.id}"
+            )
         }.addOnFailureListener { e ->
             Log.e("Edit Participation","Error Modifying you participation status: $e")
         }

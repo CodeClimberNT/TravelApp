@@ -829,7 +829,6 @@ fun TravelActionBar(
     val userParticipationStatus = tripVm.getUserParticipantStatus()
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
 
-    val ctx = LocalContext.current
     val numApprovedParticipant = tripVm.getNumApprovedParticipants(proposal)
 
     Surface(
@@ -989,7 +988,7 @@ fun TravelActionBar(
                     userProfileViewModel.updateBadgeTravelInPackProgress()
                 }
                 showApplyDialog = false
-                userProfileViewModel.gainExp(5, ctx)
+                userProfileViewModel.gainExp(5)
             })
     }
     if (showAcceptedDialog) {

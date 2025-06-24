@@ -130,14 +130,13 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     fun updateNotificationSetting(
         type: NotificationPreferenceType,
         enabled: Boolean,
-        ctx: Context
     ) {
         viewModelScope.launch {
             val updatedSettings = loggedUser.value.notificationSettings.map { pref ->
                 if (pref.type == type) pref.copy(enabled = enabled) else pref
             }
             val newProfile = loggedUser.value.copy(notificationSettings = updatedSettings)
-            model.editProfile(newProfile, ctx)
+            model.editProfile(newProfile)
         }
     }
 
@@ -160,10 +159,10 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
 
-    fun saveAndExitEditing(context: Context) {
+    fun saveAndExitEditing() {
         viewModelScope.launch {
             isEditing = false
-            model.editProfile(editingProfile.value, context)
+            model.editProfile(editingProfile.value)
             Log.d("Edit User", "Saving Profile: ${editingProfile.value}")
         }
     }
@@ -172,9 +171,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
         return model.getUserByUid(userUID) ?: UNKNOWN_USER
     }
 
-    fun handleBackNavigation(context: Context) {
+    fun handleBackNavigation() {
         if (validateFields()) {
-            saveAndExitEditing(context)
+            saveAndExitEditing()
         } else {
             cancelChanges()
         }
@@ -494,9 +493,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
                 && password1 == password2)
     }
 
-    fun gainExp(value: Int, context: Context) {
+    fun gainExp(value: Int) {
         viewModelScope.launch {
-            model.gainExp(value, context)
+            model.gainExp(value)
         }
     }
 

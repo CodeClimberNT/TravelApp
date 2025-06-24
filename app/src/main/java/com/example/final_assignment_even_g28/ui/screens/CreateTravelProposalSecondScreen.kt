@@ -271,7 +271,7 @@ fun CreateTravelProposalSecondScreen(
                             tripVm.updateTravelProposal(ctx)
                         } else {
                             tripVm.addTravelProposal(ctx)
-                            userVM.gainExp(10, ctx)
+                            userVM.gainExp(10)
                         }
                         tripVm.exitEditingTravelProposal()
 

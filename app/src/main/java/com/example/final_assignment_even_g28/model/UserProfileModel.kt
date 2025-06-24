@@ -2,7 +2,6 @@ package com.example.final_assignment_even_g28.model
 
 import android.app.Activity
 import android.content.Context
-import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import androidx.core.net.toUri
@@ -48,7 +47,6 @@ class UserProfileModel() {
     val loggedUser: StateFlow<UserProfile> get() = _loggedUser
 
     private val _userProfiles = MutableStateFlow<List<UserProfile>>(emptyList())
-    val userProfiles: StateFlow<List<UserProfile>> = _userProfiles
 
     private val _userBadges = MutableStateFlow<List<Badge>>(emptyList())
     val userBadges: StateFlow<List<Badge>> = _userBadges
@@ -134,7 +132,6 @@ class UserProfileModel() {
                                     }
                                 }
                             }.addOnFailureListener {
-                                //an user with that UID does not exists
                                 Log.e(
                                     "Login",
                                     "Impossible to retrieve a user with this UID: ${user.uid}"
@@ -223,10 +220,6 @@ class UserProfileModel() {
                 Log.e("Load User", "Failed to load the user with UID: $uid")
             }
     }
-
-//    private fun loadUser(user: UserProfile) {
-//        _loggedUser.value = user
-//    }
 
     fun logOut() {
         Collections.auth.signOut()
@@ -365,7 +358,7 @@ class UserProfileModel() {
             }
     }
 
-    suspend fun editProfile(userToSave: UserProfile, context: Context) {
+    suspend fun editProfile(userToSave: UserProfile) {
         try {
             Collections.users.document(userToSave.uid).set(
                 UserToSave(
@@ -427,26 +420,6 @@ class UserProfileModel() {
         }
     }
 
-
-//    fun getAllUsers() {
-//        Collections.users.get()
-//            .addOnSuccessListener { collections ->
-//                var users = mutableListOf<UserProfile>()
-//                collections.forEach { document ->
-//                    val user = document.toObject(UserProfile::class.java)
-//                    users.add(user)
-//                }
-//
-//                _allUsers.value = users
-//
-//            }
-//    }
-
-    fun getUserById(id: String): UserProfile {
-        //get user by id from the list of all users
-        return _userProfiles.value.find { it.uid == id } ?: UserProfile()
-    }
-
     fun getAvailableIcons(): List<IconType> {
         return IconType.toList()
 
@@ -457,16 +430,7 @@ class UserProfileModel() {
     }
 
     fun getNameByUID(userUID: String): String {
-        return _userProfiles.value.firstOrNull() { it.uid == userUID }?.name ?: "Unknown"
-    }
-
-    fun updateUserProfile(updatedProfile: UserProfile) {
-        _userProfiles.value =
-            _userProfiles.value.map { if (it.uid == updatedProfile.uid) updatedProfile else it }
-    }
-
-    fun fromStringToUri(uriString: String): Uri {
-        return uriString.removePrefix("UriData(uri=").removeSuffix(")").toUri()
+        return _userProfiles.value.firstOrNull { it.uid == userUID }?.name ?: "Unknown"
     }
 
     fun getImageFromUser(user: UserProfile): String {
@@ -520,15 +484,6 @@ class UserProfileModel() {
             .joinToString("")
     }
 
-    fun getImageUrlFromSupabase(user: UserProfile): String {
-        val storage = Collections.storage
-
-        val publicUrl = storage.from(Collections.userImagesBucket.toString())
-            .publicUrl("${user.uid}/${user.profilePicture}.jpg")
-
-        return publicUrl
-    }
-
     suspend fun deleteUserProfileImage() {
         try {
 
@@ -543,20 +498,15 @@ class UserProfileModel() {
         }
     }
 
-    private fun extractUserProfileFilePathFromUrl(url: String): String {
-        // Extract file path from Supabase public URL
-        return url.substringAfter(Collections.USER_IMAGES_BUCKET_PREFIX)
-    }
-
-    suspend fun gainExp(expValue: Int, context: Context) {
+    suspend fun gainExp(expValue: Int) {
         val newExp = loggedUser.value.exp + expValue
         editLevel(loggedUser.value.exp, newExp)
         _loggedUser.value = _loggedUser.value.copy(exp = newExp)
-        editProfile(loggedUser.value, context)
+        editProfile(loggedUser.value)
     }
 
     fun editLevel(oldExp: Int, newExp: Int) {
-        var oldLvl: Int = 0;
+        var oldLvl = 0
 
         when (oldExp) {
             in 0..20 -> {
@@ -797,21 +747,6 @@ class UserProfileModel() {
         }
     }
 
-    fun updateNotificationSettings(userId: String, settings: List<NotificationPreference>) {
-        Collections.users.document(userId)
-            .update("notificationSettings", settings)
-            .addOnSuccessListener {
-                Log.d("UserProfileNotifications", "Notification settings updated successfully")
-                _loggedUser.value = _loggedUser.value.copy(notificationSettings = settings)
-            }
-            .addOnFailureListener { error ->
-                Log.e(
-                    "UserProfileNotifications",
-                    "Failed to update notification settings: ${error.message}"
-                )
-            }
-    }
-
     fun migrateNotificationSettings(userId: String) {
         if (!userId.isEmpty()) {
             Log.e("Migration", "User ID is empty, skipping migration")
@@ -862,7 +797,6 @@ class UserProfileModel() {
     }
 
 
-    // FIXME: duplicate code, should be moved to a common place
     private fun addNotification(
         tripId: String,
         title: String,
