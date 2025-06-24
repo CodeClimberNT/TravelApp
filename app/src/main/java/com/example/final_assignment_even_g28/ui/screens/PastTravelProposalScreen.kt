@@ -257,7 +257,7 @@ fun TripOverview(tripPlanner: Planner) {
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = tripPlanner.rating.toString(), fontSize = 12.sp)
+                    Text(text = "%.2f".format(tripPlanner.rating), fontSize = 12.sp)
                 }
             }
         }
