@@ -203,13 +203,14 @@ fun SingleUserReviewCard(
 
     Dialog(onDismissRequest = { onDismiss(false) }) {
         Card(
-            modifier = Modifier
-                .height(500.dp),
+            modifier = Modifier.height(500.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(top = 16.dp, start = 16.dp, end = 16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row {
@@ -226,12 +227,10 @@ fun SingleUserReviewCard(
                     label = { Text("Title Review") },
                     maxLines = 1,
                     singleLine = true,
-                    modifier = Modifier.padding(8.dp)
                 )
 
                 Row(
                     modifier = Modifier
-                        .padding(start = 16.dp, top = 8.dp, end = 8.dp)
                         .fillMaxWidth()
                 ) {
                     RatingStar(reviewValue, 5, { reviewValue = it.toFloat() })
@@ -242,7 +241,6 @@ fun SingleUserReviewCard(
                     onValueChange = { newText -> textState.value = newText },
                     label = { Text("Insert your Review") },
                     modifier = Modifier
-                        .padding(16.dp)
                         .height(150.dp),
                     maxLines = 5,
                     singleLine = false
