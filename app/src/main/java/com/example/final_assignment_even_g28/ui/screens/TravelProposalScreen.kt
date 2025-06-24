@@ -1242,7 +1242,9 @@ fun CandidateProfile(
         Column {
             ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
-        Column{
+        Column(
+            modifier = Modifier.weight(2f)
+        ){
             Text(
                 text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
                 style = MaterialTheme.typography.labelMedium,
@@ -1258,16 +1260,16 @@ fun CandidateProfile(
                 Text(
                     text = candidate.bio,
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = Modifier.padding(start = 8.dp, end = 6.dp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
         }
-        Spacer(modifier = Modifier.weight(2f))
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.weight(1f)
         ) {
                 TriStateCheckbox(
                     modifier = Modifier.padding(0.dp), state = when (isChecked) {
@@ -1297,6 +1299,7 @@ fun CandidateProfile(
                     })
                 Text(text = " % .2f".format(candidate.rating),
                     modifier = Modifier.padding(0.dp),
+                    maxLines = 1,
                     style = MaterialTheme.typography.labelSmall
                 )
         }
