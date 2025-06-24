@@ -823,7 +823,18 @@ class TravelProposalModel() {
                     //TODO: TO DECIDE IF <= OR ==
                     originalDurationDays <= userTripDurationDays
                 }.filter { itinerary ->
-                    (itinerary.title.lowercase()).contains(travelName.lowercase())
+                    val searchWords = travelName.lowercase()
+                        .split("\\s+".toRegex())
+                        .filter { it.isNotBlank() }
+
+                    val itineraryTitle = itinerary.title.lowercase()
+
+                    Log.d("getItinerarySuggestions", "Search words: $searchWords")
+                    Log.d("getItinerarySuggestions", "Itinerary title: $itineraryTitle")
+
+                    searchWords.any { searchWord ->
+                        itineraryTitle.contains(searchWord)
+                    }
                 }
 
                 Log.d(

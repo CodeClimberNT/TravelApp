@@ -20,3 +20,37 @@ val AdventureColor = Color(0xFF7BC043)
 val CultureColor = Color(0xFFF68B1E)
 val RelaxColor = Color(0xFF33AADD)
 val PartyColor = Color(0xFFA57CFF)
+
+// Notification Bell Light
+val NewNotificationBackgroundUnReadColor = Color(0xFFFFF8E1)
+val NewNotificationBackgroundReadColor = Color(0xFFE8F5E8)
+val OldNotificationBackgroundColor = Color(0xFFF5F5F5)
+
+val NewNotificationBorderUnReadColor = Color(0xFFFFC107)
+val NewNotificationBorderReadColor = Color(0xFF4CAF50)
+val OldNotificationBorderColor = Color(0xFFE0E0E0)
+
+//Notification Bell Dark
+
+val NewNotificationBackgroundUnReadColorDark = Color(0xFF303030)
+val NewNotificationBackgroundReadColorDark = Color(0xFF424242)
+val OldNotificationBackgroundColorDark = Color(0xFF212121)
+
+val NewNotificationBorderUnReadColorDark = Color(0xFFFFC107)
+val NewNotificationBorderReadColorDark = Color(0xFF4CAF50)
+val OldNotificationBorderColorDark = Color(0xFF424242)
+
+
+// Profile Screen Colors
+val ProfileBackgroundLightPrimary = Color(0xFFF8F9FA)
+val ProfileBackgroundLightSecondary = Color(0xFFE9ECEF)
+val ProfileBackgroundLightTertiary = Color(0xFFF1F3F4)
+val ProfileCardLight = Color(0xFFFFFFFF)
+val ProfileBorderLight = Color(0xFFE0E0E0)
+val ProfileTextPrimaryLight = Color(0xFF1A237E)
+val ProfileTextSecondaryLight = Color(0xFF495057)
+val ProfileTextMutedLight = Color(0xFF6C757D)
+val ProfileAccentLight = Color(0xFF407BFF)
+val ProfileSurfaceLight = Color(0xFFF8F9FA)
+val ProfileSurfaceBorderLight = Color(0xFFE9ECEF)
+

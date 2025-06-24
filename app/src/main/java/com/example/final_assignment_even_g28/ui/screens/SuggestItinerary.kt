@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,9 +63,7 @@ fun ItineraryDialog(
 ) {
     var selectedItinerary by remember { mutableStateOf<Itinerary?>(null) }
 
-    //val tripName = viewModel.tempTravelProposal.title
     val suggestions = suggestion
-
 
     Dialog(onDismissRequest = { onDismiss() }) {
         Card(
@@ -87,32 +86,47 @@ fun ItineraryDialog(
                     if (suggestions.isEmpty()) {
                         Text("No suggestions available", color = Color.Red)
                     } else {
-                        suggestions.forEach { suggestion ->
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable {
-                                        selectedItinerary = suggestion
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (suggestions.size > 3) {
+                                        Modifier
+                                            .heightIn(max = 200.dp)
+                                            .verticalScroll(rememberScrollState())
+                                    } else {
+                                        Modifier.wrapContentHeight()
                                     }
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(16.dp)
+                                )
+                        ) {
+                            suggestions.forEach { suggestion ->
+                                Card(
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable {
+                                            selectedItinerary = suggestion
+                                        }
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Lightbulb,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        suggestion.title,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Lightbulb,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            suggestion.title,
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                    }
                                 }
                             }
                         }
