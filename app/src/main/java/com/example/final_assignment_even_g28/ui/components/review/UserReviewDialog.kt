@@ -1,10 +1,8 @@
 package com.example.final_assignment_even_g28.ui.components.review
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,17 +13,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -164,20 +162,20 @@ fun ProfileRow(user: UserProfile) {
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.End
         ) {
-            Button(
+            IconButton(
                 modifier = Modifier
                     .size(height = 40.dp, width = 130.dp),
                 onClick = {
                     showReview = true
                 },
-                colors = ButtonDefaults.buttonColors(
+                colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                //Text("Review")
                 Icon(
                     imageVector = Icons.Default.RateReview,
-                    contentDescription = "Write a review"
+                    contentDescription = "Write a review",
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -210,7 +208,9 @@ fun SingleUserReviewCard(
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
                 Row {
                     Text(

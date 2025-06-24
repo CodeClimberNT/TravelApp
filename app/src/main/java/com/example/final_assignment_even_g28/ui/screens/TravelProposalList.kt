@@ -1,5 +1,6 @@
 package com.example.final_assignment_even_g28.ui.screens
 
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -167,9 +168,7 @@ fun TravelProposalList(
                 }
             )
         },
-        modifier = Modifier
-            .fillMaxSize()
-//            .background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -261,6 +260,9 @@ fun ExpandableFilterTopBar(
     filterSummary: @Composable () -> Unit,
     expandedContent: @Composable () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    var isLandScape = configuration.orientation == ORIENTATION_LANDSCAPE
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -324,11 +326,19 @@ fun ExpandableFilterTopBar(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    Column(
+                    val columnModifier = if (isLandScape) {
                         Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-//                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 110.dp)
+                            .verticalScroll(rememberScrollState())
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    }
+                    Column(
+                        modifier = columnModifier,
                     ) {
                         expandedContent()
                     }
