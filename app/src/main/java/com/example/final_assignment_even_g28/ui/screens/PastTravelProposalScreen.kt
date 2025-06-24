@@ -22,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Reviews
 import androidx.compose.material.icons.filled.Star
@@ -150,7 +149,7 @@ fun PastTravelProposalScreen(
                         InfoReviewTab(tabIndex, reviews.size, onTabSelected = { tabIndex = it })
                         when (tabIndex) {
                             0 -> {
-                                TripOverview(tripPlanner, tripVm)
+                                TripOverview(tripPlanner)
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 4.dp)
                                 )
@@ -230,7 +229,7 @@ fun PastTravelProposalScreen(
 }
 
 @Composable
-fun TripOverview(tripPlanner: Planner, vm: TravelProposalViewModel) {
+fun TripOverview(tripPlanner: Planner) {
     val configuration = LocalConfiguration.current
     val isLandScape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     Column(modifier = Modifier.padding(16.dp)) {
@@ -243,7 +242,6 @@ fun TripOverview(tripPlanner: Planner, vm: TravelProposalViewModel) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
         ) {
-            // User Avatar (Placeholder) -> will be updated with the tripPlanner.avatar
             ProfilePicture(tripPlanner, isLandScape = isLandScape, isDashboard = true)
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -260,28 +258,6 @@ fun TripOverview(tripPlanner: Planner, vm: TravelProposalViewModel) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(text = tripPlanner.rating.toString(), fontSize = 12.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            if (!vm.isMyTrip()) {
-                Button(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .width(50.dp)
-                        .shadow(4.dp, RoundedCornerShape(10.dp)),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(4.dp),
-                    onClick = {}, // will be updated with the tripPlanner.contact
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.Message,
-                        contentDescription = "Contact",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .size(40.dp)
-                    )
                 }
             }
         }
