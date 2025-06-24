@@ -7,17 +7,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,6 +51,7 @@ import com.example.final_assignment_even_g28.data_class.ParticipantDetailed
 import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.data_class.UserReview
 import com.example.final_assignment_even_g28.ui.components.RatingStar
+import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 import com.example.final_assignment_even_g28.viewmodel.UserReviewViewModel
@@ -133,26 +138,12 @@ fun ProfileRow(user: UserProfile) {
             .fillMaxWidth()
     ) {
         Column {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "User Avatar",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .size(50.dp)
-                )
-            }
+            ProfilePicture(user, true, isCandidate = true)
         }
 
-        Column {
+        Column(
+            modifier = Modifier.weight(2f)
+        ) {
             Text(
                 text = user.name,
                 fontWeight = FontWeight.Medium,
@@ -163,18 +154,19 @@ fun ProfileRow(user: UserProfile) {
             Text(
                 text = user.bio,
                 style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.End
         ) {
             Button(
                 modifier = Modifier
-                    .size(height = 40.dp, width = 130.dp)
-                    .padding(start = 16.dp),
+                    .size(height = 40.dp, width = 130.dp),
                 onClick = {
                     showReview = true
                 },
@@ -182,7 +174,11 @@ fun ProfileRow(user: UserProfile) {
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Review")
+                //Text("Review")
+                Icon(
+                    imageVector = Icons.Default.RateReview,
+                    contentDescription = "Write a review"
+                )
             }
         }
     }
@@ -220,7 +216,7 @@ fun SingleUserReviewCard(
                     Text(
                         text = "Review of the traveler",
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(8.dp)
                     )
                 }
 
@@ -230,7 +226,7 @@ fun SingleUserReviewCard(
                     label = { Text("Title Review") },
                     maxLines = 1,
                     singleLine = true,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(8.dp)
                 )
 
                 Row(
@@ -258,14 +254,16 @@ fun SingleUserReviewCard(
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "",
-                        modifier = Modifier.size(40.dp)
+                    ProfilePicture(
+                        user,
+                        true,
+                        isCandidate = true
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = user.name,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 

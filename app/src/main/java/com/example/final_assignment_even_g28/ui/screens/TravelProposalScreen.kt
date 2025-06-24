@@ -14,6 +14,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,6 +93,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -142,6 +144,7 @@ import kotlinx.io.IOException
 import org.json.JSONObject
 import java.net.URL
 import java.net.URLEncoder
+import java.nio.file.WatchEvent
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -1232,67 +1235,73 @@ fun CandidateProfile(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        //horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
-            .padding(16.dp)
+            .padding(8.dp)
             .fillMaxWidth()
     ) {
         Column {
             ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
-
-        Column {
+        Column(
+            modifier = Modifier.weight(2f)
+        ){
             Text(
                 text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .clickable {
                         showMiniProfile = true
                     })
-            Text(
-                text = candidate.bio,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
 
-        //Spacer(Modifier.weight(1f))
+                Text(
+                    text = candidate.bio,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(start = 8.dp, end = 6.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-        Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
-        ) {
-            Text(text = " % .2f".format(candidate.rating), modifier = Modifier.padding(6.dp))
         }
         Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.weight(1f)
         ) {
-            TriStateCheckbox(
-                modifier = Modifier.padding(end = 8.dp, start = 6.dp), state = when (isChecked) {
-                    true -> ToggleableState.On
-                    false -> ToggleableState.Off
-                    null -> ToggleableState.Indeterminate
-                }, colors = if (isChecked != null) {
-                    CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = MaterialTheme.colorScheme.onSurface
-                    )
-                } else {
-                    CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.error,
-                        uncheckedColor = MaterialTheme.colorScheme.onError
-                    )
-                }, onClick = {
-                    if (isChecked == false) {
-                        showNullDialog = true
-                    }
-                    if (isChecked == true) {
-                        acceptedDialog = true
-                    }
-                    if (isChecked == null) {
-                        rejectedDialog = true
-                    }
-                })
+                TriStateCheckbox(
+                    modifier = Modifier.padding(0.dp), state = when (isChecked) {
+                        true -> ToggleableState.On
+                        false -> ToggleableState.Off
+                        null -> ToggleableState.Indeterminate
+                    }, colors = if (isChecked != null) {
+                        CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.primary,
+                            uncheckedColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    } else {
+                        CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.error,
+                            uncheckedColor = MaterialTheme.colorScheme.onError
+                        )
+                    }, onClick = {
+                        if (isChecked == false) {
+                            showNullDialog = true
+                        }
+                        if (isChecked == true) {
+                            acceptedDialog = true
+                        }
+                        if (isChecked == null) {
+                            rejectedDialog = true
+                        }
+                    })
+                Text(text = " % .2f".format(candidate.rating),
+                    modifier = Modifier.padding(0.dp),
+                    maxLines = 1,
+                    style = MaterialTheme.typography.labelSmall
+                )
         }
 
     }
