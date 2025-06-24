@@ -495,6 +495,7 @@ fun ProfileEditCard(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top= 16.dp, bottom = 0.dp, start = 0.dp, end = 0.dp)
         ) {
 
             ProfilePicture(
@@ -513,6 +514,7 @@ fun ProfileEditCard(
                 text = "${profile.name} ${profile.surname}".takeIf { it.trim().isNotEmpty() }
                     ?: "Your Name",
                 style = MaterialTheme.typography.headlineMedium,
+                modifier= Modifier.padding(top= 0.dp, bottom = 16.dp, start = 0.dp, end = 0.dp),
                 fontWeight = FontWeight.Bold,
                 color = if (isSystemInDarkTheme()) {
                     MaterialTheme.colorScheme.onSurface
