@@ -46,21 +46,16 @@ import com.example.final_assignment_even_g28.data_class.Notification
 import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.navigation.handleNotificationNavigation
 import com.example.final_assignment_even_g28.ui.theme.LocalNotificationBellColors
-import com.example.final_assignment_even_g28.ui.theme.MadTheme
-import com.example.final_assignment_even_g28.ui.theme.NewNotificationBackgroundReadColor
-import com.example.final_assignment_even_g28.ui.theme.NewNotificationBackgroundUnReadColor
-import com.example.final_assignment_even_g28.ui.theme.NewNotificationBorderReadColor
-import com.example.final_assignment_even_g28.ui.theme.NewNotificationBorderUnReadColor
-import com.example.final_assignment_even_g28.ui.theme.OldNotificationBackgroundColor
-import com.example.final_assignment_even_g28.ui.theme.OldNotificationBorderColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.viewmodel.TravelProposalViewModel
 
 
-
 @Composable
-fun NotificationBell(navActions: Navigation, tripVm : TravelProposalViewModel = viewModel(factory = AppFactory)) {
+fun NotificationBell(
+    navActions: Navigation,
+    tripVm: TravelProposalViewModel = viewModel(factory = AppFactory)
+) {
     var expanded by remember { mutableStateOf(false) }
 
     val notifications by tripVm.notifications.collectAsState(initial = emptyList())
@@ -69,8 +64,9 @@ fun NotificationBell(navActions: Navigation, tripVm : TravelProposalViewModel = 
 
     Box(contentAlignment = Alignment.TopEnd) {
         Box {
-            IconButton(onClick = { expanded = !expanded
-               }) {
+            IconButton(onClick = {
+                expanded = !expanded
+            }) {
                 Icon(
                     Icons.Filled.Notifications,
                     contentDescription = null,
@@ -131,7 +127,9 @@ fun NotificationDropdown(
 ) {
     val sortedNotifications = tripVm.getSortedNotifications()
     Column(
-        modifier = modifier.background(MaterialTheme.colorScheme.surface),
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline, shape = RoundedCornerShape(12.dp)),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -142,7 +140,11 @@ fun NotificationDropdown(
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Notifications", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                Text(
+                    "Notifications",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold
+                )
                 if (hasUnread > 0) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
@@ -154,9 +156,12 @@ fun NotificationDropdown(
             }
         }
 
-        LazyColumn(contentPadding = PaddingValues(bottom = 12.dp, top = 12.dp), modifier = Modifier.height(300.dp)) {
+        LazyColumn(
+            contentPadding = PaddingValues(bottom = 12.dp, top = 12.dp),
+            modifier = Modifier.height(300.dp)
+        ) {
             items(sortedNotifications) { notification ->
-                NotificationItem(notification, navActions,tripVm, onDismiss)
+                NotificationItem(notification, navActions, tripVm, onDismiss)
             }
         }
     }
@@ -203,9 +208,13 @@ fun NotificationItem(
             .padding(12.dp)
     ) {
         Text(
-            text = tripVm.getNotificationMessage(notification.type,notification.title, false),
+            text = tripVm.getNotificationMessage(notification.type, notification.title, false),
             fontWeight = if (!isReadFromDB) FontWeight.Bold else FontWeight.Normal
         )
-        Text(if( isRecent ) "Now" else notification.timestamp.toDateFormat(), fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground)
+        Text(
+            if (isRecent) "Now" else notification.timestamp.toDateFormat(),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     }
 }
