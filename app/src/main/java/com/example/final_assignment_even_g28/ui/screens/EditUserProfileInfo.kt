@@ -8,8 +8,22 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +42,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,6 +57,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -55,6 +72,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +88,17 @@ import com.example.final_assignment_even_g28.shared.EditableTextField
 import com.example.final_assignment_even_g28.ui.components.modal.DatePickerModal
 import com.example.final_assignment_even_g28.ui.components.user_profile.IconType
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
+import com.example.final_assignment_even_g28.ui.screens.CameraPreview
+import com.example.final_assignment_even_g28.ui.theme.ProfileAccentLight
+import com.example.final_assignment_even_g28.ui.theme.ProfileBackgroundLightPrimary
+import com.example.final_assignment_even_g28.ui.theme.ProfileBackgroundLightSecondary
+import com.example.final_assignment_even_g28.ui.theme.ProfileBackgroundLightTertiary
+import com.example.final_assignment_even_g28.ui.theme.ProfileBorderLight
+import com.example.final_assignment_even_g28.ui.theme.ProfileCardLight
+import com.example.final_assignment_even_g28.ui.theme.ProfileSurfaceLight
+import com.example.final_assignment_even_g28.ui.theme.ProfileSurfaceBorderLight
+import com.example.final_assignment_even_g28.ui.theme.ProfileTextPrimaryLight
+import com.example.final_assignment_even_g28.ui.theme.ProfileTextSecondaryLight
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.utils.toDateFormat
 import com.example.final_assignment_even_g28.utils.toMillis
@@ -77,15 +107,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.firebase.Timestamp
-
+import kotlinx.coroutines.delay
 
 enum class CameraPopupState {
     GALLERY,
     CAMERA,
 }
 
-// The design was changed from the first laboratory
-// to better adhere both to the M3 guidelines and to the Lab2 specifications
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun EditUserProfileInfo(
@@ -100,6 +128,13 @@ fun EditUserProfileInfo(
     val profile by viewModel.editingProfile.collectAsState()
     val configuration = LocalConfiguration.current
     val isLandScape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -120,10 +155,8 @@ fun EditUserProfileInfo(
         }
     }
 
-
     val needToTakePhoto = remember { mutableStateOf(false) }
     val permissionState = rememberPermissionState(Manifest.permission.CAMERA)
-
 
     LaunchedEffect(permissionState.status.isGranted) {
         if (permissionState.status.isGranted && needToTakePhoto.value) {
@@ -132,165 +165,263 @@ fun EditUserProfileInfo(
         }
     }
 
-
-    // For system back navigation (e.g., swiping from the edge of the screen)
     BackHandler {
         viewModel.handleBackNavigation(ctx)
         onBackClick()
     }
 
-
     if (!previewCamera) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Edit Profile",
-                            style = MaterialTheme.typography.headlineLarge
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            viewModel.handleBackNavigation(ctx)
-                            onBackClick()
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    },
-                    colors =
-                        TopAppBarDefaults.topAppBarColors(
-                            MaterialTheme.colorScheme.inversePrimary,
-                        ),
-                    modifier = Modifier.shadow(16.dp)
-                )
-            },
-
-            ) { innerPadding ->
-
-            if (!isLandScape) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(innerPadding)
-                        .padding(16.dp, 0.dp)
-                        .verticalScroll(scrollable)
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shadowElevation = 12.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Spacer(Modifier.height(16.dp))
-
-                    ProfilePicture(
-                        userProfile = profile,
-                        showCameraButton = true,
-                        userProfileViewModel = viewModel,
-                        onCameraClick = {
-                            showCameraPopup = true
-                            needToTakePhoto.value = true
-                        },
-                        onRemoveClick = {
-                            viewModel.updateProfilePicture(IconType.ACCOUNT_CIRCLE)
-                        },
-                        isLandScape = isLandScape
-                    )
-
-                    Spacer(Modifier.height(16.dp))
-
-                    GenerateEditableFields(
-                        fields = viewModel.getEditFieldDefinitionList(profile)
-                    )
-
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = {
-                                viewModel.cancelChanges()
-                                onBackClick()
-                            },
-                            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)
-                        ) {
-                            Text("Cancel", color = MaterialTheme.colorScheme.onError)
-                        }
-
-                        Spacer(Modifier.width(24.dp))
-
-                        Button(onClick = {
-                            if (viewModel.validateFields()) {
+                    TopAppBar(
+                        navigationIcon = {
+                            IconButton(onClick = {
                                 viewModel.handleBackNavigation(ctx)
                                 onBackClick()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
                             }
-                        }) {
-                            Text("Save")
-                        }
-                    }
-                }
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(16.dp, 0.dp)
-                ) {
-                    ProfilePicture(
-                        userProfile = profile,
-                        showCameraButton = true,
-                        userProfileViewModel = viewModel,
-                        onCameraClick = {
-                            showCameraPopup = true
-                            needToTakePhoto.value = true
                         },
-                        onRemoveClick = {
-                            viewModel.updateProfilePicture(IconType.ACCOUNT_CIRCLE)
+                        title = {
+                            Text(
+                                text = "Edit Profile",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
                         },
-                        isLandScape = isLandScape
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        )
                     )
+                }
+            },
+        ) { innerPadding ->
 
 
-                    Spacer(Modifier.padding(16.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = if (isSystemInDarkTheme()) {
+                                listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                )
+                            } else {
+                                listOf(
+                                    ProfileBackgroundLightPrimary,
+                                    ProfileBackgroundLightSecondary,
+                                    ProfileBackgroundLightTertiary
+                                )
+                            }
+                        )
+                    )
+            ) {
+                if (!isLandScape) {
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize()
                             .verticalScroll(scrollable)
+                            .padding(20.dp)
+                    ) {
+                        Spacer(Modifier.height(16.dp))
+
+
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(
+                                animationSpec = tween(durationMillis = 800),
+                                initialOffsetY = { -it }
+                            ) + fadeIn(animationSpec = tween(800)),
+                            exit = slideOutVertically() + fadeOut()
+                        ) {
+                            ProfileEditCard(
+                                profile = profile,
+                                viewModel = viewModel,
+                                isLandScape = isLandScape,
+                                onCameraClick = {
+                                    showCameraPopup = true
+                                    needToTakePhoto.value = true
+                                },
+                                onRemoveClick = {
+                                    viewModel.updateProfilePicture(IconType.ACCOUNT_CIRCLE)
+                                }
+                            )
+                        }
+
+                        Spacer(Modifier.height(32.dp))
+
+
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(
+                                animationSpec = tween(durationMillis = 800, delayMillis = 300),
+                                initialOffsetY = { it }
+                            ) + fadeIn(animationSpec = tween(800, delayMillis = 300)),
+                            exit = slideOutVertically() + fadeOut()
+                        ) {
+                            EditInformationCard(
+                                fields = viewModel.getEditFieldDefinitionList(profile),
+                                viewModel = viewModel,
+                                isLandScape = isLandScape
+                            )
+                        }
+
+                        Spacer(Modifier.height(32.dp))
+
+
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(
+                                animationSpec = tween(durationMillis = 800, delayMillis = 600),
+                                initialOffsetY = { it }
+                            ) + fadeIn(animationSpec = tween(800, delayMillis = 600)),
+                            exit = slideOutVertically() + fadeOut()
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.cancelChanges()
+                                        onBackClick()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    ),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                Button(
+                                    onClick = {
+                                        if (viewModel.validateFields()) {
+                                            viewModel.saveAndExitEditing(ctx)
+                                            onBackClick()
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    Text("Save")
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(40.dp))
+                    }
+                } else {
+
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .padding(20.dp)
                     ) {
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        GenerateEditableFields(
-                            fields = viewModel.getEditFieldDefinitionList(profile)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                        AnimatedVisibility(
+                            modifier = Modifier.weight(1f),
+                            visible = isVisible,
+                            enter = slideInHorizontally(
+                                animationSpec = tween(800),
+                                initialOffsetX = { -it }
+                            ) + fadeIn(tween(800))
                         ) {
-                            Button(onClick = {
-                                viewModel.cancelChanges()
-                                onBackClick()
-                            }) {
-                                Text("Cancel")
-                            }
+                            ProfileEditCard(
+                                profile = profile,
+                                viewModel = viewModel,
+                                isLandScape = isLandScape,
+                                onCameraClick = {
+                                    showCameraPopup = true
+                                    needToTakePhoto.value = true
+                                },
+                                onRemoveClick = {
+                                    viewModel.updateProfilePicture(IconType.ACCOUNT_CIRCLE)
+                                },
+                                modifier = Modifier.weight(0.35f)
+                            )
+                        }
 
-                            Button(onClick = {
-                                if (viewModel.validateFields()) {
-                                    viewModel.handleBackNavigation(ctx)
-                                    onBackClick()
+                        Spacer(Modifier.width(20.dp))
+
+
+                        AnimatedVisibility(
+                            modifier = Modifier.weight(2f),
+                            visible = isVisible,
+                            enter = slideInHorizontally(
+                                animationSpec = tween(800, delayMillis = 300),
+                                initialOffsetX = { it }
+                            ) + fadeIn(tween(800, delayMillis = 300))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(0.65f)
+                                    .fillMaxHeight()
+                                    .verticalScroll(scrollable)
+                            ) {
+                                EditInformationCard(
+                                    fields = viewModel.getEditFieldDefinitionList(profile),
+                                    viewModel = viewModel,
+                                    isLandScape = isLandScape,
+                                    modifier = Modifier.fillMaxHeight()
+                                )
+
+                                Spacer(Modifier.height(20.dp))
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            viewModel.cancelChanges()
+                                            onBackClick()
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colorScheme.error
+                                        ),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                                    ) {
+                                        Text("Cancel")
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            if (viewModel.validateFields()) {
+                                                viewModel.handleBackNavigation(ctx)
+                                                onBackClick()
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Text("Save")
+                                    }
                                 }
-                            }) {
-                                Text("Save")
                             }
-
-                            Spacer(Modifier.padding(16.dp))
                         }
                     }
                 }
@@ -304,37 +435,157 @@ fun EditUserProfileInfo(
                             CameraPopupState.CAMERA -> {
                                 if (permissionState.status.isGranted) {
                                     previewCamera = true
-
                                 } else {
                                     permissionState.launchPermissionRequest()
                                     if (permissionState.status.isGranted) {
                                         previewCamera = true
                                     }
-
                                 }
                             }
-
                             CameraPopupState.GALLERY -> {
                                 galleryLauncher.launch("image/*")
                             }
                         }
                         showCameraPopup = false
-
                     },
                     popupSelectionState = popupSelectionState,
                     updateSelectionStateTo = { updateSelectionStateTo(it) }
                 )
             }
         }
-    } else
+    } else {
         CameraPreview(
             onDismissCameraPreview = { previewCamera = false },
             isLandScape = isLandScape
         ) { uri ->
             viewModel.updateProfilePicture(uri.toString(), ctx)
         }
+    }
 }
 
+@Composable
+fun ProfileEditCard(
+    profile: com.example.final_assignment_even_g28.data_class.UserProfile,
+    viewModel: UserProfileViewModel,
+    isLandScape: Boolean,
+    onCameraClick: () -> Unit,
+    onRemoveClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.then(
+            if (!isLandScape) Modifier.fillMaxWidth() else Modifier
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) {
+                MaterialTheme.colorScheme.surface
+            } else {
+                ProfileCardLight
+            }
+        ),
+        shape = RoundedCornerShape(24.dp),
+        border = if (isSystemInDarkTheme()) null else BorderStroke(
+            1.dp,
+            ProfileBorderLight
+        )
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+
+            ProfilePicture(
+                userProfile = profile,
+                showCameraButton = true,
+                userProfileViewModel = viewModel,
+                onCameraClick = onCameraClick,
+                onRemoveClick = onRemoveClick,
+                isLandScape = isLandScape
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+
+            Text(
+                text = "${profile.name} ${profile.surname}".takeIf { it.trim().isNotEmpty() }
+                    ?: "Your Name",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isSystemInDarkTheme()) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    ProfileTextPrimaryLight
+                }
+            )
+
+        }
+    }
+}
+
+@Composable
+fun EditInformationCard(
+    fields: List<EditableFieldDefinition>,
+    viewModel: UserProfileViewModel,
+    isLandScape: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) {
+                MaterialTheme.colorScheme.surface
+            } else {
+                ProfileCardLight
+            }
+        ),
+        shape = RoundedCornerShape(24.dp),
+        border = if (isSystemInDarkTheme()) null else BorderStroke(
+            1.dp,
+            ProfileBorderLight
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp)
+        ) {
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = if (isSystemInDarkTheme()) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        ProfileAccentLight
+                    },
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "Edit Information",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (isSystemInDarkTheme()) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        ProfileTextPrimaryLight
+                    },
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+
+            GenerateEditableFields(fields = fields, viewModel = viewModel)
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -344,20 +595,22 @@ fun GenerateEditableFields(
 ) {
     var selectDate by remember { mutableStateOf(false) }
     val profile by viewModel.editingProfile.collectAsState()
+
     Log.d("Edit Profile", "Current profile dob ${profile.dateOfBirth.toDateFormat()}")
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.fillMaxWidth()//.verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        fields.forEach {
+        fields.forEach { field ->
             EditableTextField(
-                value = it.value,
-                onValueChange = it.onValueChange,
-                label = it.label,
-                isError = it.errorMessage.isNotEmpty(),
-                errorMessage = it.errorMessage,
-                keyboardType = it.keyboardType,
-                enabled = it.editable
+                value = field.value,
+                onValueChange = field.onValueChange,
+                label = field.label,
+                isError = field.errorMessage.isNotEmpty(),
+                errorMessage = field.errorMessage,
+                keyboardType = field.keyboardType,
+                enabled = field.editable
             )
         }
 
@@ -366,6 +619,7 @@ fun GenerateEditableFields(
             onValueChange = { },
             label = { Text("Date of Birth") },
             modifier = Modifier.fillMaxWidth(),
+            readOnly = true,
             trailingIcon = {
                 IconButton(onClick = { selectDate = true }) {
                     Icon(
@@ -375,6 +629,8 @@ fun GenerateEditableFields(
                 }
             },
         )
+
+        Spacer(Modifier.height(8.dp))
 
         ActivityList()
 
@@ -395,39 +651,53 @@ fun GenerateEditableFields(
 
 @Composable
 fun ActivityList(userVm: UserProfileViewModel = viewModel(factory = AppFactory)) {
-
     val profile by userVm.editingProfile.collectAsState()
+    val validationError =  userVm.validationErrors
+    Column {
+        Text(
+            text = "Activity Preferences",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isSystemInDarkTheme()) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                ProfileTextPrimaryLight
+            },
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
 
-    Text(
-        text = "Activities preferences",
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(12.dp)
-    ) {
-
-        ActivityTag.entries.forEach { activity ->
-            FilterChip(
-                selected = profile.typeOfExperiences.contains(activity.toString()),
-                onClick = {
-                    if (profile.typeOfExperiences.contains(activity.toString())) {
-                        userVm.updateDeleteTypeOfExperiences(activity.toString())
-                        Log.d("Edit Profile", "Removed Experience: ${activity.toString()}")
-                    } else {
-                        userVm.updateAddTypeOfExperiences(activity.toString())
-                        Log.d("Edit Profile", "Added Experience: ${activity.toString()}")
-                    }
-                },
-                label = { Text(activity.value) })
-            Spacer(modifier = Modifier.width(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ActivityTag.entries.forEach { activity ->
+                FilterChip(
+                    selected = profile.typeOfExperiences.contains(activity.toString()),
+                    onClick = {
+                        if (profile.typeOfExperiences.contains(activity.toString())) {
+                            userVm.updateDeleteTypeOfExperiences(activity.toString())
+                            Log.d("Edit Profile", "Removed Experience: ${activity.toString()}")
+                        } else {
+                            userVm.updateAddTypeOfExperiences(activity.toString())
+                            Log.d("Edit Profile", "Added Experience: ${activity.toString()}")
+                        }
+                    },
+                    label = { Text(activity.value) }
+                )
+            }
+        }
+        if (validationError.typeOfExperiences.isNotBlank()) {
+            Text(
+                text = validationError.typeOfExperiences,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
-
 
 @Composable
 fun CameraPopup(
@@ -438,69 +708,86 @@ fun CameraPopup(
 ) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(24.dp),
             elevation = CardDefaults.cardElevation(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSystemInDarkTheme()) {
+                    MaterialTheme.colorScheme.surface
+                } else {
+                    ProfileCardLight
+                }
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .size(300.dp)
                 .padding(16.dp)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxHeight()
+                modifier = Modifier.padding(24.dp)
             ) {
-                // Following M3 Guidelines: https://m3.material.io/components/dialogs/specs
-                // To Review: the guidelines suggest this measures using the second component
-                // title description, not interactable Buttons, they may need more space
-                // For now M3 do not specify our specific case, for this reason we are using
-                // the only one provided by the guidelines
+                Text(
+                    "Select Image Source",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isSystemInDarkTheme()) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        ProfileTextPrimaryLight
+                    }
+                )
 
                 Spacer(Modifier.height(24.dp))
-                Text("Select an option", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(16.dp))
+
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     ButtonWithLabel(
                         text = "Camera",
                         icon = Icons.Default.CameraAlt,
                         isEnabled = popupSelectionState == CameraPopupState.CAMERA,
-                        onClick = {
-                            updateSelectionStateTo(CameraPopupState.CAMERA)
-                        }
+                        onClick = { updateSelectionStateTo(CameraPopupState.CAMERA) },
+                        modifier = Modifier.weight(1f)
                     )
                     ButtonWithLabel(
                         text = "Gallery",
                         icon = Icons.Default.Photo,
                         isEnabled = popupSelectionState == CameraPopupState.GALLERY,
-                        onClick = {
-                            updateSelectionStateTo(CameraPopupState.GALLERY)
-                        }
+                        onClick = { updateSelectionStateTo(CameraPopupState.GALLERY) },
+                        modifier = Modifier.weight(1f)
                     )
                 }
-                Spacer(Modifier.height(24.dp))
+
+                Spacer(Modifier.height(32.dp))
+
                 Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextButton(onClick = { onDismissRequest() }) {
-                        Text("Dismiss", color = MaterialTheme.colorScheme.error)
+                    OutlinedButton(
+                        onClick = { onDismissRequest() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Cancel")
                     }
-                    TextButton(onClick = { onConfirmation() }) {
+                    Button(
+                        onClick = { onConfirmation() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
                         Text("Confirm")
                     }
                 }
-                Spacer(Modifier.height(24.dp))
             }
         }
     }
-
 }
-
 
 @Composable
 fun ButtonWithLabel(
@@ -508,41 +795,70 @@ fun ButtonWithLabel(
     icon: ImageVector,
     isEnabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val buttonColor = if (isEnabled) {
-        ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+        ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
     } else {
-        ButtonDefaults.outlinedButtonColors()
+        ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
     }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-
-        ) {
-        OutlinedButton(
-            onClick = onClick,
-            shape = CircleShape,
-            colors = buttonColor,
-            modifier = Modifier
-                .size(110.dp)
-
-        ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+    ) {
+        if (isEnabled) {
+            Button(
+                onClick = onClick,
+                colors = buttonColor,
+                modifier = Modifier.size(80.dp),
+                shape = CircleShape
             ) {
-
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    Modifier.size(48.dp)
+                    modifier = Modifier.size(32.dp)
                 )
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyLarge,
+            }
+        } else {
+            OutlinedButton(
+                onClick = onClick,
+                colors = buttonColor,
+                modifier = Modifier.size(80.dp),
+                shape = CircleShape,
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp)
                 )
             }
         }
+
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (isEnabled) {
+                if (isSystemInDarkTheme()) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    ProfileTextPrimaryLight
+                }
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            }
+        )
     }
 }

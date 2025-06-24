@@ -291,6 +291,9 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     }
 
     fun getInitialsFromUser(user: UserProfile): String {
+        if (user.name.isEmpty() && user.surname.isEmpty()) {
+            return ""
+        }
         if (user.surname.isEmpty())
             return (user.name[0]).toString().uppercase()
         return (user.name[0].toString().uppercase() + user.surname[0].toString().uppercase())
