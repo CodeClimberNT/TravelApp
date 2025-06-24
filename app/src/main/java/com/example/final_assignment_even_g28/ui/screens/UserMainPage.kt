@@ -9,15 +9,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -28,7 +24,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -311,7 +306,6 @@ fun ProfileHeader(
                             } else {
                                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
                             },
-                            modifier = Modifier.shadow(2.dp, RoundedCornerShape(12.dp))
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -340,7 +334,6 @@ fun ProfileHeader(
                             } else {
                                 ProfileAccentLight.copy(alpha = 0.15f)
                             },
-                            modifier = Modifier.shadow(2.dp, RoundedCornerShape(12.dp))
                         ) {
                             Text(
                                 text = "Level ${profile.currentLevel}",
