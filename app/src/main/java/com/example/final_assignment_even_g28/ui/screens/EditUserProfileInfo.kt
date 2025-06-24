@@ -215,7 +215,7 @@ fun EditUserProfileInfo(
                         brush = Brush.verticalGradient(
                             colors = if (isSystemInDarkTheme()) {
                                 listOf(
-                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                 )
                             } else {

@@ -142,7 +142,7 @@ fun NotificationDropdown(
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Notifications", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Notifications", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                 if (hasUnread > 0) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(

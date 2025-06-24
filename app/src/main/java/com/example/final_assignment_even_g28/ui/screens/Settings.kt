@@ -36,13 +36,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.data_class.NotificationPreferenceType
 import com.example.final_assignment_even_g28.data_class.notificationItems
+import com.example.final_assignment_even_g28.navigation.Navigation
 import com.example.final_assignment_even_g28.ui.theme.DimColor
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
 @Composable
 fun NotificationSettingsScreen(
-    userModel: UserProfileViewModel = viewModel(factory = AppFactory)
+    userModel: UserProfileViewModel = viewModel(factory = AppFactory),
+    navActions: Navigation
 ) {
     val ctx = LocalContext.current
     val toggleStates = remember {
@@ -158,6 +160,7 @@ fun NotificationSettingsScreen(
                             onClick = {
                                 showDeleteCompletion = false
                                 userModel.deleteAccount()
+                                    navActions.back()
                             },
                             enabled = true,
                             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
@@ -222,10 +225,3 @@ fun NotificationToggle(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun NotificationSettingsScreenPreview() {
-    MaterialTheme {
-        NotificationSettingsScreen()
-    }
-}
