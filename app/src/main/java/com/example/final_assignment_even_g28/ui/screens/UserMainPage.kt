@@ -9,15 +9,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -28,7 +24,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,7 +31,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -90,7 +84,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.final_assignment_even_g28.R
@@ -169,7 +162,7 @@ fun ProfileScreen(
                     brush = Brush.verticalGradient(
                         colors = if (isSystemInDarkTheme()) {
                             listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha= 0.1f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                             )
                         } else {
@@ -341,7 +334,7 @@ fun ProfileHeader(
                                 ProfileAccentLight.copy(alpha = 0.15f)
                             },
 
-                        ) {
+                            ) {
                             Text(
                                 text = "Level ${profile.currentLevel}",
                                 style = MaterialTheme.typography.labelLarge,
@@ -430,19 +423,11 @@ fun EnhancedLevelProgressBar(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
         }
-
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-
-        ) {
-            ProfilePicture(
-                userProfile = userProfile,
-                isLandScape = false,
-                isDashboard = true
-            )
-        }
+        ProfilePicture(
+            userProfile = userProfile,
+            isLandScape = false,
+            isDashboard = true
+        )
     }
 }
 
@@ -472,7 +457,9 @@ fun InterestChips(interests: List<String>) {
                         MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     ),
                     colors = AssistChipDefaults.assistChipColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(
+                            alpha = 0.4f
+                        ),
                         disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 )

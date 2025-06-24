@@ -14,7 +14,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -141,10 +140,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
-import org.json.JSONObject
-import java.net.URL
 import java.net.URLEncoder
-import java.nio.file.WatchEvent
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -425,7 +421,8 @@ fun TripOverview(
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(4.dp),
                     onClick = {
-                        val message = "Hi ${tripPlanner.name}, I'm interested in this trip itinerary."
+                        val message =
+                            "Hi ${tripPlanner.name}, I'm interested in this trip itinerary."
                         openWhatsAppChat(context, tripPlanner.phoneNumber, message)
                     },
                 ) {
@@ -720,7 +717,13 @@ fun TripMap(itinerary: List<ItineraryStop>, tripName: String) {
                 // Draw route line
                 val pts = locations.filterNotNull()
                 if (pts.size >= 2) {
-                    Polyline(points = pts, width = 6f, color = Color.Blue, jointType = JointType.ROUND, geodesic = true)
+                    Polyline(
+                        points = pts,
+                        width = 6f,
+                        color = Color.Blue,
+                        jointType = JointType.ROUND,
+                        geodesic = true
+                    )
 
                     /*val arrowCap = remember {
                         CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.arrow), 30f)
@@ -767,8 +770,11 @@ suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
                     Geocoder(context, Locale.getDefault())
                         .getFromLocationName(text, 1, object : Geocoder.GeocodeListener {
                             override fun onGeocode(addresses: List<Address>) {
-                                cont.resume(addresses.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
+                                cont.resume(
+                                    addresses.firstOrNull()
+                                        ?.let { LatLng(it.latitude, it.longitude) })
                             }
+
                             override fun onError(errorMessage: String?) {
                                 cont.resume(null)
                             }
@@ -786,7 +792,6 @@ suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
     }
 
 
-
 fun geocodeAddresses(context: Context, name: String, onResult: (LatLng?) -> Unit) {
     val geocoder = Geocoder(context, Locale.getDefault())
     try {
@@ -795,6 +800,7 @@ fun geocodeAddresses(context: Context, name: String, onResult: (LatLng?) -> Unit
                 override fun onGeocode(addresses: List<Address>) {
                     onResult(addresses.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
                 }
+
                 override fun onError(errorMessage: String?) {
                     onResult(null)
                 }
@@ -830,7 +836,11 @@ fun CombinedBottomBar(
 
 @Composable
 fun TravelActionBar(
-    tripVm: TravelProposalViewModel, proposal: TravelProposal, price: String, navActions: Navigation, userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)
+    tripVm: TravelProposalViewModel,
+    proposal: TravelProposal,
+    price: String,
+    navActions: Navigation,
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)
 ) {
     var showApplyDialog by remember { mutableStateOf(false) }
     var showPendingDialog by remember { mutableStateOf(false) }
@@ -873,21 +883,23 @@ fun TravelActionBar(
                             .height(40.dp),
                         elevation = ButtonDefaults.buttonElevation(8.dp),
                         shape = RoundedCornerShape(10.dp),
-                        onClick = when(userParticipationStatus){
+                        onClick = when (userParticipationStatus) {
                             ParticipantStatus.PENDING -> {
                                 { showPendingDialog = true }
                             }
+
                             ParticipantStatus.APPROVED -> {
                                 { showAcceptedDialog = true }
                             }
+
                             ParticipantStatus.REJECTED -> {
                                 {}
                             }
+
                             null -> {
                                 { showApplyDialog = true }
                             }
-                        }
-                                  ,
+                        },
                         enabled = true,
                         colors = when (userParticipationStatus) {
                             ParticipantStatus.APPROVED -> {
@@ -913,21 +925,23 @@ fun TravelActionBar(
                     ) {
                         when (userParticipationStatus) {
                             ParticipantStatus.APPROVED -> {
-                                    Text(
-                                        text = "Approved!",
-                                    )
+                                Text(
+                                    text = "Approved!",
+                                )
                             }
+
                             ParticipantStatus.PENDING -> {
-                                    Text(
-                                        text = "Pending",
-                                    )
+                                Text(
+                                    text = "Pending",
+                                )
                             }
 
                             ParticipantStatus.REJECTED -> {
-                                    Text(
-                                        text = "Rejected",
-                                    )
+                                Text(
+                                    text = "Rejected",
+                                )
                             }
+
                             else -> {
                                 Text(
                                     text = "Apply",
@@ -998,16 +1012,29 @@ fun TravelActionBar(
                 userProfileViewModel.gainExp(5, ctx)
             })
     }
-    if(showAcceptedDialog){
-        AcceptedDialog(onDismissRequest = { showAcceptedDialog = false }, travelProposalVM = tripVm, travelProposal = proposal)
+    if (showAcceptedDialog) {
+        AcceptedDialog(
+            onDismissRequest = { showAcceptedDialog = false },
+            travelProposalVM = tripVm,
+            travelProposal = proposal
+        )
     }
-    if (showPendingDialog){
-        PendingDialog(onDismissRequest = { showPendingDialog = false }, travelProposalVM = tripVm, travelProposal = proposal)
+    if (showPendingDialog) {
+        PendingDialog(
+            onDismissRequest = { showPendingDialog = false },
+            travelProposalVM = tripVm,
+            travelProposal = proposal
+        )
     }
 }
 
 @Composable
-fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel, travelProposal: TravelProposal, userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)){
+fun AcceptedDialog(
+    onDismissRequest: () -> Unit,
+    travelProposalVM: TravelProposalViewModel,
+    travelProposal: TravelProposal,
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)
+) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -1020,17 +1047,20 @@ fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposa
             Column(
                 Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 Text(
                     text = "Changed your Mind?",
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(16.dp),
-                    style =  MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onClick = {
-                        travelProposalVM.removePendingParticipation(travelProposal, userProfileViewModel.loggedUser.value)
+                        travelProposalVM.removePendingParticipation(
+                            travelProposal,
+                            userProfileViewModel.loggedUser.value
+                        )
                         onDismissRequest()
                     },
                     modifier = Modifier.size(height = 50.dp, width = 200.dp),
@@ -1042,7 +1072,7 @@ fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposa
                 }
                 Spacer(modifier = Modifier.size(16.dp))
                 Button(
-                    onClick = { onDismissRequest },
+                    onClick = onDismissRequest,
                     modifier = Modifier.size(height = 50.dp, width = 200.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -1057,7 +1087,12 @@ fun AcceptedDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposa
 }
 
 @Composable
-fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposalViewModel, travelProposal: TravelProposal, userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)){
+fun PendingDialog(
+    onDismissRequest: () -> Unit,
+    travelProposalVM: TravelProposalViewModel,
+    travelProposal: TravelProposal,
+    userProfileViewModel: UserProfileViewModel = viewModel(factory = AppFactory)
+) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier
@@ -1066,21 +1101,24 @@ fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposal
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
 
-        ) {
+            ) {
             Column(
                 Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 Text(
                     text = "Changed your Mind?",
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(16.dp),
-                    style =  MaterialTheme.typography.titleLarge
-                    )
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onClick = {
-                        travelProposalVM.removePendingParticipation(travelProposal, userProfileViewModel.loggedUser.value)
+                        travelProposalVM.removePendingParticipation(
+                            travelProposal,
+                            userProfileViewModel.loggedUser.value
+                        )
                         onDismissRequest()
                     },
                     modifier = Modifier.size(height = 50.dp, width = 200.dp),
@@ -1092,7 +1130,7 @@ fun PendingDialog(onDismissRequest: () -> Unit, travelProposalVM: TravelProposal
                 }
                 Spacer(modifier = Modifier.size(16.dp))
                 Button(
-                    onClick = { onDismissRequest },
+                    onClick = onDismissRequest,
                     modifier = Modifier.size(height = 50.dp, width = 200.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -1239,12 +1277,20 @@ fun CandidateProfile(
             .padding(8.dp)
             .fillMaxWidth()
     ) {
-        Column {
+        Column(
+            modifier = Modifier.clickable {
+                showMiniProfile = true
+            }
+        ) {
             ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
         Column(
-            modifier = Modifier.weight(2f)
-        ){
+            modifier = Modifier
+                .weight(2f)
+                .clickable {
+                    showMiniProfile = true
+                }
+        ) {
             Text(
                 text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
                 style = MaterialTheme.typography.labelMedium,
@@ -1253,17 +1299,15 @@ fun CandidateProfile(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .clickable {
-                        showMiniProfile = true
-                    })
+            )
 
-                Text(
-                    text = candidate.bio,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(start = 8.dp, end = 6.dp),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Text(
+                text = candidate.bio,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(start = 8.dp, end = 6.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
         }
         Column(
@@ -1271,37 +1315,38 @@ fun CandidateProfile(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.weight(1f)
         ) {
-                TriStateCheckbox(
-                    modifier = Modifier.padding(0.dp), state = when (isChecked) {
-                        true -> ToggleableState.On
-                        false -> ToggleableState.Off
-                        null -> ToggleableState.Indeterminate
-                    }, colors = if (isChecked != null) {
-                        CheckboxDefaults.colors(
-                            checkedColor = MaterialTheme.colorScheme.primary,
-                            uncheckedColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    } else {
-                        CheckboxDefaults.colors(
-                            checkedColor = MaterialTheme.colorScheme.error,
-                            uncheckedColor = MaterialTheme.colorScheme.onError
-                        )
-                    }, onClick = {
-                        if (isChecked == false) {
-                            showNullDialog = true
-                        }
-                        if (isChecked == true) {
-                            acceptedDialog = true
-                        }
-                        if (isChecked == null) {
-                            rejectedDialog = true
-                        }
-                    })
-                Text(text = " % .2f".format(candidate.rating),
-                    modifier = Modifier.padding(0.dp),
-                    maxLines = 1,
-                    style = MaterialTheme.typography.labelSmall
-                )
+            TriStateCheckbox(
+                modifier = Modifier.padding(0.dp), state = when (isChecked) {
+                    true -> ToggleableState.On
+                    false -> ToggleableState.Off
+                    null -> ToggleableState.Indeterminate
+                }, colors = if (isChecked != null) {
+                    CheckboxDefaults.colors(
+                        checkedColor = MaterialTheme.colorScheme.primary,
+                        uncheckedColor = MaterialTheme.colorScheme.onSurface
+                    )
+                } else {
+                    CheckboxDefaults.colors(
+                        checkedColor = MaterialTheme.colorScheme.error,
+                        uncheckedColor = MaterialTheme.colorScheme.onError
+                    )
+                }, onClick = {
+                    if (isChecked == false) {
+                        showNullDialog = true
+                    }
+                    if (isChecked == true) {
+                        acceptedDialog = true
+                    }
+                    if (isChecked == null) {
+                        rejectedDialog = true
+                    }
+                })
+            Text(
+                text = " % .2f".format(candidate.rating),
+                modifier = Modifier.padding(0.dp),
+                maxLines = 1,
+                style = MaterialTheme.typography.labelSmall
+            )
         }
 
     }
