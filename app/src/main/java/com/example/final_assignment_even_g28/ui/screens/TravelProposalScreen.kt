@@ -14,6 +14,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -143,6 +144,7 @@ import kotlinx.io.IOException
 import org.json.JSONObject
 import java.net.URL
 import java.net.URLEncoder
+import java.nio.file.WatchEvent
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -1240,68 +1242,63 @@ fun CandidateProfile(
         Column {
             ProfilePicture(candidate, isLandScape = isLandscape, isCandidate = true)
         }
-
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Column{
             Text(
                 text = candidate.name + if (guests.isNotEmpty()) " + ${guests.size} guests" else "",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .padding(start = 4.dp)
+                    .padding(start = 8.dp)
                     .clickable {
                         showMiniProfile = true
                     })
-            Row {
+
                 Text(
                     text = candidate.bio,
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(start = 8.dp, end = 6.dp),
+                    modifier = Modifier.padding(start = 8.dp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(text = "%.2f".format(candidate.rating),
-                    modifier = Modifier.padding(start = 6.dp, end = 12.dp),
-                    maxLines = 1
-                )
-
-            }
 
         }
-        //Spacer(Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(2f))
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TriStateCheckbox(
-                modifier = Modifier.padding(end = 12.dp, start = 6.dp), state = when (isChecked) {
-                    true -> ToggleableState.On
-                    false -> ToggleableState.Off
-                    null -> ToggleableState.Indeterminate
-                }, colors = if (isChecked != null) {
-                    CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = MaterialTheme.colorScheme.onSurface
-                    )
-                } else {
-                    CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.error,
-                        uncheckedColor = MaterialTheme.colorScheme.onError
-                    )
-                }, onClick = {
-                    if (isChecked == false) {
-                        showNullDialog = true
-                    }
-                    if (isChecked == true) {
-                        acceptedDialog = true
-                    }
-                    if (isChecked == null) {
-                        rejectedDialog = true
-                    }
-                })
-
+                TriStateCheckbox(
+                    modifier = Modifier.padding(0.dp), state = when (isChecked) {
+                        true -> ToggleableState.On
+                        false -> ToggleableState.Off
+                        null -> ToggleableState.Indeterminate
+                    }, colors = if (isChecked != null) {
+                        CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.primary,
+                            uncheckedColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    } else {
+                        CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.error,
+                            uncheckedColor = MaterialTheme.colorScheme.onError
+                        )
+                    }, onClick = {
+                        if (isChecked == false) {
+                            showNullDialog = true
+                        }
+                        if (isChecked == true) {
+                            acceptedDialog = true
+                        }
+                        if (isChecked == null) {
+                            rejectedDialog = true
+                        }
+                    })
+                Text(text = " % .2f".format(candidate.rating),
+                    modifier = Modifier.padding(0.dp),
+                    style = MaterialTheme.typography.labelSmall
+                )
         }
 
     }
