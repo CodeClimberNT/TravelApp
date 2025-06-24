@@ -292,7 +292,7 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
 
     fun getInitialsFromUser(user: UserProfile): String {
         if (user.name.isEmpty() && user.surname.isEmpty()) {
-            return ""
+            return "?"
         }
         if (user.surname.isEmpty())
             return (user.name[0]).toString().uppercase()
@@ -467,11 +467,11 @@ class UserProfileViewModel(private val model: UserProfileModel) : ViewModel() {
     fun getInfoFieldDefinitionList(profile: UserProfile): List<InfoFieldDefinition> {
         return listOf(
             InfoFieldDefinition(
-                label = "name",
+                label = "Name",
                 value = profile.name,
             ),
             InfoFieldDefinition(
-                label = "surname",
+                label = "Surname",
                 value = profile.surname,
             ),
             InfoFieldDefinition(

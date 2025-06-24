@@ -44,25 +44,7 @@ import com.example.final_assignment_even_g28.ui.components.badge.BadgeIconWithIn
 import com.example.final_assignment_even_g28.utils.AppFactory
 import com.example.final_assignment_even_g28.viewmodel.UserProfileViewModel
 
-/*
-@Serializable
-@Polymorphic
-sealed class ProfilePictureData {
-    @Serializable
-    data class Monogram(val initials: String = "") : ProfilePictureData()
 
-    @Serializable
-    data class Icon(val icon: IconType = IconType.ACCOUNT_CIRCLE) : ProfilePictureData()
-
-    @Serializable
-    data class UriData(val uri: String = "") : ProfilePictureData()
-
-    companion object {
-        val DEFAULT: ProfilePictureData = Icon(IconType.ACCOUNT_CIRCLE)
-    }
-
-}
-*/
 
 @Composable
 fun ProfilePicture(
@@ -75,7 +57,7 @@ fun ProfilePicture(
     onCameraClick: (() -> Unit)? = null,
     onRemoveClick: () -> Unit = {},
 ) {
-    val avatarSize = if (isCandidate) 56.dp else if (isDashboard) 72.dp else 150.dp
+    val avatarSize = if (isCandidate) 56.dp else if (isDashboard) 100.dp else 150.dp
     val isEditing by remember { mutableStateOf(showCameraButton && onCameraClick != null) }
     val badge = userProfile.badge
     val profilePicture = userProfile.profilePicture
@@ -118,7 +100,7 @@ fun ProfilePicture(
                         isPrimary = true,
                         isDashboard = isDashboard,
                         isCandidate = isCandidate,
-                        modifier = if (!isLandScape) Modifier else Modifier.size(100.dp)
+                        modifier = Modifier.size(100.dp)
                     )
                 }
 

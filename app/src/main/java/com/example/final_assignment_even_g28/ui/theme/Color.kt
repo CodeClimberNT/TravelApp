@@ -41,16 +41,22 @@ val NewNotificationBorderReadColorDark = Color(0xFF4CAF50)
 val OldNotificationBorderColorDark = Color(0xFF424242)
 
 
-// Profile Screen Colors
-val ProfileBackgroundLightPrimary = Color(0xFFF8F9FA)
-val ProfileBackgroundLightSecondary = Color(0xFFE9ECEF)
-val ProfileBackgroundLightTertiary = Color(0xFFF1F3F4)
-val ProfileCardLight = Color(0xFFFFFFFF)
-val ProfileBorderLight = Color(0xFFE0E0E0)
-val ProfileTextPrimaryLight = Color(0xFF1A237E)
-val ProfileTextSecondaryLight = Color(0xFF495057)
-val ProfileTextMutedLight = Color(0xFF6C757D)
-val ProfileAccentLight = Color(0xFF407BFF)
-val ProfileSurfaceLight = Color(0xFFF8F9FA)
-val ProfileSurfaceBorderLight = Color(0xFFE9ECEF)
+
+val ProfileBackgroundLightPrimary = Color(0xFFFFFBFE)
+val ProfileBackgroundLightSecondary = Color(0xFFF7F2FA)
+val ProfileBackgroundLightTertiary = Color(0xFFF0EDF1)
+val ProfileCardLight = Color(0xFFFFFBFE)
+val ProfileBorderLight = Color(0xFFCAC4D0)
+val ProfileTextPrimaryLight = Color(0xFF1C1B1F)
+val ProfileTextSecondaryLight = Color(0xFF49454F)
+val ProfileTextMutedLight = Color(0xFF79747E)
+val ProfileAccentLight = Color(0xFF6650a4)
+val ProfileSurfaceLight = Color(0xFFFFFBFE)
+val ProfileSurfaceBorderLight = Color(0xFFE7E0EC)
+
+
+
+
+
+
 

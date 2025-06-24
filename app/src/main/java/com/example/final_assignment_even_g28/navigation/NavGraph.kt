@@ -179,7 +179,7 @@ fun NavGraph(
             }
 
             composable(route = Destinations.SETTINGS_ROUTE) {
-                NotificationSettingsScreen()
+                NotificationSettingsScreen(navActions = navActions)
             }
 
             composable(

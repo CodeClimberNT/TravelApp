@@ -192,7 +192,15 @@ class UserProfileModel() {
                         }
                     }
                 }
-            user.delete()
+            Collections.users.document(user.uid).delete()
+                .addOnSuccessListener {
+                    Log.d("User Model", "User profile deleted successfully")
+                    user.delete()
+                    auth.signOut()
+                }
+                .addOnFailureListener { e ->
+                    Log.e("User Model", "Error deleting user profile: ${e.message}")
+                }
             Log.d("User Model", "User eliminated")
         } else {
             Log.e("User Model", "Impossible to eliminate the user")
