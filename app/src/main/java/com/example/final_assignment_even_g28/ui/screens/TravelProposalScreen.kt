@@ -654,7 +654,6 @@ fun ItineraryItem(stop: ItineraryStop, isLastItem: Boolean) {
 @OptIn(FlowPreview::class)
 @Composable
 fun TripMap(itinerary: List<ItineraryStop>, tripName: String) {
-    val defaultLocation = LatLng(45.438, 10.992)
     val context = LocalContext.current
     var locations by remember { mutableStateOf<List<LatLng?>>(emptyList()) }
     var location_title by remember { mutableStateOf<LatLng?>(null) }
@@ -795,30 +794,6 @@ suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
             null
         }
     }
-
-
-fun geocodeAddresses(context: Context, name: String, onResult: (LatLng?) -> Unit) {
-    val geocoder = Geocoder(context, Locale.getDefault())
-    try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            geocoder.getFromLocationName(name, 1, object : Geocoder.GeocodeListener {
-                override fun onGeocode(addresses: List<Address>) {
-                    onResult(addresses.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
-                }
-
-                override fun onError(errorMessage: String?) {
-                    onResult(null)
-                }
-            })
-        } else {
-            // Deprecated sync call
-            val addresses = geocoder.getFromLocationName(name, 1)
-            onResult(addresses?.firstOrNull()?.let { LatLng(it.latitude, it.longitude) })
-        }
-    } catch (e: IOException) {
-        onResult(null)
-    }
-}
 
 
 @Composable
