@@ -31,7 +31,6 @@ val NewNotificationBorderReadColor = Color(0xFF4CAF50)
 val OldNotificationBorderColor = Color(0xFFE0E0E0)
 
 //Notification Bell Dark
-//generate dark colors based on light colors that are more suitable for dark mode
 
 val NewNotificationBackgroundUnReadColorDark = Color(0xFF303030)
 val NewNotificationBackgroundReadColorDark = Color(0xFF424242)
