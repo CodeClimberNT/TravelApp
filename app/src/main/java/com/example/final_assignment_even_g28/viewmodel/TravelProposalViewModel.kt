@@ -545,7 +545,8 @@ class TravelProposalViewModel(
                 val pendingImageUris = getPendingImageUris()
 
                 val originalStartDate = travelProposal.value.tripStartDate.toDate().time
-
+                val travelId = tempTravelProposal.id
+                val travelTitle= tempTravelProposal.title
                 val result = tripModel.updateTravelProposal(
                     updatedProposal = tempTravelProposal,
                     originalSavedImages = travelProposal.value.images,
@@ -563,8 +564,8 @@ class TravelProposalViewModel(
                     )
                     if (isLastMinute && originalStartDate != tripStart) {
                         tripModel.addNotification(
-                            tempTravelProposal.id,
-                            tempTravelProposal.title,
+                            travelId,
+                            travelTitle,
                             NotificationType.LAST_MINUTE,
                             currentUser.value.uid,
                             applicantId = currentUser.value.uid

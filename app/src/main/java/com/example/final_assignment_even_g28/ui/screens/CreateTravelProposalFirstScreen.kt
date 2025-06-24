@@ -130,7 +130,7 @@ fun CreateTravelProposalFirstScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(start = 16.dp, end = 16.dp, bottom= 16.dp, top= 54.dp)
                         .fillMaxWidth()
                 ) {
                     EditableTextField(
