@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">lab5-even-g28</string>
+    <string name="app_name">final_assignment_even_g28</string>
     <string name="participants">Partecipanti</string>
     <string name="login_prompt">Per continuare fai il login</string>
     <string name="your_badges">I Tuoi Badge</string>
