@@ -104,7 +104,7 @@ fun TravelProposalList(
     val filters = tripVm.filters
     val filterBgColor = MaterialTheme.colorScheme.primaryContainer
     val filterTextColor = MaterialTheme.colorScheme.onPrimaryContainer
-
+    val numOfActivitiesToDisplay = 1
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = { CustomBottomBar(navActions, selectedItem = bottomBarItem) },
@@ -129,7 +129,7 @@ fun TravelProposalList(
                         )
                         Spacer(Modifier.width(8.dp))
 
-                        filters.activities.take(1).forEach { act ->
+                        filters.activities.take(numOfActivitiesToDisplay).forEach { act ->
                             AssistChip(
                                 onClick = {},
                                 label = {
@@ -150,9 +150,9 @@ fun TravelProposalList(
                             )
                             Spacer(Modifier.width(4.dp))
                         }
-                        if (filters.activities.size > 1) {
+                        if (filters.activities.size > numOfActivitiesToDisplay) {
                             Text(
-                                "+${filters.activities.size - 1}",
+                                "+${filters.activities.size - numOfActivitiesToDisplay}",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -221,7 +221,7 @@ fun TravelProposalListColumn(
         travelProposalList.forEach { travel ->
             TravelProposalCard(
                 tripVm, travel, navActions,
-//                fromExplore = true,
+                fromMyTrip = false,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope
             )
@@ -232,7 +232,6 @@ fun TravelProposalListColumn(
 }
 
 
-//TODO() Modified -> tell the others
 @Composable
 fun Tag(tagsList: List<ActivityTag>) {
     LazyRow(
@@ -267,11 +266,12 @@ fun ExpandableFilterTopBar(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+
     ) {
         Column(Modifier.fillMaxWidth()) {
             TopAppBar(
                 modifier = Modifier
-                    .height(104.dp)
+                    .height(128.dp)
                     .fillMaxWidth(),
                 title = {
                     Column(

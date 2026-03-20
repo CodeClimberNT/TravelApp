@@ -25,3 +25,5 @@ local.properties
 /.idea/runConfigurations.xml
 /.idea/vcs.xml
 /gradle.properties
+
+*/release

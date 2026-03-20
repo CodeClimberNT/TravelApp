@@ -112,6 +112,7 @@ import com.example.final_assignment_even_g28.data_class.UserProfile
 import com.example.final_assignment_even_g28.navigation.BottomBarItem
 import com.example.final_assignment_even_g28.navigation.CustomBottomBar
 import com.example.final_assignment_even_g28.navigation.Navigation
+import com.example.final_assignment_even_g28.ui.components.NeedToLogin
 import com.example.final_assignment_even_g28.ui.components.user_profile.ProfilePicture
 import com.example.final_assignment_even_g28.ui.theme.AdventureColor
 import com.example.final_assignment_even_g28.ui.theme.CultureColor
@@ -150,6 +151,7 @@ import kotlin.coroutines.resume
 @Composable
 fun TravelProposalScreen(
     tripVm: TravelProposalViewModel = viewModel(factory = AppFactory),
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     navActions: Navigation,
     bottomBarItem: BottomBarItem,
     tripId: String,
@@ -159,6 +161,7 @@ fun TravelProposalScreen(
     animatedContentScope: AnimatedVisibilityScope
 ) {
     tripVm.clickTripInfo(tripId)
+    val loggedUser by userVm.loggedUser.collectAsState()
     val travelProposal by tripVm.travelProposal.collectAsState()
     val tripPlanner by tripVm.currentTripPlanner.collectAsState()
     val configuration = LocalConfiguration.current
@@ -185,68 +188,72 @@ fun TravelProposalScreen(
             )
         }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Box(Modifier.fillMaxSize()) {
-            with(sharedTransitionScope) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .verticalScroll(rememberScrollState())
-                        .sharedElement(
-                            rememberSharedContentState(key = "card_$tripId"),
-                            animatedVisibilityScope = animatedContentScope
+        if (loggedUser.uid.isEmpty()) {
+            NeedToLogin(navAction = navActions)
+        } else {
+            Box(Modifier.fillMaxSize()) {
+                with(sharedTransitionScope) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .verticalScroll(rememberScrollState())
+                            .sharedElement(
+                                rememberSharedContentState(key = "card_$tripId"),
+                                animatedVisibilityScope = animatedContentScope
+                            )
+                    ) {
+                        ImageCarousel(travelProposal.images)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HeroSection(
+                            title = travelProposal.title,
+                            duration = tripVm.showDatesInTripInfo(
+                                travelProposal.tripStartDate.toDate(),
+                                travelProposal.tripEndDate.toDate()
+                            ),
+                            tags = travelProposal.activities.map { it.value },
+                            travelProposalVM = tripVm,
+                            navActions = navActions,
                         )
-                ) {
-                    ImageCarousel(travelProposal.images)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HeroSection(
-                        title = travelProposal.title,
-                        duration = tripVm.showDatesInTripInfo(
-                            travelProposal.tripStartDate.toDate(),
-                            travelProposal.tripEndDate.toDate()
-                        ),
-                        tags = travelProposal.activities.map { it.value },
-                        travelProposalVM = tripVm,
-                        navActions = navActions,
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                    TripOverview(
-                        tripVm = tripVm,
-                        proposal = travelProposal,
-                        tripPlanner = tripPlanner,
-                        navActions = navActions,
-                        bottomBarItem = bottomBarItem,
-                        openCandidatesDialog
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                    ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
-                    TripDescription(travelProposal.description)
-                    if (isLandscape) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.secondary)
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        TripOverview(
+                            tripVm = tripVm,
+                            proposal = travelProposal,
+                            tripPlanner = tripPlanner,
+                            navActions = navActions,
+                            bottomBarItem = bottomBarItem,
+                            openCandidatesDialog
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        ActivitiesPercentages(travelProposal.experienceComposition, isLandscape)
+                        TripDescription(travelProposal.description)
+                        if (isLandscape) {
+                            Row(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp)
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                ItinerarySection(travelProposal.itinerary)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp)
+                                ) {
+                                    ItinerarySection(travelProposal.itinerary)
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 8.dp)
+                                ) {
+                                    TripMap(travelProposal.itinerary, travelProposal.title)
+                                }
                             }
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 8.dp)
-                            ) {
-                                TripMap(travelProposal.itinerary, travelProposal.title)
-                            }
+                        } else {
+                            ItinerarySection(travelProposal.itinerary)
+                            TripMap(travelProposal.itinerary, travelProposal.title)
                         }
-                    } else {
-                        ItinerarySection(travelProposal.itinerary)
-                        TripMap(travelProposal.itinerary, travelProposal.title)
                     }
                 }
             }
@@ -437,7 +444,7 @@ fun TripOverview(
                 Button(
                     modifier = Modifier
                         .height(40.dp)
-                        .width(130.dp)
+                        .width(140.dp)
                         .shadow(4.dp, RoundedCornerShape(10.dp)),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(4.dp),
@@ -455,7 +462,7 @@ fun TripOverview(
                         Icon(
                             imageVector = Icons.Default.People,
                             contentDescription = "Contact",
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(42.dp)
                         )
                         Text(text = "Candidates")
 
@@ -799,15 +806,19 @@ suspend fun geocodeWithSdk(context: Context, text: String): LatLng? =
 @Composable
 fun CombinedBottomBar(
     tripVm: TravelProposalViewModel,
+    userVm: UserProfileViewModel = viewModel(factory = AppFactory),
     proposal: TravelProposal,
     price: String,
     navActions: Navigation,
     bottomBarItem: BottomBarItem
 ) {
+    val loggedUser by userVm.loggedUser.collectAsState()
     Column {
-        TravelActionBar(
-            tripVm = tripVm, proposal = proposal, price = price, navActions = navActions
-        )
+        if (loggedUser.uid.isNotEmpty()) {
+            TravelActionBar(
+                tripVm = tripVm, proposal = proposal, price = price, navActions = navActions
+            )
+        }
         CustomBottomBar(navActions, selectedItem = bottomBarItem)
 
     }

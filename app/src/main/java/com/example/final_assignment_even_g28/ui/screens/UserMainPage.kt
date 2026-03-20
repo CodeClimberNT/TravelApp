@@ -712,8 +712,8 @@ fun BadgeCard(badge: Badge, userVm: UserProfileViewModel = viewModel(factory = A
             }
         ),
         modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(12.dp)),
+            .fillMaxWidth(),
+//            .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(

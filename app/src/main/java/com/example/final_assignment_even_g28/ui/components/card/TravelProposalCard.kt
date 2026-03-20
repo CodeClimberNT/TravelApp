@@ -44,8 +44,7 @@ fun TravelProposalCard(
     tripVm: TravelProposalViewModel,
     travelProposal: TravelProposal,
     navActions: Navigation,
-//TODO: remove the default value and de-comment the other caller to remove notification from explore tab
-    fromExplore: Boolean = false,
+    fromMyTrip: Boolean,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedVisibilityScope,
 ) {
@@ -56,7 +55,6 @@ fun TravelProposalCard(
     val textColor = MaterialTheme.colorScheme.onSecondaryContainer
     val notifications by tripVm.notifications.collectAsState()
     val isTripNotified = notifications.any { it.tripId == travelProposal.id }
-    val fromExplore = false
 
     with(sharedTransitionScope) {
         Card(
@@ -67,15 +65,15 @@ fun TravelProposalCard(
                 )
                 .fillMaxWidth()
                 .clickable {
-                    if (!isPast)
-                        navActions.navigateToTripInfo(
+                    if (isPast)
+                        navActions.navigateToPastTravelProposalInfo(
                             travelProposal.id,
                             true
                         )
                     else
-                        navActions.navigateToPastTravelProposalInfo(
+                        navActions.navigateToTripInfo(
                             travelProposal.id,
-                            true
+                            fromMyTrip
                         )
                 },
             colors = CardDefaults.cardColors(
@@ -154,7 +152,7 @@ fun TravelProposalCard(
             }
             Row(modifier = Modifier.padding(start = 10.dp)) {
                 Tag(travelProposal.activities)
-                if (isTripNotified && !fromExplore) {
+                if (isTripNotified && fromMyTrip) {
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.Outlined.NotificationsActive,

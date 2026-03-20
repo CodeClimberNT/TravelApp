@@ -187,7 +187,7 @@ fun OwnedTravelProposalListColumn(
                 travelProposalVM,
                 travel,
                 navActions,
-//                fromExplore = false,
+                fromMyTrip = true,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
             )
